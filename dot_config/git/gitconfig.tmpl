@@ -1,0 +1,330 @@
+[advice]
+    skippedCherryPicks = false
+
+[alias]
+    # Stage everything.
+    aa = add --all
+
+    # Auto-distribute staged changes to correct commits.
+    abs = !git absorb --and-rebase
+
+    # List aliases.
+    aliases = config --get-regexp alias
+
+    # Amend the currently staged files to the latest commit.
+    amend = commit --amend --no-edit
+
+    # Alias for branch.
+    b = branch
+
+    # Delete a branch.
+    bd = branch -D
+
+    # Create a branch with the current date appended.
+    bdate = "!f() { git checkout -b \"$1-$(date +%Y-%m-%d)\"; }; f"
+
+    # Commit.
+    c = commit
+
+    # Commit all changes.
+    ca = !git add -A && git commit -v
+
+    # Commit all with message.
+    cam = commit -am
+
+    # Copy last message to clipboard.
+    clm = !git log -1 --pretty=%B | pbcopy
+
+    # Copy message of provided commit.
+    cm = !"git rev-list --format=%B --max-count=1 $1 | tail +2 | pbcopy"
+
+    # List contributors with number of commits.
+    contributors = shortlog --summary --numbered
+
+    # Credit an author on the latest commit.
+    credit = "!f() { git commit --amend --author \"$1 <$2>\" -C HEAD; }; f"
+
+    # Diff shortcuts.
+    df = diff
+    dfc = diff --cached
+
+    # `git di $number` shows the diff between the state `$number` revisions ago and the current state.
+    di = !"d() { git diff --patch-with-stat HEAD~$1; }; git diff-index --quiet HEAD -- || clear; d"
+
+    # Remove branches that have already been merged with main.
+    # a.k.a. 'delete merged'
+    dm = !"git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
+
+    # Go to the main branch, pull the latest changes, and delete the current branch.
+    done = "!f() { BRANCH=$(git branch --show-current); git checkout main && git pull && git branch -D $BRANCH; }; f"
+
+    # Find branches containing commit.
+    fb = "!f() { git branch -a --contains $1; }; f"
+
+    # Find commits by source code.
+    fc = "!f() { git log --pretty=format:'%C(yellow)%h  %Cblue%ad  %Creset%s%Cgreen  [%cn] %Cred%d' --decorate --date=short -S$1; }; f"
+
+    # Quick fixup commit for rebasing.
+    fixup = commit --fixup
+
+    # Log file changes with author and date.
+    flog = log --follow --pretty=format:'%Cblue%ad %Cyellow%h %Cgreen%an %Creset%s' --date=short --
+
+    # Find commits by commit message.
+    fm = "!f() { git log --pretty=format:'%C(yellow)%h  %Cblue%ad  %Creset%s%Cgreen  [%cn] %Cred%d' --decorate --date=short --grep=$1; }; f"
+
+    # Force push to origin main.
+    fpom = push --force-with-lease origin main
+
+    # Force push to origin staging.
+    fpos = push --force-with-lease origin staging
+
+    # Find tags containing commit.
+    ft = "!f() { git describe --always --contains $1; }; f"
+
+    # Switch to a branch, creating it if necessary.
+    go = "!f() { git checkout -b \"$1\" 2> /dev/null || git checkout \"$1\"; }; f"
+
+    # Delete branches with deleted remote.
+    gone = !git fetch -p && git for-each-ref --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" {print $1}' | xargs -r git branch -D
+
+    # Pretty log graph with abbreviated commits and relative time.
+    l = "!f() { git log --abbrev-commit --graph --pretty=format:'%C(auto)%h%d %C(dim)(%cr)%C(reset)%n%B' \"$@\"; }; f"
+
+    # Log with specified number of commits, no pager.
+    ln = "!f() { n=\"$1\"; shift; git --no-pager log -n \"$n\" \"$@\"; }; f"
+
+    # Execute git command without pager.
+    np = "!f() { git --no-pager \"$@\"; }; f"
+
+    # Pull in remote changes for the current repository and all its submodules.
+    p = pull --recurse-submodules
+
+    # Force push with lease.
+    pf = push --force-with-lease
+
+    # Push to origin main.
+    pom = push origin main
+
+    # Push to origin staging.
+    pos = push origin staging
+
+    # Push current branch and set upstream.
+    pu = !git push -u origin $(git branch --show-current)
+
+    # Rebase.
+    r = rebase
+
+    # Fuzzy recent branches (requires fzf).
+    rb = !git for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)' | fzf --height 40% --reverse | xargs git switch
+
+    # Interactive rebase with the given number of latest commits.
+    reb = "!f() { git rebase -i HEAD~$1; }; f"
+
+    # Remove the old tag with this name and tag the latest commit with it.
+    retag = "!f() { git tag -d $1 && git push origin :refs/tags/$1 && git tag $1; }; f"
+
+    # View the current working tree status using the short format.
+    s = status -s
+
+    # Stage only the deleted files.
+    sd = !"git ls-files --deleted | xargs git add"
+
+    # Stage all, amend, and force push current branch.
+    ship = !git add . && git commit -q --amend --no-edit && git push -q -f origin $(git branch --show-current)
+
+    # Stash.
+    sp = stash pop
+    ss = stash
+
+    # Switch branches.
+    sw = switch
+    sw- = switch -
+
+    # Delete a branch and rename the current branch to the deleted branch's name.
+    swap = "!f() { git branch -D \"$1\" && git branch -m \"$1\"; }; f"
+
+    # Today's commits.
+    today = "!f() { git log --since=midnight --author=\"$(git config user.name)\" --oneline; }; f"
+
+    # Fetch all remotes and create local tracking branches.
+    track-all = "!git fetch --all && for b in $(git branch -r | grep -v '\\->'); do git branch --track \"${b#origin/}\" \"$b\" 2>/dev/null; done"
+
+    # Undo last commit (keep changes staged).
+    undo = reset --soft HEAD~1
+
+    # Handy shortcut for unstaging.
+    unstage = reset HEAD --
+
+    # Show the user email for the current repository.
+    whoami = config user.email
+
+[apply]
+    # Detect whitespace errors when applying a patch.
+    whitespace = fix
+
+[branch]
+    # Show most recently changed branches first.
+    sort = -committerdate
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+
+{{- if eq .chezmoi.os "darwin" }}
+[commit]
+    # https://help.github.com/articles/signing-commits-using-gpg/
+    gpgsign = true
+{{- end }}
+
+[core]
+    # Use custom `.gitattributes`.
+    attributesFile = ~/.gitattributes
+
+    # Process all text files and make sure that CRLF is replaced with LF when writing that
+    # file to the object database.
+    autocrlf = input
+
+    # Default editor for commit messages and other git operations.
+    editor = nvim
+
+    # Use custom `.gitignore`.
+    excludesfile = {{ joinPath .chezmoi.homeDir ".config/git/ignore" }}
+
+    # Case sensitive file system.
+    ignorecase = false
+
+    # Use delta for diffs.
+    pager = delta
+
+{{- if eq .chezmoi.os "darwin" }}
+    # Prevent showing files whose names contain non-ASCII symbols as unversioned.
+    # http://michael-kuehnel.de/git/2014/11/21/git-mac-osx-and-german-umlaute.html
+    precomposeUnicode = true
+{{- end }}
+
+    # Make `git rebase` safer on macOS.
+    # More info: <http://www.git-tower.com/blog/make-git-rebase-safe-on-osx/>
+    trustctime = false
+
+    # Speed up commands involving untracked files such as `git status`.
+    # https://git-scm.com/docs/git-update-index#_untracked_cache
+    untrackedCache = true
+
+    # Use builtin fsmonitor daemon (Git >= 2.37).
+    # https://git-scm.com/docs/git-fsmonitor--daemon
+    fsmonitor = true
+
+    # Treat spaces before tabs and all kinds of trailing whitespace as an error.
+    # [default] trailing-space: looks for spaces at the end of a line
+    # [default] space-before-tab: looks for spaces before tabs at the beginning of a line
+    whitespace = space-before-tab,-indent-with-non-tab,trailing-space
+
+[delta]
+    line-numbers = true
+    navigate = true
+    # Use `less` as delta's pager, but silence the annoying terminal bell.
+    pager = less -R -F -X -q
+    syntax-theme = Visual Studio Dark+
+
+[diff]
+    # Ignore dirty submodules.
+    ignoreSubmodules = dirty
+
+    # Detect copies as well as renames.
+    renames = copies
+
+{{- if eq .chezmoi.os "darwin" }}
+    # Make difftool the default conflict resolving tool.
+    tool = opendiff
+{{- end }}
+
+[diff "bin"]
+    # Use `hexdump` to diff binary files.
+    textconv = hexdump -v -C
+
+[fetch]
+    # Behave as if the --prune option was given on the command line.
+    prune = true
+
+[help]
+    # Automatically correct mistyped commands.
+    autocorrect = immediate
+
+[init]
+    # Set the name of the default branch.
+    defaultBranch = main
+
+[interactive]
+    diffFilter = delta --color-only
+
+[merge]
+    # No merge commits are created and all merges are fast-forwarded, which means that
+    # merging is only allowed if the branch can be fast-forwarded.
+    ff = only
+
+    # Include summaries of merged commits in newly created merge commit messages.
+    log = true
+
+{{- if eq .chezmoi.os "darwin" }}
+    # Make difftool the default merging tool.
+    tool = opendiff
+{{- end }}
+
+[pager]
+    branch = false
+
+[pull]
+    rebase = true
+
+[push]
+    # Automatically set upstream for new branches.
+    autoSetupRemote = true
+
+    # Make `git push` push relevant annotated tags when pushing branches out.
+    followTags = true
+
+[rebase]
+    # Auto-squash fixup! commits.
+    autosquash = true
+
+    # Auto-stash before rebase.
+    autoStash = true
+
+    # Update dependent branches.
+    updateRefs = true
+
+[url "git@github.com:"]
+    insteadOf = https://github.com/
+    pushInsteadOf = github:
+    pushInsteadOf = git://github.com/
+
+[url "git://github.com/"]
+    insteadOf = github:
+
+[url "git@gist.github.com:"]
+    insteadOf = gst:
+    pushInsteadOf = gist:
+    pushInsteadOf = git://gist.github.com/
+
+[url "git://gist.github.com/"]
+    insteadOf = gist:
+
+[user]
+    email = prberg@proton.me
+    name = Paul Berg
+
+{{- if eq .chezmoi.os "darwin" }}
+[gpg]
+    # Path to gnupg.
+    program = /opt/homebrew/bin/gpg
+
+[user]
+    signingKey = {{ onepasswordRead "op://Keys/GPG/password" }}
+{{- end }}

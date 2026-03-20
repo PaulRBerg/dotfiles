@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+alias cleanup="fd -H -t f -g '*.DS_Store' -X rm -v" # recursively delete `.DS_Store` files
+
+# Editor and app shortcuts
+alias code="open -a Cursor"
+alias edit_vim="open -a 'Cursor' ~/.vim_runtime"
+alias edit_home="open -a 'Sublime Text' ~" # using Sublime because it's faster
+
+# Using the Homebrew Bash over the built-in Bash
+alias bash="/opt/homebrew/bin/bash"
+
+# Locations
+alias appsupport="cd ~/Library/Application\ Support"
+alias cd_cursor="cd ~/Library/Application\ Support/Cursor/User"
+alias cd_vscode="cd ~/Library/Application\ Support/Code/User"
+alias d="cd ~/Desktop"
+alias dl="cd ~/Downloads"
+alias lib="cd ~/Library"
+alias esp="cd ~/Library/Application\ Support/espanso"
+alias obs="cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents"

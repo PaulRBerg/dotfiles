@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# hash: {{ .chezmoi.os }}
+# Generates zsh completion files for CLI tools
+
+set -euo pipefail
+
+ZFUNC_DIR="$HOME/.zfunc"
+mkdir -p "$ZFUNC_DIR"
+
+generate() {
+  local name="$1"
+  shift
+  if command -v "$name" &>/dev/null; then
+    echo "  ✓ $name" >&2
+    "$@" >"$ZFUNC_DIR/_$name"
+  else
+    echo "  ⊘ $name (not installed)" >&2
+  fi
+}
+
+echo "🔧 Generating zsh completions..." >&2
+echo "" >&2
+
+generate openclaw openclaw completion -s zsh
+generate anchor anchor completions zsh
+generate avm avm completions zsh
+generate sentry-cli sentry-cli completions zsh
+generate solana solana completion -s zsh
+
+echo "" >&2
+echo "✓ Completions generated in $ZFUNC_DIR" >&2

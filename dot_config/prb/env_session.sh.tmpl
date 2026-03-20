@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
+
+###############################################################################
+# SESSION ENVIRONMENT                                                         #
+###############################################################################
+
+[[ -n "${TTY:-}" ]] && export GPG_TTY="$TTY" # https://stackoverflow.com/a/42265848/96656
+
+export HISTCONTROL="${HISTCONTROL:-ignoreboth}" # Omit duplicates and commands that begin with a space from history.
+export MANPAGER="${MANPAGER:-less -X}"          # Don't clear the screen after quitting a manual page.
+
+# Node
+export NODE_REPL_HISTORY="${NODE_REPL_HISTORY:-$HOME/.node_history}" # Enable persistent REPL history for `node`.
+export NODE_REPL_HISTORY_SIZE="${NODE_REPL_HISTORY_SIZE:-32768}"     # Allow 32³ entries; the default is 1000.
+export NODE_REPL_MODE="${NODE_REPL_MODE:-sloppy}"                    # Use sloppy mode by default, matching web browsers.
+
+# Python
+export PYTHONIOENCODING="${PYTHONIOENCODING:-UTF-8}"
+
+# Editor (nvim for Ctrl+G in Claude Code and other tools)
+export EDITOR="${EDITOR:-nvim}"
+export VISUAL="${VISUAL:-$EDITOR}"
+
+###############################################################################
+# REPO-TRACKED PERSONAL ENV                                                   #
+###############################################################################
+# {{- if eq .chezmoi.os "darwin" }}
+
+source "$USER_DIR/load_env_macos.sh"
+
+###############################################################################
+# AWS                                                                         #
+###############################################################################
+
+# {{- else if (and (eq .chezmoi.os "linux") (eq .chezmoi.hostname "aws")) }}
+
+source "$USER_DIR/load_env_linux.sh"
+
+# {{- end }}

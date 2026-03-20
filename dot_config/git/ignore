@@ -1,0 +1,74 @@
+# AI agents
+.ai/
+.claude/files/
+.claude-trace/
+.claude/settings.local.json
+.codex/files/
+.gemini/files
+
+# Dotfiles
+.extra
+
+# Environment files
+.env
+.env*
+!.env.example
+.envrc
+
+# Files that might appear on external disks
+.Spotlight-V100
+.Trashes
+
+# Folder view configuration files
+.DS_Store
+Desktop.ini
+
+# Git residue
+.git/
+*.orig
+
+# IDEs
+*.iml
+.idea/
+
+# Markdown files
+PLAN.md
+PROMPT.md
+SPEC.md
+STYLED.md
+TODO.md
+
+# Next.js
+.next/
+.vercel/
+
+# Node
+npm-error.log
+yarn-error.log
+/node_modules
+
+# Playwright
+.playwright/
+.playwright-mcp/
+
+# Python
+.python-version
+/env
+*.pyc
+
+# Ruby
+/.bundle
+
+# Serena MCP
+.serena/
+
+# Temporary files
+/tmp
+/tmp**/*
+
+# Thumbnail cache files
+._*
+Thumbs.db
+
+# WebAssembly
+/.emsdk

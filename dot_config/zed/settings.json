@@ -1,0 +1,79 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run the `open default settings` command
+// from the command palette or from `Zed` application menu.
+{
+  "project_panel": {
+    "dock": "right",
+    "button": true
+  },
+  "theme": "One Dark",
+  "buffer_font_size": 16,
+  "languages": {
+    "JavaScript": {
+      "formatter": [
+        {
+          "code_action": "source.fixAll.biome"
+        },
+        {
+          "code_action": "source.organizeImports.biome"
+        },
+        {
+          "language_server": {
+            "name": "biome"
+          }
+        }
+      ]
+    },
+    "TypeScript": {
+      "formatter": [
+        {
+          "code_action": "source.fixAll.biome"
+        },
+        {
+          "code_action": "source.organizeImports.biome"
+        },
+        {
+          "language_server": {
+            "name": "biome"
+          }
+        }
+      ]
+    },
+    "TSX": {
+      "formatter": [
+        {
+          "code_action": "source.fixAll.biome"
+        },
+        {
+          "code_action": "source.organizeImports.biome"
+        },
+        {
+          "language_server": {
+            "name": "biome"
+          }
+        }
+      ]
+    },
+    "JSON": { "formatter": { "language_server": { "name": "biome" } } },
+    "JSONC": { "formatter": { "language_server": { "name": "biome" } } },
+    "CSS": { "formatter": { "language_server": { "name": "biome" } } },
+    "GraphQL": { "formatter": { "language_server": { "name": "biome" } } }
+  },
+  "lsp": {
+    "biome": {
+      "settings": {
+        "require_config_file": true
+      }
+    }
+  },
+  "telemetry": {
+    "diagnostics": true,
+    "metrics": false
+  },
+  "ui_font_size": 16
+}

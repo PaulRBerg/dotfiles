@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Minimal bashrc - zsh is the primary shell
+# This exists only as a fallback for bash interactive sessions
+
+# Exit early if non-interactive
+[[ $- != *i* ]] && return
+
+USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
+
+# Source common dotfiles
+[[ -r "$USER_DIR/path.sh" ]] && source "$USER_DIR/path.sh"
+[[ -r "$USER_DIR/aliases.sh" ]] && source "$USER_DIR/aliases.sh"
+[[ -r "$USER_DIR/functions.sh" ]] && source "$USER_DIR/functions.sh"

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# GitHub
+{{- if hasKey . "github_token" }}
+export GITHUB_TOKEN="{{ .github_token }}"
+{{- else }}
+echo "⚠️ Warning: GITHUB_TOKEN not configured in chezmoi data" >&2
+{{- end }}

@@ -1,0 +1,137 @@
+# Base directory for custom shell modules
+USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
+
+# Core environment and PATH must load before the rest of the shell modules.
+[[ -r "$USER_DIR/env_core.sh" ]] && source "$USER_DIR/env_core.sh"
+[[ -r "$USER_DIR/path.sh" ]] && source "$USER_DIR/path.sh"
+
+# Load tracked core shell modules.
+core_dotfiles=(
+  "$USER_DIR/agents.sh"
+  "$USER_DIR/aliases.sh"
+  "$USER_DIR/web3.sh"
+  "$USER_DIR/functions.sh"
+  "$USER_DIR/gh.sh"
+  "$USER_DIR/env_session.sh"
+  "$USER_DIR/shims.sh"
+)
+for file in "${core_dotfiles[@]}"; do
+  [[ -r "$file" ]] && source "$file"
+done
+unset file core_dotfiles
+
+# Uncomment the following line to use case-sensitive completion.
+export CASE_SENSITIVE="true"
+
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# You can set one of the optional three formats:
+# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+# or set a custom format using the strftime function format specifications,
+# see "man strftime" for details.
+export HIST_STAMPS="yyyy-mm-dd"
+
+# Uncomment the following line to use hyphen-insensitive completion.
+# Case-sensitive completion must be off. _ and - will be interchangeable.
+export HYPHEN_INSENSITIVE="false"
+
+# Load custom functions
+# shellcheck disable=SC2206
+fpath=("$HOME/.zfunc" $fpath)
+
+# Keep compdump stable and skip compaudit for faster startup
+export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/compdump-${ZSH_VERSION}"
+mkdir -p "${ZSH_COMPDUMP:h}"
+
+# Which plugins would you like to load?
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
+# Add wisely, as too many plugins slow down shell startup.
+# shellcheck disable=SC2034
+plugins=(
+  command-not-found
+  fnm
+  git
+  zsh-autosuggestions     # custom: https://github.com/zsh-users/zsh-autosuggestions
+  zsh-syntax-highlighting # custom, must be the last one: https://github.com/zsh-users/zsh-syntax-highlighting
+)
+
+# No theme - starship handles the prompt
+export ZSH_THEME=""
+
+# Update automatically without asking
+zstyle ":omz:update" mode auto # update automatically without asking
+
+# Skip aliases defined in Oh My Zsh lib files (ls, l, .., etc.)
+zstyle ":omz:lib:*" aliases no
+
+# Skip compaudit security check on non-login shells (saves ~15-20ms per shell startup)
+if [[ -o login ]]; then
+  zstyle ":omz:lib:compfix" skip no
+else
+  zstyle ":omz:lib:compfix" skip yes
+fi
+
+# Load oh-my-zsh
+source "$ZSH/oh-my-zsh.sh"
+
+# Enable recursive globbing with **
+setopt GLOB_STAR_SHORT
+
+# zoxide - smart directory jumping (must be after oh-my-zsh for compinit)
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh)"
+fi
+
+# fnm - must be after Homebrew to take priority for node/npm
+command -v fnm >/dev/null && eval "$(fnm env)"
+
+{{- if eq .chezmoi.os "darwin" }}
+# Atuin - enhanced shell history with sync (must be after oh-my-zsh)
+if command -v atuin &>/dev/null; then
+  eval "$(atuin init zsh)"
+fi
+{{- end }}
+
+# fzf
+[[ -r ~/.fzf.zsh ]] && source ~/.fzf.zsh
+
+# Vite+ bin (https://viteplus.dev)
+[[ -r "$HOME/.vite-plus/env" ]] && . "$HOME/.vite-plus/env"
+
+# bun completions
+[[ -s "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun" ]] && source "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun"
+
+# Starship prompt (must be last)
+if command -v starship &>/dev/null; then
+  eval "$(starship init zsh)"
+
+  # Transient prompt - collapse previous prompts to single line
+  zle-line-init() {
+    emulate -L zsh
+    [[ $CONTEXT == start ]] || return 0
+
+    while true; do
+      zle .recursive-edit
+      local -i ret=$?
+      [[ $ret == 0 && $KEYS == $'\4' ]] || break
+      [[ -o ignore_eof ]] || exit 0
+    done
+
+    local saved_prompt=$PROMPT
+    local saved_rprompt=$RPROMPT
+    PROMPT='❯ '
+    RPROMPT=''
+    zle .reset-prompt
+    PROMPT=$saved_prompt
+    RPROMPT=$saved_rprompt
+
+    if ((ret)); then
+      zle .send-break
+    else
+      zle .accept-line
+    fi
+    return ret
+  }
+  zle -N zle-line-init
+fi

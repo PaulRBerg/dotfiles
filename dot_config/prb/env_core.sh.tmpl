@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+###############################################################################
+# CORE ENVIRONMENT                                                            #
+###############################################################################
+
+# XDG Base Directory Specification
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+
+# Prefer US English and use UTF-8.
+export LANG="${LANG:-en_US.UTF-8}"
+export LC_ALL="${LC_ALL:-en_US.UTF-8}"
+
+# Bun
+export BUN_INSTALL="${BUN_INSTALL:-$XDG_DATA_HOME/bun}"
+
+# Cargo / Rust
+export CARGO_HOME="${CARGO_HOME:-$XDG_DATA_HOME/cargo}"
+export RUSTUP_HOME="${RUSTUP_HOME:-$XDG_DATA_HOME/rustup}"
+
+# Docker
+export DOCKER_CONFIG="${DOCKER_CONFIG:-$XDG_CONFIG_HOME/docker}"
+
+# Foundry
+export FOUNDRY_DIR="${FOUNDRY_DIR:-$XDG_DATA_HOME/foundry}"
+
+# GnuPG
+export GNUPGHOME="${GNUPGHOME:-$XDG_DATA_HOME/gnupg}"
+
+# IPython
+export IPYTHONDIR="${IPYTHONDIR:-$XDG_CONFIG_HOME/ipython}"
+
+# Kubernetes
+export KUBECONFIG="${KUBECONFIG:-$XDG_CONFIG_HOME/kube/config}"
+
+# Matplotlib
+export MPLCONFIGDIR="${MPLCONFIGDIR:-$XDG_CONFIG_HOME/matplotlib}"
+
+# Ni
+export NI_DEFAULT_AGENT="${NI_DEFAULT_AGENT:-bun}"
+export NI_GLOBAL_AGENT="${NI_GLOBAL_AGENT:-npm}"
+
+# NPM
+export NPM_CONFIG_CACHE="${NPM_CONFIG_CACHE:-$XDG_CACHE_HOME/npm}"
+export NPM_CONFIG_USERCONFIG="${NPM_CONFIG_USERCONFIG:-$XDG_CONFIG_HOME/npm/npmrc}"
+
+# Oh-My-Zsh
+export ZSH="${ZSH:-$XDG_DATA_HOME/oh-my-zsh}"
+
+# Ollama
+export OLLAMA_HOME="${OLLAMA_HOME:-$XDG_DATA_HOME/ollama}"
+
+# PNPM
+export PNPM_HOME="${PNPM_HOME:-$XDG_DATA_HOME/pnpm}"
+
+# Serena
+export SERENA_HOME="${SERENA_HOME:-$XDG_CONFIG_HOME/serena}"
+
+# Less
+export LESSHISTFILE="${LESSHISTFILE:-$XDG_STATE_HOME/less/history}"
+
+# Python
+export PYTHON_HISTORY="${PYTHON_HISTORY:-$XDG_STATE_HOME/python/history}"
+
+# Wget
+export WGETRC="${WGETRC:-$XDG_CONFIG_HOME/wget/wgetrc}"

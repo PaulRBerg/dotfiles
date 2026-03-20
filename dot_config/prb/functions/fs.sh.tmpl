@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+
+###############################################################################
+# FILE SYSTEM                                                                 #
+###############################################################################
+
+# Determine size of a file or total size of a directory
+function fs() {
+  if du -b /dev/null >/dev/null 2>&1; then
+    local arg=-sbh
+  else
+    local arg=-sh
+  fi
+  if (($#)); then
+    du "$arg" -- "$@"
+  else
+    du "$arg" .[^.]* ./*
+  fi
+}
+
+# Sort the files in the given location by size
+function fsort() {
+  find "${1:-.}" -type f -print0 | xargs -0 ls -l | sort -k5,5rn
+}
+
+# Platform-specific stat wrapper to get file size
+function get_file_size() {
+  {{- if eq .chezmoi.os "darwin" }}
+  stat -f"%z" "$1"
+  {{- else if eq .chezmoi.os "linux" }}
+  stat -c"%s" "$1"
+  {{- end }}
+}
+
+# List directories (tree) and files (flat) in separate sections
+# Usage: l [level] [path]
+function l() {
+  local level=1
+  local dir="."
+
+  if [[ "$1" =~ ^[0-9]+$ ]] && [[ "$1" -gt 0 ]]; then
+    level="$1"
+    dir="${2:-.}"
+  else
+    dir="${1:-.}"
+  fi
+
+  local -a eza_common_args=(
+    --color=always
+    --no-filesize --no-permissions --no-time --no-user
+    -I '.DS_Store'
+  )
+
+  local -a eza_base_args=(
+    "${eza_common_args[@]}"
+    --all
+    "$dir"
+  )
+
+  local -a eza_symlink_args=(
+    "${eza_common_args[@]}"
+    --stdin
+  )
+
+  local dirs_output
+  local files_output
+  local symlinks_output
+  dirs_output=$(eza "${eza_base_args[@]}" --level "$level" --group-directories-first --only-dirs)
+  files_output=$(eza "${eza_base_args[@]}" --only-files)
+  symlinks_output=$(
+    cd "$dir" &&
+      find . -maxdepth 1 -type l -exec basename {} \; | eza "${eza_symlink_args[@]}"
+  )
+
+  if [[ "$dirs_output" == "." ]]; then
+    dirs_output=""
+  fi
+
+  if [[ -z "$dirs_output" && -z "$files_output" && -z "$symlinks_output" ]]; then
+    echo "Empty directory"
+  else
+    local printed=0
+
+    if [[ -n "$symlinks_output" ]]; then
+      printf "Symlinks\n--------\n%s\n" "$symlinks_output"
+      printed=1
+    fi
+
+    if [[ -n "$dirs_output" ]]; then
+      ((printed == 1)) && printf "\n"
+      printf "Directories\n-----------\n%s\n" "$dirs_output"
+      printed=1
+    fi
+
+    if [[ -n "$files_output" ]]; then
+      ((printed == 1)) && printf "\n"
+      printf "Files\n-----\n%s\n" "$files_output"
+    fi
+  fi
+}
+
+# Create a new directory and enter it
+function mkd() {
+  mkdir -p "$@" && cd "$_" || return
+}
+
+# `o` with no arguments opens the current directory, otherwise opens the given
+# location
+function o() {
+  if [[ $# -eq 0 ]]; then
+    {{- if eq .chezmoi.os "darwin" }}
+    open .
+    {{- else if eq .chezmoi.os "linux" }}
+    xdg-open .
+    {{- end }}
+  else
+    {{- if eq .chezmoi.os "darwin" }}
+    open "$@"
+    {{- else if eq .chezmoi.os "linux" }}
+    xdg-open "$@"
+    {{- end }}
+  fi
+}
+
+# Print each PATH entry on a separate line, sorted alphabetically
+function path() {
+  echo "$PATH" | tr ":" "\n" | sort
+}
+
+# Create a .tar.gz archive, using `zopfli`, `pigz` or `gzip` for compression
+function targz() {
+  local tmpFile="$*.tar"
+  tar -cvf "${tmpFile}" --exclude=".DS_Store" "${@}" || return 1
+
+  size=$(get_file_size "${tmpFile}")
+
+  local cmd=""
+  if ((size < 52428800)) && hash zopfli 2>/dev/null; then
+    # the .tar file is smaller than 50 MB and Zopfli is available; use it
+    cmd="zopfli"
+  else
+    if hash pigz 2>/dev/null; then
+      cmd="pigz"
+    else
+      cmd="gzip"
+    fi
+  fi
+
+  echo "Compressing .tar ($((size / 1000)) kB) using \`${cmd}\`…"
+  "${cmd}" -v "${tmpFile}" || return 1
+  [[ -f "${tmpFile}" ]] && rm "${tmpFile}"
+
+  zippedSize=$(get_file_size "${tmpFile}.gz")
+
+  echo "${tmpFile}.gz ($((zippedSize / 1000)) kB) created successfully."
+}
+
+# `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring
+# the `.git` directory, listing directories first. The output gets piped into
+# `less` with options to preserve color and line numbers, unless the output is
+# small enough for one screen.
+function tre() {
+  tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX
+}

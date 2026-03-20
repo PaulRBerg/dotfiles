@@ -1,0 +1,9 @@
+IgnoreUnknown UseKeychain
+
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/github/key.pem
+  IdentitiesOnly yes
+  AddKeysToAgent yes
+  UseKeychain yes

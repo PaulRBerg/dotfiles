@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Sleep script for sleepwatcher
+# Runs when Mac enters sleep mode
+
+# Sleepwatcher runs with a minimal PATH; ensure Homebrew binaries are available
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# Next.js apps
+ports=(4001 4003 5001 5003 6100)
+
+for p in "${ports[@]}"; do
+  # Check if something is listening on the port
+  if lsof -i tcp:"$p" -sTCP:LISTEN >/dev/null 2>&1; then
+    echo "Killing server on port $p"
+    killport "$p"
+  fi
+done
+

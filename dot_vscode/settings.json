@@ -1,0 +1,14 @@
+{
+  "search.exclude": {
+    "**/*/*": true,
+    "**/.vscode": false
+  },
+  "files.exclude": {
+    "**/*/*": true,
+    "**/.vscode": false
+  },
+  "files.watcherExclude": {
+    "**/*/*": true,
+    "**/.vscode": false
+  }
+}

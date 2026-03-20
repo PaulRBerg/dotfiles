@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
+PRB_SETUP_DIR="${PRB_SETUP_DIR:-$HOME/.setup}"
+
+# Helper to add path only if it exists
+add_path() {
+  [[ -d "$1" ]] && export PATH="$1:$PATH"
+}
+
+###############################################################################
+# Dotfiles                                                                    #
+###############################################################################
+add_path "$USER_DIR/bin"
+add_path "$PRB_SETUP_DIR"
+
+###############################################################################
+# Personal                                                                    #
+###############################################################################
+# {{- if eq .chezmoi.os "darwin" }}
+
+source "$USER_DIR/path_macos.sh"
+
+###############################################################################
+# AWS                                                                         #
+###############################################################################
+
+# {{- else if (and (eq .chezmoi.os "linux") (eq .chezmoi.hostname "aws")) }}
+
+source "$USER_DIR/path_linux.sh"
+
+# {{- end }}
+
+###############################################################################
+# Cross-Machine                                                               #
+###############################################################################
+
+# User-local binaries
+add_path "$HOME/.local/bin"
+
+# Deno
+add_path "$HOME/.deno/bin"
+
+# Bun
+add_path "${BUN_INSTALL:-$XDG_DATA_HOME/bun}/bin"
+
+# Cargo/Rust (CARGO_HOME set in env_core.sh)
+add_path "${CARGO_HOME:-$XDG_DATA_HOME/cargo}/bin"
+
+# PNPM
+add_path "${PNPM_HOME:-$XDG_DATA_HOME/pnpm}"
+
+# Foundry
+add_path "${FOUNDRY_DIR:-$XDG_DATA_HOME/foundry}/bin"
+
+# OpenCode
+add_path "$HOME/.opencode/bin"
+
+# Rindexer
+add_path "${XDG_CONFIG_HOME:-$HOME/.config}/.rindexer/bin"

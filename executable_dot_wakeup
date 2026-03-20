@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Wakeup script for sleepwatcher
+# Runs when Mac wakes from sleep
+
+# Sleepwatcher runs with a minimal PATH; ensure Homebrew binaries are available
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# ------------------------------
+# SSH key
+# ------------------------------
+SSH_KEY="$HOME/.ssh/github/key.pem"
+if [[ -f "$SSH_KEY" ]] && ! /usr/bin/ssh-add -l 2>/dev/null | grep -q "$SSH_KEY"; then
+  /usr/bin/ssh-add --apple-use-keychain "$SSH_KEY" 2>/dev/null
+fi
+
+# ------------------------------
+# Effect pull
+# ------------------------------
+EFFECT_DIR="$HOME/.effect"
+if [[ ! -d "$EFFECT_DIR/.git" ]]; then
+  exit 0
+fi
+echo "Pulling effect"
+git -C "$EFFECT_DIR" pull --ff-only 2>&1 || true
+

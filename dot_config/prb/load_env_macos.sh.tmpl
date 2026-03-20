@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+###############################################################################
+# APIs                                                                        #
+###############################################################################
+
+# MCPs
+export API_KEY_MAGIC_MCP={{ onepasswordRead "op://Keys/Magic MCP/credential" }}
+export API_KEY_MORPH_MCP={{ onepasswordRead "op://Keys/Morph MCP/credential" }}
+export API_KEY_CONTEXT7_MCP={{ onepasswordRead "op://Keys/Context7 MCP/credential" }}
+
+# Etherscan
+export API_KEY_ETHERSCAN={{ onepasswordRead "op://Keys/Etherscan/credential" }}
+export ETHERSCAN_API_KEY={{ onepasswordRead "op://Keys/Etherscan/credential" }}
+
+# Foundry
+export ETH_RPC_URL=https://sepolia.infura.io/v3/{{ onepasswordRead "op://Keys/Infura/credential" }}
+export EHT_MNEMONIC={{ onepasswordRead "op://Keys/Default Tester - Mnemonic/credential" }}
+export ETH_PRIVATE_KEY={{ onepasswordRead "op://Keys/Default Tester - Private Key/credential" }}
+export ROUTEMESH_API_KEY={{ onepasswordRead "op://Keys/RouteMesh/credential" }}
+
+# GitHub
+export GITHUB_TOKEN={{ onepasswordRead "op://Keys/GitHub/credential" }}
+
+# Infura
+export API_KEY_INFURA={{ onepasswordRead "op://Keys/Infura/credential" }}
+
+# OpenAI
+export API_KEY_OPENAI={{ onepasswordRead "op://Keys/OpenAI/credential" }}
+export OPENAI_API_KEY={{ onepasswordRead "op://Keys/OpenAI/credential" }}
+
+###############################################################################
+# Languages and Tools                                                         #
+###############################################################################
+
+# 1Password
+export OP_ACCOUNT="my.1password.com"
+
+# Foundry
+export FOUNDRY_DISABLE_NIGHTLY_WARNING="true"
+
+# fzf
+export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git --exclude .DS_Store | sort'
+export FZF_CTRL_T_COMMAND='fd --type f --hidden --exclude .git --exclude .DS_Store | sort'
+export FZF_DEFAULT_COMMAND="$FZF_CTRL_T_COMMAND"
+export FZF_DEFAULT_OPTS='--no-sort'
+
+# OpenSSL
+export CPPFLAGS="-I/opt/homebrew/opt/openssl/include"
+export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
+
+# Homebrew
+export HOMEBREW_NO_AUTO_UPDATE=1
+
+# Editor (nvim for Ctrl+G in Claude Code and other tools)
+export EDITOR="nvim"
+export VISUAL="nvim"
+
+# Xcode
+# https://stackoverflow.com/q/51314888/3873510
+if command -v xcrun >/dev/null; then
+  xcode_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/xcrun"
+  xcode_cache_file="$xcode_cache_dir/sdk-path"
+  if [[ -r "$xcode_cache_file" ]]; then
+    sdk_path=$(<"$xcode_cache_file")
+  else
+    mkdir -p "$xcode_cache_dir"
+    sdk_path=$(xcrun --show-sdk-path)
+    [[ -n "$sdk_path" ]] && printf '%s\n' "$sdk_path" >|"${xcode_cache_file}"
+  fi
+  export SDKROOT="$sdk_path"
+fi

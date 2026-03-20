@@ -1,0 +1,28 @@
+# ShellCheck configuration
+# https://github.com/koalaman/shellcheck
+
+# Shell dialect
+shell=zsh
+
+# Enable external source analysis
+external-sources=true
+
+# Enable optional checks for better code quality
+enable=check-unassigned-uppercase
+enable=deprecate-which
+enable=quote-safe-variables
+enable=require-double-brackets
+
+# Disable checks that conflict with chezmoi templates
+# See https://github.com/twpayne/chezmoi/discussions/1426
+disable=SC1009 # incomplete syntax - chezmoi template
+disable=SC1036 # TBD - chezmoi template
+disable=SC1054 # expected token not found - chezmoi template
+disable=SC1056 # unexpected token - chezmoi template
+disable=SC1072 # expected end of expression - chezmoi template
+disable=SC1073 # couldn't parse expression - chezmoi template
+disable=SC1083 # literal braces - zsh parameter expansion
+disable=SC1090 # non-constant source
+disable=SC1091 # not following - chezmoi templates
+disable=SC2154 # env vars
+disable=SC2155 # allow declare and assign in one line

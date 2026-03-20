@@ -1,0 +1,14 @@
+# Minimal, fast Starship config
+
+add_newline = false
+command_timeout = 2000
+scan_timeout = 20
+format = "$directory$git_branch$git_status$character"
+
+[directory]
+  truncate_to_repo = true
+  truncation_length = 3
+
+[character]
+  success_symbol = "[>](bold green)"
+  error_symbol = "[>](bold red)"

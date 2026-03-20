@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+
+###############################################################################
+# SYMLINKS                                                                    #
+###############################################################################
+
+# Replace a symlink with a copy of its target, then symlink the target back
+function deref() {
+  local link="$1"
+  local target=$(readlink "$link")
+  rsync -aL --remove-source-files "$target" "$link"
+  ln -s "$(cd "$(dirname "$link")" && pwd)/$(basename "$link")" "$target"
+  echo "📋 Dereferenced: \e[36m$link\e[0m ← $target"
+}
+
+function is_symlink() {
+  local show_path=false
+  local target_path=""
+
+  # Parse arguments
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --path | -p)
+      show_path=true
+      shift
+      ;;
+    *)
+      target_path="$1"
+      shift
+      ;;
+    esac
+  done
+
+  if [[ -z "$target_path" ]]; then
+    echo "Please provide a path"
+    return 1
+  fi
+
+  if [[ -L "$target_path" ]]; then
+    echo "✅ Yes"
+    if [[ "$show_path" == true ]]; then
+      readlink "$target_path"
+    fi
+  else
+    echo "❌ No"
+  fi
+}
+
+# Symlink utility with two modes:
+#   1. Info mode:     symlink <path>            - Check if a path is a symlink and show its target
+#   2. Creation mode: symlink <target> <source> - Create a new relative symlink
+#
+# Uses relative paths for portability (symlinks work even if parent dirs move).
+# Cross-platform: uses grealpath on macOS, realpath on Linux.
+function symlink() {
+  local target="${1-}" # In info mode: path to check. In creation mode: where the symlink will be created
+  local source="${2-}" # Only in creation mode: the file/dir the symlink will point to
+
+  # Expand tilde to $HOME (handles cases where tilde isn't shell-expanded)
+  target="${target/#\~/$HOME}"
+  [[ -n "$source" ]] && source="${source/#\~/$HOME}"
+
+  # Validate target is provided
+  if [[ -z "$target" ]]; then
+    echo "❌ Path not provided, aborting"
+    return 1
+  fi
+
+  # Helper to convert a path to absolute (even if it doesn't exist yet).
+  abs_path() {
+    local path="$1"
+
+    {{- if eq .chezmoi.os "darwin" }}
+    grealpath -m "$path"
+    {{- else if eq .chezmoi.os "linux" }}
+    realpath -m "$path"
+    {{- end }}
+  }
+
+  # Helper to convert absolute path to relative path from a base directory.
+  # This ensures symlinks use relative paths for better portability.
+  abs_to_rel() {
+    local abs_path="$1"
+    local base_dir="${2:-$(pwd)}"
+
+    {{- if eq .chezmoi.os "darwin" }}
+    # macOS: use grealpath from GNU coreutils (brew install coreutils)
+    grealpath -m --relative-to="$base_dir" "$abs_path"
+    {{- else if eq .chezmoi.os "linux" }}
+    # Linux: realpath supports --relative-to natively
+    realpath -m --relative-to="$base_dir" "$abs_path"
+    {{- end }}
+  }
+
+  # INFO MODE: When only one argument is given, inspect the target path
+  if [[ -z "$source" ]]; then
+    if [[ -L "$target" ]]; then
+      # Target is a symlink - show where it points
+      echo "🔗 Path $target is a symlink"
+      local link_target="$(readlink "$target")"
+      # Convert absolute link targets to relative for cleaner display
+      if [[ "$link_target" = /* ]]; then
+        link_target="$(abs_to_rel "$link_target")"
+      fi
+      echo "👉 $link_target"
+    else
+      # Target exists but is not a symlink (regular file/directory)
+      echo "📄 Path $target isn't a symlink"
+    fi
+    return
+  fi
+
+  # CREATION MODE: When two arguments are given, create a new symlink
+
+  # Safety check: refuse to overwrite existing files or symlinks
+  if [[ -e "$target" || -L "$target" ]]; then
+    echo "❌ Target already exists: $target"
+    echo "💡 Delete it first to create a new symlink"
+    return 1
+  fi
+
+  # Resolve the source to an absolute path, then convert to relative from target dir.
+  # This handles cases where source is given as relative or contains symlinks.
+  local target_dir_abs="$(abs_path "$(dirname "$target")")"
+  local source_abs="$(abs_path "$source")"
+  local relative_source="$(abs_to_rel "$source_abs" "$target_dir_abs")"
+
+  if [[ -z "$relative_source" ]]; then
+    echo "❌ Failed to resolve symlink source: $source"
+    return 1
+  fi
+
+  ln -s "$relative_source" "$target"
+
+  echo "✅ Symlink created: $target -> $relative_source"
+}
+
+# Create CLAUDE.md symlinks pointing to AGENTS.md files in every directory
+# that contains an AGENTS.md. Useful for tools that look for CLAUDE.md.
+function symlink_agents_md() {
+  echo "Finding AGENTS.md files..."
+  while IFS= read -r agents_file; do
+    local dir=$(dirname "$agents_file")
+    local claude_file="$dir/CLAUDE.md"
+    if [[ -L "$claude_file" ]] && [[ "$(readlink "$claude_file")" == "AGENTS.md" ]]; then
+      echo "✓ Skip: $claude_file (already linked)"
+      continue
+    fi
+    if [[ -e "$claude_file" ]]; then
+      echo "⚠ Replace: $claude_file (removing regular file)"
+      rm "$claude_file"
+    fi
+    ln -s AGENTS.md "$claude_file"
+    echo "✓ Created: $claude_file → AGENTS.md"
+  done < <(fd -t f "^AGENTS\.md$" .)
+  echo "Done!"
+}

@@ -1,0 +1,38 @@
+# Development directories
+.claude/
+.serena/
+
+# Development files
+**/AGENTS.md
+**/CLAUDE.md
+.op-service-token
+.prettierignore
+.prettierrc.yml
+.shellcheckrc
+bootstrap_ubuntu.sh
+justfile
+README.md
+
+# the following files are macOS only
+{{- if ne .chezmoi.os "darwin" }}
+*macos.sh
+.actrc
+.biome/
+.setup/setup_biome.sh
+.setup/setup_duti.sh
+.setup/load_launchagents.sh
+.config/karabiner/
+.setup/start_sleepwatcher.sh
+.sleep
+.ssh/
+.vscode/
+.wakeup
+Library/
+{{- end }}
+
+# the following files are Linux only
+{{- if ne .chezmoi.os "linux" }}
+*ubuntu.sh
+.config/prb/bin/pbcopy.sh
+.config/prb/bin/pbpaste.sh
+{{- end }}
