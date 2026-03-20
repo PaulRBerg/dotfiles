@@ -217,9 +217,9 @@
     # https://git-scm.com/docs/git-update-index#_untracked_cache
     untrackedCache = true
 
-    # Use builtin fsmonitor daemon (Git >= 2.37).
+    # Disable builtin fsmonitor daemon globally; enable it per-repo if needed.
     # https://git-scm.com/docs/git-fsmonitor--daemon
-    fsmonitor = true
+    fsmonitor = false
 
     # Treat spaces before tabs and all kinds of trailing whitespace as an error.
     # [default] trailing-space: looks for spaces at the end of a line
