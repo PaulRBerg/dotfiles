@@ -138,6 +138,45 @@ init_chezmoi() {
 }
 
 # ==============================================================================
+# Setup Directories and Repositories
+# ==============================================================================
+
+clone_repo() {
+  local repo_url="$1"
+  local target_dir="$2"
+
+  if [[ -d "$target_dir" ]]; then
+    log_info "Already exists: $target_dir"
+  else
+    mkdir -p "$(dirname "$target_dir")"
+    sudo -u "$SUDO_USER" git clone "$repo_url" "$target_dir"
+    log_success "Cloned $repo_url -> $target_dir"
+  fi
+}
+
+setup_directories_and_repos() {
+  local user_home="/home/${SUDO_USER}"
+
+  log_info "Setting up directories and repositories..."
+
+  # Create bare directories
+  for dir in "$user_home/projects" "$user_home/sablier" "$user_home/work"; do
+    sudo -u "$SUDO_USER" mkdir -p "$dir"
+  done
+
+  # Clone dotfile repos into home directories
+  clone_repo "git@github.com:PaulRBerg/dot-claude.git" "$user_home/.claude"
+  clone_repo "git@github.com:PaulRBerg/dot-agents.git" "$user_home/.agents"
+
+  # Clone project repositories
+  clone_repo "git@github.com:PaulRBerg/next-template.git" "$user_home/work/next-template"
+  clone_repo "git@github.com:PaulRBerg/agent-skills.git" "$user_home/projects/agent-skills"
+  clone_repo "git@github.com:sablier-labs/ui.git" "$user_home/sablier/new-ui"
+
+  log_success "Directories and repositories set up"
+}
+
+# ==============================================================================
 # Main
 # ==============================================================================
 
@@ -154,6 +193,7 @@ main() {
 
   init_chezmoi
   init_tailscale
+  setup_directories_and_repos
 
   echo ""
   echo "🎉 Bootstrap complete!" >&2
