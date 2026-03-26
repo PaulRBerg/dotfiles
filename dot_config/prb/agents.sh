@@ -83,10 +83,11 @@ function _require_gum() {
 }
 
 # Helper: non-interactive Claude invocation with JSON output.
-# --bare: skips hooks, LSP, plugins, auto-memory, CLAUDE.md discovery; auth via ANTHROPIC_API_KEY only
 # --no-session-persistence: session not saved to disk (cannot be resumed)
-# --print: print response and exit (non-interactive, pipe-friendly)
 # --output-format json: returns structured JSON instead of plain text
+# --print: print response and exit (non-interactive, pipe-friendly)
+# Note: --print must be the last flag.
 function _run_claude() {
-  claude --bare --model "sonnet" --no-session-persistence --print --output-format json "$@"
+  claude --model "sonnet" --no-session-persistence --output-format json \
+    --print "$@"
 }
