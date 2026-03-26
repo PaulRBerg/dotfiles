@@ -51,7 +51,8 @@ function ccc() {
   local output
   output=$(
     gum spin --spinner dot --title "Claude is git committing..." -- \
-      _run_claude "/commit $*"
+      claude --model "sonnet" --no-session-persistence --output-format json \
+      --print "/commit $*"
   )
 
   jq -r '.result' <<<"$output"
@@ -66,7 +67,9 @@ function cccp() {
 # Claude Code bump release
 function ccbump() {
   _require_gum || return 1
-  gum spin --spinner dot --title "Claude is bumping release..." -- _run_claude "/bump-release $*"
+  gum spin --spinner dot --title "Claude is bumping release..." -- \
+    claude --model "sonnet" --no-session-persistence --output-format json \
+    --print "/bump-release $*"
 }
 
 ###############################################################################
@@ -80,14 +83,4 @@ function _require_gum() {
     echo "Install: brew install gum (macOS) or sudo apt install gum (Ubuntu)"
     return 1
   fi
-}
-
-# Helper: non-interactive Claude invocation with JSON output.
-# --no-session-persistence: session not saved to disk (cannot be resumed)
-# --output-format json: returns structured JSON instead of plain text
-# --print: print response and exit (non-interactive, pipe-friendly)
-# Note: --print must be the last flag.
-function _run_claude() {
-  claude --model "sonnet" --no-session-persistence --output-format json \
-    --print "$@"
 }
