@@ -32,15 +32,6 @@ alias edit_gemini="code ~/.gemini"
 # FUNCTIONS                                                                   #
 ###############################################################################
 
-# Helper to ensure gum is installed (used for spinners)
-function _require_gum() {
-  if ! command -v gum &>/dev/null; then
-    echo "❌ Error: gum is required for this command"
-    echo "Install: brew install gum (macOS) or sudo apt install gum (Ubuntu)"
-    return 1
-  fi
-}
-
 # Claude Code commit
 function ccc() {
   _require_gum || return 1
@@ -60,85 +51,10 @@ function ccc() {
   local output
   output=$(
     gum spin --spinner dot --title "Claude is git committing..." -- \
-      claude --model "sonnet" --print "/commit $*" --output-format json
+      _run_claude "/commit $*"
   )
 
-  _claude_cleanup_session "$output"
   jq -r '.result' <<<"$output"
-}
-
-# Codex commit (message generated via Codex, commit performed locally)
-function coc() {
-  _require_gum || return 1
-
-  if ! git rev-parse --git-dir &>/dev/null; then
-    echo "❌ Error: Not in a git repository"
-    return 1
-  fi
-
-  if [[ -z "$(git status --porcelain)" ]]; then
-    echo "No changes to commit (working tree clean)"
-    return 0
-  fi
-
-  local want_all=false
-  local want_push=false
-  local -a commit_args=()
-
-  [[ $# -eq 0 ]] && want_all=true
-
-  for arg in "$@"; do
-    case "$arg" in
-    --all) want_all=true ;;
-    --push) want_push=true ;;
-    -m | --message) echo "⚠️  Warning: Ignoring $arg (Codex generates the message)" ;;
-    *) commit_args+=("$arg") ;;
-    esac
-  done
-
-  [[ "$want_all" == true ]] && git add -A
-
-  if git diff --cached --quiet; then
-    echo "⚠️  Warning: No staged changes to commit"
-    return 0
-  fi
-
-  local prompt_file="$HOME/.codex/prompts/commit.md"
-  if [[ ! -f "$prompt_file" ]]; then
-    echo "❌ Error: Missing $prompt_file"
-    return 1
-  fi
-
-  local output
-  output=$(
-    {
-      cat "$prompt_file"
-      printf '\n'
-      git diff --cached
-    } |
-      gum spin --spinner dot --title "Codex is drafting commit..." -- \
-        command codex --dangerously-bypass-approvals-and-sandbox exec - \
-        -m "$CODEX_MODEL" \
-        -c model_reasoning_effort=low \
-        --profile quiet \
-        -s read-only \
-        --skip-git-repo-check \
-        2>/dev/null
-  )
-
-  local msg
-  msg=$(printf '%s' "$output" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | head -n 1)
-  [[ -z "$msg" ]] && {
-    echo "❌ Error: Codex returned an empty commit message"
-    return 1
-  }
-  if [[ "$msg" == *"approval_policy"* || "$msg" == *"sandbox"* || "$msg" == *"no session files"* ]]; then
-    echo "❌ Error: Codex returned an error instead of a commit message"
-    return 1
-  fi
-
-  git commit "${commit_args[@]}" -m "$msg"
-  [[ "$want_push" == true ]] && git push
 }
 
 # Claude Code commit and push
@@ -150,32 +66,27 @@ function cccp() {
 # Claude Code bump release
 function ccbump() {
   _require_gum || return 1
-  gum spin --spinner dot --title "Claude is bumping release..." -- claude --dangerously-skip-permissions --model "sonnet" --print "/bump-release $*"
+  gum spin --spinner dot --title "Claude is bumping release..." -- _run_claude "/bump-release $*"
 }
 
-# Helper function to resolve monorepo root when in app subdirectory
-# Echoes the target directory (parent if in app subdir, otherwise PWD)
-function _claude_get_monorepo_root() {
-  if [[ "$PWD" =~ /sablier/new-ui/(portal|diff|landing)$ ]]; then
-    echo "${PWD%/*}"
-    return 0
+###############################################################################
+# PRIVATE                                                                     #
+###############################################################################
+
+# Helper to ensure gum is installed (used for spinners)
+function _require_gum() {
+  if ! command -v gum &>/dev/null; then
+    echo "❌ Error: gum is required for this command"
+    echo "Install: brew install gum (macOS) or sudo apt install gum (Ubuntu)"
+    return 1
   fi
-  echo "$PWD"
-  return 1
 }
 
-# Helper function to delete Claude conversation history from a JSON response
-function _claude_cleanup_session() {
-  local json_output="$1"
-
-  # Extract session_id from JSON
-  local session_id
-  session_id=$(jq -r '.session_id' <<<"$json_output" 2>/dev/null)
-
-  # Delete the .jsonl file if session_id exists
-  if [[ -n "$session_id" && "$session_id" != "null" ]]; then
-    local jsonl_file
-    jsonl_file=$(find ~/.claude/projects -name "${session_id}.jsonl" 2>/dev/null | head -1)
-    [[ -n "$jsonl_file" ]] && rm -f "$jsonl_file"
-  fi
+# Helper: non-interactive Claude invocation with JSON output.
+# --bare: skips hooks, LSP, plugins, auto-memory, CLAUDE.md discovery; auth via ANTHROPIC_API_KEY only
+# --no-session-persistence: session not saved to disk (cannot be resumed)
+# --print: print response and exit (non-interactive, pipe-friendly)
+# --output-format json: returns structured JSON instead of plain text
+function _run_claude() {
+  claude --bare --model "sonnet" --no-session-persistence --print --output-format json "$@"
 }
