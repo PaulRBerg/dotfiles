@@ -61,6 +61,14 @@ Use `onepasswordRead` in templates to fetch secrets:
 
 See `dot_config/prb/load_env_macos.sh.tmpl` for examples.
 
+The chezmoi config at `~/.config/chezmoi/chezmoi.toml` controls the 1Password mode:
+
+- `mode = "account"` — uses the interactive 1Password CLI (`op signin`). Use this for local development.
+- `mode = "service"` — requires `OP_SERVICE_ACCOUNT_TOKEN` in the environment. Use this for CI/automation.
+
+If `chezmoi apply` fails with `onepassword.mode is service, but OP_SERVICE_ACCOUNT_TOKEN is not set`, either set the
+token or switch the mode to `"account"`.
+
 ## Shell Startup Order
 
 See [`dot_zshrc.tmpl`](dot_zshrc.tmpl) for the complete startup order.
