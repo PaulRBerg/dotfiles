@@ -85,6 +85,19 @@ just shell-check      # Validate shell scripts (alias: sc)
 just shell-write      # Auto-format shell scripts (alias: sw)
 ```
 
+## Gum Spin Gotcha
+
+`gum spin -- <command>` spawns a subprocess via Go's `exec.Command`, which only finds executables on `$PATH`. Shell
+functions are invisible to it.
+
+```sh
+# Bad — _my_helper is a shell function, gum can't find it
+gum spin --spinner dot --title "Working..." -- _my_helper "$@"
+
+# Good — call the executable directly
+gum spin --spinner dot --title "Working..." -- claude --print "$@"
+```
+
 ## Validation
 
 Run validation before committing:

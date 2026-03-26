@@ -14,6 +14,11 @@ if [[ -d "/opt/homebrew/opt/openssl" ]]; then
   add_path "/opt/homebrew/opt/openssl/bin"
 fi
 
+# Google Cloud SDK
+if [[ -d "$HOME/.local/share/google-cloud-sdk" ]]; then
+  add_path "$HOME/.local/share/google-cloud-sdk/bin"
+fi
+
 # Solana
 add_path "$HOME/.local/share/solana/install/active_release/bin"
 add_path "$HOME/.avm/bin"
