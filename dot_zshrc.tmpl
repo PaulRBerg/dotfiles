@@ -102,6 +102,11 @@ fi
 # bun completions
 [[ -s "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun" ]] && source "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun"
 
+# Google Cloud SDK completions
+{{- if eq .chezmoi.os "darwin" }}
+[[ -s "$HOME/.local/share/google-cloud-sdk/completion.zsh.inc" ]] && source "$HOME/.local/share/google-cloud-sdk/completion.zsh.inc"
+{{- end }}
+
 # Starship prompt (must be last)
 if command -v starship &>/dev/null; then
   eval "$(starship init zsh)"
