@@ -5,8 +5,6 @@
 ###############################################################################
 
 # MCPs
-export API_KEY_MAGIC_MCP={{ onepasswordRead "op://Keys/Magic MCP/credential" }}
-export API_KEY_MORPH_MCP={{ onepasswordRead "op://Keys/Morph MCP/credential" }}
 export API_KEY_CONTEXT7_MCP={{ onepasswordRead "op://Keys/Context7 MCP/credential" }}
 
 # Etherscan
@@ -17,16 +15,14 @@ export ETHERSCAN_API_KEY={{ onepasswordRead "op://Keys/Etherscan/credential" }}
 export ETH_RPC_URL=https://sepolia.infura.io/v3/{{ onepasswordRead "op://Keys/Infura/credential" }}
 export EHT_MNEMONIC={{ onepasswordRead "op://Keys/Default Tester - Mnemonic/credential" }}
 export ETH_PRIVATE_KEY={{ onepasswordRead "op://Keys/Default Tester - Private Key/credential" }}
+
+# RouteMesh
 export ROUTEMESH_API_KEY={{ onepasswordRead "op://Keys/RouteMesh/credential" }}
 
 # GitHub
 export GITHUB_TOKEN={{ onepasswordRead "op://Keys/GitHub/credential" }}
 
-# Infura
-export API_KEY_INFURA={{ onepasswordRead "op://Keys/Infura/credential" }}
-
 # OpenAI
-export API_KEY_OPENAI={{ onepasswordRead "op://Keys/OpenAI/credential" }}
 export OPENAI_API_KEY={{ onepasswordRead "op://Keys/OpenAI/credential" }}
 
 ###############################################################################
