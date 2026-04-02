@@ -68,12 +68,12 @@ function symlink() {
 
   # Helper to convert a path to absolute (even if it doesn't exist yet).
   abs_path() {
-    local path="$1"
+    local p="$1"
 
     {{- if eq .chezmoi.os "darwin" }}
-    grealpath -m "$path"
+    grealpath -m "$p"
     {{- else if eq .chezmoi.os "linux" }}
-    realpath -m "$path"
+    realpath -m "$p"
     {{- end }}
   }
 
