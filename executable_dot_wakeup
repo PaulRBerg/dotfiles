@@ -35,3 +35,12 @@ for repo in "${PULL_REPOS[@]}"; do
   git -C "$repo" pull --ff-only 2>&1 || true
 done
 
+# ------------------------------
+# Merge Claude settings
+# ------------------------------
+CLAUDE_DIR="$HOME/.claude"
+if [[ -d "$CLAUDE_DIR/.git" ]] && [[ -z "$(git -C "$CLAUDE_DIR" status --porcelain 2>/dev/null)" ]]; then
+  echo "Merging Claude settings"
+  (cd "$CLAUDE_DIR" && just merge-settings 2>&1) || true
+fi
+
