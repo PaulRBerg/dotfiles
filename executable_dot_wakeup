@@ -14,12 +14,24 @@ if [[ -f "$SSH_KEY" ]] && ! /usr/bin/ssh-add -l 2>/dev/null | grep -q "$SSH_KEY"
 fi
 
 # ------------------------------
-# Effect pull
+# Pull repos
 # ------------------------------
-EFFECT_DIR="$HOME/.effect"
-if [[ ! -d "$EFFECT_DIR/.git" ]]; then
-  exit 0
-fi
-echo "Pulling effect"
-git -C "$EFFECT_DIR" pull --ff-only 2>&1 || true
+PULL_REPOS=(
+  "$HOME/.effect"
+  "$HOME/.claude"
+  "$HOME/.agents"
+  "$HOME/projects/agent-skills"
+)
+
+for repo in "${PULL_REPOS[@]}"; do
+  if [[ ! -d "$repo/.git" ]]; then
+    continue
+  fi
+  if [[ -n "$(git -C "$repo" status --porcelain 2>/dev/null)" ]]; then
+    echo "Skipping $repo (dirty worktree)"
+    continue
+  fi
+  echo "Pulling $repo"
+  git -C "$repo" pull --ff-only 2>&1 || true
+done
 
