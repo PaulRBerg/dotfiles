@@ -22,3 +22,8 @@ fi
 # Solana
 add_path "$HOME/.local/share/solana/install/active_release/bin"
 add_path "$HOME/.avm/bin"
+
+# Aztec
+add_path "$HOME/.aztec/bin"
+add_path "$HOME/.aztec/current/node_modules/.bin"
+add_path "$HOME/.aztec/current/bin"
