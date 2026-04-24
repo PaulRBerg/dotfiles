@@ -6,7 +6,8 @@
 
 # See https://github.com/oven-sh/bun/issues/10341
 function pm_update() {
-  nlx taze --group --interactive --recursive
+  # --maturity-period skips versions published within the last N days to mitigate supply-chain attacks
+  nlx taze --group --interactive --recursive --maturity-period 3
 }
 
 # Copy Chromium browser profile while excluding files specific to one browser or system
