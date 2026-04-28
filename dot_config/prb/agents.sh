@@ -48,11 +48,22 @@ function ccc() {
 
   [[ $# -eq 0 ]] && set -- --all
 
+  # Each flag is split onto its own line so the rationale stays close to the
+  # flag. Inline comments don't work with `\` line continuations, so we build
+  # the args in an array and expand it below.
+  local claude_args=(
+    --model "sonnet"         # /commit is mechanical; sonnet is sufficient
+    --no-session-persistence # one-shot; no session file to resume from
+    --output-format json     # parsed with jq below to extract .result
+    --strict-mcp-config      # no --mcp-config alongside = skip all MCP servers
+    --tools "Bash,Read"      # /commit only needs git (Bash) and file reads
+    --print "/commit $*"     # non-interactive; run the skill and exit
+  )
+
   local output
   output=$(
     gum spin --spinner dot --title "Claude is git committing..." -- \
-      claude --model "sonnet" --no-session-persistence --output-format json \
-      --print "/commit $*"
+      claude "${claude_args[@]}"
   )
 
   jq -r '.result' <<<"$output"
