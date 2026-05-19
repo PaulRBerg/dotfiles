@@ -12,6 +12,11 @@ CODEX_MODEL="gpt-5.5"
 ###############################################################################
 
 alias c="claude --dangerously-skip-permissions"
+alias c_low="c --efort low"
+alias c_medium="c --efort medium"
+alias c_high="c --efort high"
+alias c_xhigh="c --efort xhigh"
+alias c_max="c --efort max"
 alias cda="cd ~/.agents"
 alias cd_agents="cd ~/.agents"
 alias cd_claude="cd ~/.claude"
