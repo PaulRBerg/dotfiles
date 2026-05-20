@@ -44,3 +44,18 @@ if [[ -d "$CLAUDE_DIR/.git" ]] && [[ -z "$(git -C "$CLAUDE_DIR" status --porcela
   (cd "$CLAUDE_DIR" && just merge-settings 2>&1) || true
 fi
 
+# ------------------------------
+# Commit and push dictionary
+# ------------------------------
+DICTIONARY_DIR="$HOME/work/dictionary"
+if [[ -d "$DICTIONARY_DIR/.git" ]]; then
+  cd "$DICTIONARY_DIR" || exit
+  git add -A
+  if [[ -n "$(git status --porcelain)" ]]; then
+    echo "Committing dictionary changes"
+    git commit -m "Update words $(date -u +%Y-%m-%d@%H-%M-%S)" 2>&1 || true
+  fi
+  echo "Pushing dictionary"
+  git push origin 2>&1 || true
+fi
+
