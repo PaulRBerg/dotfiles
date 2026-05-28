@@ -4,3 +4,9 @@ export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
+# Keep user-managed shims ahead of system binaries for all zsh invocations,
+# including non-interactive shells that do not read ~/.zshrc.
+if [[ -d "$HOME/.local/bin" ]]; then
+  path=("$HOME/.local/bin" ${path:#"$HOME/.local/bin"})
+  export PATH
+fi
