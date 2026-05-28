@@ -1,0 +1,6 @@
+# macOS path_helper runs before this file in login shells and can move
+# /usr/bin ahead of user shims. Put ~/.local/bin back in front.
+if [[ -d "$HOME/.local/bin" ]]; then
+  path=("$HOME/.local/bin" ${path:#"$HOME/.local/bin"})
+  export PATH
+fi
