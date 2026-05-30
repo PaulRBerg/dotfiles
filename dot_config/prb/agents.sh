@@ -53,25 +53,40 @@ function ccc() {
 
   [[ $# -eq 0 ]] && set -- --all
 
-  # Each flag is split onto its own line so the rationale stays close to the
-  # flag. Inline comments don't work with `\` line continuations, so we build
-  # the args in an array and expand it below.
-  local claude_args=(
-    --model "sonnet"         # /commit is mechanical; sonnet is sufficient
-    --no-session-persistence # one-shot; no session file to resume from
-    --output-format json     # parsed with jq below to extract .result
-    --strict-mcp-config      # no --mcp-config alongside = skip all MCP servers
-    --tools "Bash,Read"      # /commit only needs git (Bash) and file reads
-    --print "/commit $*"     # non-interactive; run the skill and exit
-  )
+  # Hard timeout so a stall can never become an unbounded hang (coreutils
+  # ships `gtimeout` on macOS, `timeout` on Linux). Override with CCC_TIMEOUT.
+  local timeout_cmd=""
+  if command -v timeout &>/dev/null; then
+    timeout_cmd="timeout ${CCC_TIMEOUT:-300}"
+  elif command -v gtimeout &>/dev/null; then
+    timeout_cmd="gtimeout ${CCC_TIMEOUT:-300}"
+  fi
 
-  local output
-  output=$(
-    gum spin --spinner dot --title "Claude is git committing..." -- \
-      claude "${claude_args[@]}"
-  )
+  # Redirect Claude's JSON to a file instead of capturing it through gum's
+  # pipe. Claude spawns background workers (prefetch/keychain reads) that can
+  # inherit the capture pipe and hold it open after the commit already landed,
+  # wedging `$(...)`/gum forever. Writing to a file breaks that fd inheritance.
+  # GIT_TERMINAL_PROMPT=0 turns a hidden credential prompt (e.g. cccp/--push)
+  # into a fast failure instead of an invisible hang behind the spinner.
+  local out err status
+  out=$(mktemp) || return 1
+  err=$(mktemp) || return 1
 
-  jq -r '.result' <<<"$output"
+  # shellcheck disable=SC2016
+  gum spin --spinner dot --title "Claude is git committing..." -- \
+    sh -c "GIT_TERMINAL_PROMPT=0 ${timeout_cmd} "'claude --model sonnet --no-session-persistence --output-format json --strict-mcp-config --tools "Bash,Read" --print "/commit $1" >"$2" 2>"$3"' \
+    _ "$*" "$out" "$err"
+  status=$?
+
+  if ((status != 0)) || [[ ! -s "$out" ]]; then
+    echo "❌ ccc failed (exit ${status}; 124 = timed out)" >&2
+    [[ -s "$err" ]] && sed 's/^/   /' "$err" >&2
+    rm -f "$out" "$err"
+    return 1
+  fi
+
+  jq -r '.result' "$out"
+  rm -f "$out" "$err"
 }
 
 # Claude Code commit and push
