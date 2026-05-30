@@ -287,8 +287,25 @@
     # Automatically set upstream for new branches.
     autoSetupRemote = true
 
-    # Make `git push` push relevant annotated tags when pushing branches out.
-    followTags = true
+    # Keep tag pushes opt-in unless this repo matches an owned remote below.
+    followTags = false
+
+# This is repo-scoped, not push-destination-scoped: a clone with both owned and
+# external remotes still needs `git push --no-follow-tags <external> ...`.
+[includeIf "hasconfig:remote.*.url:git@github.com:PaulRBerg/**"]
+    path = ~/.config/git/follow-tags.gitconfig
+
+[includeIf "hasconfig:remote.*.url:ssh://git@github.com/PaulRBerg/**"]
+    path = ~/.config/git/follow-tags.gitconfig
+
+[includeIf "hasconfig:remote.*.url:https://github.com/PaulRBerg/**"]
+    path = ~/.config/git/follow-tags.gitconfig
+
+[includeIf "hasconfig:remote.*.url:github:PaulRBerg/**"]
+    path = ~/.config/git/follow-tags.gitconfig
+
+[includeIf "hasconfig:remote.*.url:git://github.com/PaulRBerg/**"]
+    path = ~/.config/git/follow-tags.gitconfig
 
 [rebase]
     # Auto-squash fixup! commits.
