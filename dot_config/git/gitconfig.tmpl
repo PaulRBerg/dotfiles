@@ -317,6 +317,10 @@
     # Update dependent branches.
     updateRefs = true
 
+[tag]
+    # Show newest version tags first.
+    sort = -version:refname
+
 [url "git@github.com:"]
     insteadOf = https://github.com/
     pushInsteadOf = github:
