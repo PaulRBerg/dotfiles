@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 
-# Homebrew (must be first - use shellenv for proper PATH ordering)
-if [[ -z "${HOMEBREW_PREFIX:-}" ]] && [[ -x /opt/homebrew/bin/brew ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+# Homebrew (keep ahead of macOS system binaries even if HOMEBREW_PREFIX is inherited)
+if [[ -z "${HOMEBREW_PREFIX:-}" ]]; then
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+fi
+if [[ -n "${HOMEBREW_PREFIX:-}" ]]; then
+  add_path "$HOMEBREW_PREFIX/sbin"
+  add_path "$HOMEBREW_PREFIX/bin"
 fi
 
 # LM Studio
