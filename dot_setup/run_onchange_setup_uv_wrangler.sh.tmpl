@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Recreate the VS Code Data Wrangler Jupyter venv + kernel on the pinned Python.
+# macOS only. Idempotent: rebuilds only when the venv is missing or on the
+# wrong interpreter; the kernelspec is refreshed on every content change.
+# shellcheck disable=SC2034
+{{- if eq .chezmoi.os "darwin" }}
+
+set -euo pipefail
+
+readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+# run_onchange_ scripts execute from a temp dir, so source from the installed path
+source "$HOME/.setup/lib/common.sh"
+
+if ! command -v uv &>/dev/null; then
+  log_error "uv not found on PATH; skipping Data Wrangler venv"
+  exit 0
+fi
+
+readonly PYTHON_VERSION="3.14"
+readonly VENV="$HOME/.venvs/data-wrangler"
+readonly KERNEL_DIR="$HOME/Library/Jupyter/kernels/data-wrangler-py312"
+
+# (Re)build the venv when missing or not already on PYTHON_VERSION.
+needs_build=true
+if [[ -x "$VENV/bin/python" ]]; then
+  current="$("$VENV/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null || true)"
+  [[ "$current" == "$PYTHON_VERSION" ]] && needs_build=false
+fi
+
+if [[ "$needs_build" == true ]]; then
+  log_info "Building Data Wrangler venv on CPython ${PYTHON_VERSION}..."
+  rm -rf "$VENV"
+  uv venv --python "$PYTHON_VERSION" "$VENV"
+  uv pip install --python "$VENV/bin/python" ipykernel pandas pyarrow
+  log_success "Data Wrangler venv ready"
+fi
+
+# Refresh the Jupyter kernelspec so it points at the venv interpreter.
+mkdir -p "$KERNEL_DIR"
+cat >"$KERNEL_DIR/kernel.json" <<JSON
+{
+ "argv": [
+  "$VENV/bin/python",
+  "-Xfrozen_modules=off",
+  "-m",
+  "ipykernel_launcher",
+  "-f",
+  "{connection_file}"
+ ],
+ "display_name": "Data Wrangler (Python ${PYTHON_VERSION})",
+ "language": "python",
+ "metadata": {
+  "debugger": true
+ },
+ "kernel_protocol_version": "5.5"
+}
+JSON
+
+log_success "Data Wrangler kernel registered"
+{{- else }}
+exit 0
+{{- end }}
