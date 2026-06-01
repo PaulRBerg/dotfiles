@@ -68,7 +68,7 @@ function ccc() {
   # wedging `$(...)`/gum forever. Writing to a file breaks that fd inheritance.
   # GIT_TERMINAL_PROMPT=0 turns a hidden credential prompt (e.g. cccp/--push)
   # into a fast failure instead of an invisible hang behind the spinner.
-  local out err status
+  local out err rc
   out=$(mktemp) || return 1
   err=$(mktemp) || return 1
 
@@ -76,10 +76,10 @@ function ccc() {
   gum spin --spinner dot --title "Claude is git committing..." -- \
     sh -c "GIT_TERMINAL_PROMPT=0 ${timeout_cmd} "'claude --model sonnet --no-session-persistence --output-format json --strict-mcp-config --tools "Bash,Read" --print "/commit $1" >"$2" 2>"$3"' \
     _ "$*" "$out" "$err"
-  status=$?
+  rc=$?
 
-  if ((status != 0)) || [[ ! -s "$out" ]]; then
-    echo "❌ ccc failed (exit ${status}; 124 = timed out)" >&2
+  if ((rc != 0)) || [[ ! -s "$out" ]]; then
+    echo "❌ ccc failed (exit ${rc}; 124 = timed out)" >&2
     [[ -s "$err" ]] && sed 's/^/   /' "$err" >&2
     rm -f "$out" "$err"
     return 1
