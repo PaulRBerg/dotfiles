@@ -41,6 +41,7 @@ MACOS_FORMULAE=(
   gh
   git
   git-lfs
+  golangci-lint
   jq
   ls-lint
   lua

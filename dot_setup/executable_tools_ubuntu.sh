@@ -126,6 +126,19 @@ install_uv() {
   fi
 }
 
+install_golangci_lint() {
+  log_info "Installing golangci-lint..."
+
+  # No APT package or official snap exists; the binary install script is the
+  # recommended method (`go install` is explicitly discouraged upstream).
+  if ! command -v golangci-lint &>/dev/null; then
+    curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b /usr/local/bin
+    log_success "golangci-lint installed"
+  else
+    log_info "golangci-lint already installed"
+  fi
+}
+
 install_vim_runtime() {
   log_info "Installing ultimate Vim configuration (amix/vimrc)..."
 
@@ -179,6 +192,7 @@ main() {
   install_snap_packages
   install_fnm
   install_uv
+  install_golangci_lint
   install_vim_runtime
   install_tailscale
   install_starship
