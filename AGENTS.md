@@ -1,24 +1,101 @@
 # Development Instructions
 
-AI agents working on this dotfiles repository should follow these guidelines.
+Guidelines for AI agents and developers working on this dotfiles repository.
 
 ## Most Important Thing
 
-**Maintain cross-platform compatibility between macOS and Linux.** All changes must work correctly after `chezmoi init`
-and subsequent `chezmoi apply` on both platforms. Test changes on both operating systems when possible.
+**Maintain cross-platform compatibility between macOS and Linux.** Every change must work after `chezmoi init` and a
+subsequent `chezmoi apply` on both platforms. Test on both when possible.
 
-## Repository Purpose
+## Stack
 
-PRB's reusable dotfiles managed with [chezmoi](https://chezmoi.io/). These dotfiles provide a consistent shell
-environment, aliases, functions, and tooling across macOS and Linux systems.
+- **chezmoi** — dotfile manager; source state uses Go templates (`.tmpl`). Fetch current chezmoi docs via the context7
+  MCP when unsure about syntax or API.
+- **Zsh** — Oh My Zsh + Starship prompt. `bash` runs scripts and `just` recipes.
+- **just** — task runner (`justfile`). Requires `gum`, `nlx`, `shellcheck`, and `shfmt` on `PATH` (declared via
+  `require()`).
+- **Prettier** — formats Markdown/YAML. **ShellCheck** + **shfmt** lint and format shell.
+- **1Password CLI** (`op`) — secret injection in templates via `onepasswordRead`.
+- **Homebrew** (macOS) / **APT + Snap** (Ubuntu) — package provisioning.
 
-**Note**: When in doubt about chezmoi syntax or API, use the context7 MCP to fetch the latest chezmoi documentation.
+## Commands
+
+Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
+
+| Recipe                | Alias | Action                                                                  |
+| --------------------- | ----- | ----------------------------------------------------------------------- |
+| `just`                | —     | List recipes                                                            |
+| `just apply`          | `a`   | `chezmoi apply`                                                         |
+| `just sync [msg]`     | —     | `git add -A`, commit (uses `ccc` if no msg), push to `main`, then apply |
+| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`                                 |
+| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`                            |
+| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`                            |
+| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts                   |
+| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                                       |
+
+### chezmoi
+
+- `chezmoi apply` — apply the source state to `$HOME`
+- `chezmoi diff` — preview pending changes
+- `chezmoi edit <file>` — edit the source of a target file
+- `chezmoi cd` — open a shell in the source directory
+- `chezmoi update` — pull the repo and apply
+
+### Provisioning
+
+- macOS: `~/.setup/tools_macos.sh` (Homebrew)
+- Ubuntu: `~/.setup/tools_ubuntu.sh` (APT/Snap); also installs `shellcheck` and `shfmt` for local validation
+- Fresh Ubuntu: run `./bootstrap_ubuntu.sh` once from the source dir — installs snapd + chezmoi, then runs init + apply
+
+### Validation (before committing)
+
+- `just full-check` — Prettier + ShellCheck + shfmt
+- `chezmoi apply --dry-run --verbose` (or `chezmoi diff`) — confirm a clean apply
+
+## Project Structure
+
+chezmoi source-state naming (source name → target):
+
+- `dot_<x>` → `~/.x`
+- `<x>.tmpl` → templated with Go template syntax
+- `executable_<x>` → target gets the executable bit
+- `symlink_<x>` → target is a symlink
+- `run_onchange_<x>.sh` → re-run on `chezmoi apply` when the script's contents change
+
+Layout:
+
+| Path                                    | Purpose                                                |
+| --------------------------------------- | ------------------------------------------------------ |
+| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                      |
+| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`  |
+| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)              |
+| `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`   |
+| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                     |
+| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)  |
+| `dot_setup/packages.sh`                 | Shared package manifest — source of truth              |
+| `dot_setup/lib/common.sh`               | Shared setup helpers                                   |
+| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, duti, uv tools, completions, …)  |
+| `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                         |
+| `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi) |
+| `justfile`                              | Task runner                                            |
+
+### Shell Startup Order
+
+1. `~/.zshenv` — set XDG base dirs; prepend `~/.local/bin`.
+2. `~/.config/prb/env_core.sh` — path-critical env (sourced first in `.zshrc`).
+3. `~/.config/prb/path.sh` — build `PATH` (adds `~/.config/prb/bin`, `~/.setup`, and per-OS paths).
+4. Tracked modules, in order: `agents.sh`, `aliases.sh`, `web3.sh`, `functions.sh`, `gh.sh`, `env_session.sh`,
+   `shims.sh`.
+5. Oh My Zsh, then tool init: zoxide, fnm, atuin (macOS), fzf, Starship (last).
+
+`~/.config/prb/load_env.sh` remains a compatibility wrapper for manual sourcing; the boot path uses `env_core.sh` before
+`path.sh`.
 
 ## Cross-Platform Patterns
 
-### Chezmoi Templates
+### chezmoi templates
 
-Use chezmoi template syntax for platform-specific code:
+Gate platform-specific code with template conditionals:
 
 ```sh
 {{- if eq .chezmoi.os "darwin" }}
@@ -30,95 +107,69 @@ xclip -selection clipboard
 {{- end }}
 ```
 
-### Ubuntu Bootstrap
+### Tool installation
 
-The Ubuntu bootstrap script is `bootstrap_ubuntu.sh` (kept in the repo root and ignored by chezmoi). Run it once on a
-fresh Ubuntu installation from the chezmoi source dir; it installs snapd + chezmoi, then initializes and applies the
-dotfiles.
+- [`dot_setup/packages.sh`](dot_setup/packages.sh) — shared manifest, **source of truth**.
+- [`dot_setup/executable_tools_macos.sh`](dot_setup/executable_tools_macos.sh) — Homebrew packages.
+- [`dot_setup/executable_tools_ubuntu.sh`](dot_setup/executable_tools_ubuntu.sh) — APT/Snap packages.
 
-### Tool Installation Scripts
+Keep installers thin and platform-specific; source `packages.sh` rather than duplicating lists. When adding tools:
 
-- [`dot_setup/executable_tools_macos.sh`](dot_setup/executable_tools_macos.sh): Homebrew packages for macOS
-- [`dot_setup/executable_tools_ubuntu.sh`](dot_setup/executable_tools_ubuntu.sh): APT/Snap packages for Ubuntu
-- [`dot_setup/packages.sh`](dot_setup/packages.sh): shared package manifest/source of truth
+1. Add to the right category (alphabetically) in `packages.sh` first.
+2. Ensure equivalent packages in both installers if cross-platform.
+3. Note package-name differences (e.g. `bat` on macOS vs `batcat` on Ubuntu).
 
-**Keep `dot_setup/packages.sh` as the source of truth.** The installer scripts should stay thin and platform-specific,
-while package additions and removals happen in the shared manifest first.
+### Clipboard
 
-When adding tools:
-
-1. Add to the appropriate category (alphabetically)
-2. If cross-platform, ensure equivalent packages in both files
-3. Note package name differences (e.g., `bat` on macOS vs `bat` installed as `batcat` on Ubuntu)
+Portable `pbcopy`/`pbpaste` shims live in `dot_config/prb/bin/` (on `PATH`). Shell functions and git aliases call them
+directly, so clipboard workflows work on macOS and Linux without per-OS aliases.
 
 ## 1Password Integration
 
-Use `onepasswordRead` in templates to fetch secrets:
+Fetch secrets in templates with `onepasswordRead`:
 
 ```sh
 {{ onepasswordRead "op://Vault/Item/field" }}
 ```
 
-See `dot_config/prb/load_env_macos.sh.tmpl` for examples.
+See `dot_config/prb/load_env_macos.sh.tmpl` for examples. The chezmoi config at `~/.config/chezmoi/chezmoi.toml`
+controls the mode:
 
-The chezmoi config at `~/.config/chezmoi/chezmoi.toml` controls the 1Password mode:
+- `mode = "account"` — interactive 1Password CLI (`op signin`). Use for local development.
+- `mode = "service"` — requires `OP_SERVICE_ACCOUNT_TOKEN` in the environment. Use for CI/automation.
 
-- `mode = "account"` — uses the interactive 1Password CLI (`op signin`). Use this for local development.
-- `mode = "service"` — requires `OP_SERVICE_ACCOUNT_TOKEN` in the environment. Use this for CI/automation.
+If `chezmoi apply` fails with `onepassword.mode is service, but OP_SERVICE_ACCOUNT_TOKEN is not set`, set the token or
+switch the mode to `"account"`.
 
-If `chezmoi apply` fails with `onepassword.mode is service, but OP_SERVICE_ACCOUNT_TOKEN is not set`, either set the
-token or switch the mode to `"account"`.
+Review secret-backed and machine-specific templates before applying on a new machine:
+`dot_config/prb/load_env_macos.sh.tmpl`, `load_env_linux.sh.tmpl`, `aliases/locations.sh`, `path_macos.sh`, `agents.sh`,
+and `web3.sh`.
 
-## Shell Startup Order
+## Code Style
 
-See [`dot_zshrc.tmpl`](dot_zshrc.tmpl) for the complete startup order.
+- **Shell**: `shfmt` + ShellCheck (`.shellcheckrc`). Run `just shell-write` then `just shell-check`. Recipes execute
+  under `bash -euo pipefail`.
+- **Markdown/YAML**: Prettier (`.prettierrc.yml`: `printWidth: 120`, `proseWrap: always`). Wrap prose at 120 columns.
+- **Templates**: chezmoi Go template syntax; gate OS-specific blocks with `{{ if eq .chezmoi.os ... }}`.
+- Order package lists alphabetically.
 
-## Just Recipes
+## Conventions
 
-```bash
-just apply            # Apply chezmoi (alias: a)
-just sync [msg]       # Git commit + chezmoi apply (uses ccc if no msg)
-just full-check       # Run all checks (alias: fc)
-just prettier-check   # Check Prettier formatting (alias: pc)
-just prettier-write   # Format with Prettier (alias: pw)
-just shell-check      # Validate shell scripts (alias: sc)
-just shell-write      # Auto-format shell scripts (alias: sw)
-```
+- `dot_setup/packages.sh` is the single source of truth for packages — edit it before the installer scripts.
+- **Gum spin gotcha**: `gum spin -- <cmd>` spawns a subprocess via Go's `exec.Command`, which only finds executables on
+  `$PATH`. Shell functions are invisible to it — call the executable directly.
 
-## Gum Spin Gotcha
+  ```sh
+  # Bad — _my_helper is a shell function, gum can't find it
+  gum spin --spinner dot --title "Working..." -- _my_helper "$@"
 
-`gum spin -- <command>` spawns a subprocess via Go's `exec.Command`, which only finds executables on `$PATH`. Shell
-functions are invisible to it.
+  # Good — call the executable directly
+  gum spin --spinner dot --title "Working..." -- claude --print "$@"
+  ```
 
-```sh
-# Bad — _my_helper is a shell function, gum can't find it
-gum spin --spinner dot --title "Working..." -- _my_helper "$@"
+## Contribution Workflow
 
-# Good — call the executable directly
-gum spin --spinner dot --title "Working..." -- claude --print "$@"
-```
-
-## Validation
-
-Run validation before committing:
-
-```bash
-just shell-check  # Validate shell scripts with ShellCheck and shfmt
-just shell-write  # Auto-format shell scripts
-```
-
-## Key Files
-
-- `dot_*.tmpl`: Template files using chezmoi syntax
-- `dot_setup/executable_*.sh`: Installation and configuration scripts
-- `justfile`: Task runner with validation recipes
-- `.chezmoiignore.tmpl`: Files to ignore during chezmoi apply
-
-## Common Operations
-
-```bash
-chezmoi apply        # Apply dotfiles
-chezmoi diff         # Preview changes
-chezmoi edit <file>  # Edit source file
-chezmoi cd           # Navigate to source directory
-```
+- Default branch: `main`. `just sync` commits and pushes directly to `main` (personal repo; no PR flow).
+- Run `just full-check` before committing and fix any Prettier / ShellCheck / shfmt findings.
+- No CI — validation is local only.
+- `CLAUDE.md` is a symlink to `AGENTS.md`; both paths resolve to this file. Edit `AGENTS.md` directly.
