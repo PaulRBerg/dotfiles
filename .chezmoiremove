@@ -1,0 +1,3 @@
+# Orphaned: npm reads $XDG_CONFIG_HOME/npm/npmrc (NPM_CONFIG_USERCONFIG in
+# env_core.sh.tmpl), so the legacy ~/.npmrc is unused. See dot_config/npm/.
+.npmrc

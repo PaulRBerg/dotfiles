@@ -1,0 +1,9 @@
+//registry.npmjs.org/:_authToken={{ onepasswordRead "op://Keys/npm/credential" }}
+min-release-age=7
+
+# Allow install (life-cycle) scripts only for these trusted packages during
+# `npm install -g` / npx (npm 11+ allow-scripts policy). Each name is matched
+# against the dependency's resolved identity. Unlisted packages still run their
+# scripts but print a warning (advisory in npm 11.x; a future release will block
+# them outright). Add a trusted global below to silence its postinstall nag.
+allow-scripts[]=bun

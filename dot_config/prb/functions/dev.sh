@@ -10,6 +10,32 @@ function pm_update() {
   nlx taze --group --interactive --recursive --maturity-period 3
 }
 
+# Upgrade outdated global npm packages to their latest versions.
+# Reinstalls each outdated global at `latest`, which reliably moves past the
+# installed semver range (unlike `npm update -g`). No-op when nothing's outdated.
+function npm_update() {
+  local outdated names
+  outdated=$(npm outdated -g --parseable --depth=0 | cut -d: -f4)
+
+  if [[ -z "$outdated" ]]; then
+    echo "All global npm packages are up to date."
+    return 0
+  fi
+
+  echo "Upgrading:"
+  echo "  ${outdated//$'\n'/$'\n'  }"
+
+  # npm 11+ warns about (and will eventually block) packages' install scripts.
+  # Grant them for exactly the packages being upgraded so postinstall steps
+  # (e.g. bun downloading its binary) run, without a blanket allow-all policy.
+  # Strip the trailing `@version` from each spec, keeping scoped names intact.
+  names=$(echo "$outdated" | sed 's/@[^@]*$//' | paste -sd, -)
+
+  # Word-split the newline-separated spec list into per-package install args.
+  # shellcheck disable=SC2086
+  npm install -g $outdated --allow-scripts "$names"
+}
+
 # Copy Chromium browser profile while excluding files specific to one browser or system
 function copy_browser_profile() {
   rsync --archive \
