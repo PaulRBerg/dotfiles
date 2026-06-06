@@ -74,7 +74,7 @@ Layout:
 | `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)  |
 | `dot_setup/packages.sh`                 | Shared package manifest — source of truth              |
 | `dot_setup/lib/common.sh`               | Shared setup helpers                                   |
-| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, duti, uv tools, completions, …)  |
+| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …) |
 | `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                         |
 | `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi) |
 | `justfile`                              | Task runner                                            |

@@ -3,6 +3,7 @@
 
 MACOS_TAPS=(
   bramstein/webfonttools
+  jackchuka/tap
 )
 
 MACOS_FORMULAE=(
@@ -64,7 +65,7 @@ MACOS_FORMULAE=(
   # Other utilities
   ack
   cloc
-  duti
+  dutix
   gmp
   gnu-sed
   gnupg
