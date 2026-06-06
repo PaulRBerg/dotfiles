@@ -75,6 +75,15 @@ EXTENSIONS=(
   zsh
 )
 
+# UTIs in alphabetical order.
+# Some apps (e.g. TablePlus) register themselves as the *owner* of a content
+# type's UTI. Launch Services resolves a file by its UTI before its extension,
+# so a per-extension duti entry is silently ignored for those types. Bind the
+# UTI directly to override the owning app.
+UTIS=(
+  org.iso.sql # .sql — owned by TablePlus
+)
+
 # duti is part of the managed macOS toolset.
 if ! command -v duti >/dev/null 2>&1; then
   echo "❌ duti is required. Install it with ~/.setup/tools_macos.sh." >&2
@@ -86,6 +95,11 @@ fi
   # Loop through each file extension
   for ext in "${EXTENSIONS[@]}"; do
     printf "%s\t.%s\tall\n" "$CURSOR_BUNDLE_ID" "$ext"
+  done
+
+  # Loop through each UTI (no leading dot; duti treats these as content types)
+  for uti in "${UTIS[@]}"; do
+    printf "%s\t%s\tall\n" "$CURSOR_BUNDLE_ID" "$uti"
   done
 
   # Configure Finder to handle directories
