@@ -9,8 +9,6 @@ packages=(
   @biomejs/biome
   @google/gemini-cli
   @modelcontextprotocol/server-sequential-thinking
-  @mariozechner/claude-trace
-  @openai/codex
   @typescript/native-preview
   @upstash/context7-mcp
   add-skill
