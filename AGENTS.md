@@ -132,14 +132,14 @@ Fetch secrets in templates with `onepasswordRead`:
 {{ onepasswordRead "op://Vault/Item/field" }}
 ```
 
-See `dot_config/prb/load_env_macos.sh.tmpl` for examples. The chezmoi config at `~/.config/chezmoi/chezmoi.toml`
-controls the mode:
+See `dot_config/prb/load_env_macos.sh.tmpl` for examples. The default chezmoi config at `~/.config/chezmoi/chezmoi.toml`
+uses service-account auth:
 
-- `mode = "account"` — interactive 1Password CLI (`op signin`). Use for local development.
-- `mode = "service"` — requires `OP_SERVICE_ACCOUNT_TOKEN` in the environment. Use for CI/automation.
+- `mode = "service"` — requires `OP_SERVICE_ACCOUNT_TOKEN` in the environment.
+- `chezmoi-service` — loads `OP_SERVICE_ACCOUNT_TOKEN` from macOS Keychain, then execs `chezmoi`.
 
-If `chezmoi apply` fails with `onepassword.mode is service, but OP_SERVICE_ACCOUNT_TOKEN is not set`, set the token or
-switch the mode to `"account"`.
+Use `just apply` or `chezmoi-service apply` for local runs. If raw `chezmoi apply` fails with
+`onepassword.mode is service, but OP_SERVICE_ACCOUNT_TOKEN is not set`, export the token explicitly or use the wrapper.
 
 Review secret-backed and machine-specific templates before applying on a new machine:
 `dot_config/prb/load_env_macos.sh.tmpl`, `load_env_linux.sh.tmpl`, `aliases/locations.sh`, `path_macos.sh`, `agents.sh`,
