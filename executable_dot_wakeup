@@ -45,6 +45,22 @@ if [[ -d "$CLAUDE_DIR/.git" ]] && [[ -z "$(git -C "$CLAUDE_DIR" status --porcela
 fi
 
 # ------------------------------
+# Build Codex AGENTS.md
+# ------------------------------
+CODEX_DIR="$HOME/.codex"
+if [[ -d "$CODEX_DIR/.git" ]] && [[ -z "$(git -C "$CODEX_DIR" status --porcelain 2>/dev/null)" ]]; then
+  echo "Building Codex AGENTS.md"
+  (cd "$CODEX_DIR" && just build 2>&1) || true
+  git -C "$CODEX_DIR" add -A
+  if [[ -n "$(git -C "$CODEX_DIR" status --porcelain 2>/dev/null)" ]]; then
+    echo "Committing Codex changes"
+    git -C "$CODEX_DIR" commit -m "Build AGENTS.md $(date -u +%Y-%m-%d@%H-%M-%S)" 2>&1 || true
+  fi
+  echo "Pushing Codex"
+  git -C "$CODEX_DIR" push origin 2>&1 || true
+fi
+
+# ------------------------------
 # Commit and push dictionary
 # ------------------------------
 DICTIONARY_DIR="$HOME/work/dictionary"
@@ -58,4 +74,3 @@ if [[ -d "$DICTIONARY_DIR/.git" ]]; then
   echo "Pushing dictionary"
   git push origin 2>&1 || true
 fi
-
