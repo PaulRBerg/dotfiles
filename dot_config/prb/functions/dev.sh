@@ -136,17 +136,44 @@ function fnm_bump_node() {
 }
 
 # Interactive live grep: ripgrep re-runs on every keystroke and streams matches
-# into fzf, with a syntax-highlighted bat preview centered on the hit. Enter
-# opens the match in Cursor at the exact line/column. An optional argument seeds
-# the initial query. Empty query shows nothing (no full-repo dump on launch).
+# into fzf, with a syntax-highlighted bat preview centered on the hit. Hidden
+# files are searched too (.git excluded, .gitignore still honored). CTRL-T
+# toggles fzf mode, which fuzzy-filters the current rg results (matched chars
+# underlined); each mode remembers its own query. Enter opens the match in
+# Cursor at the exact line/column, or in ${EDITOR:-vim} at the line when
+# cursor is not on PATH. An optional argument seeds the initial query. Empty
+# query shows nothing (no full-repo dump on launch).
+# Requires fzf >= 0.45 (transform action with $FZF_PROMPT).
 # Usage: rgf [query]
 function rgf() {
-  local rg_prefix="rg --column --line-number --no-heading --color=always --smart-case"
+  local rg_prefix="rg --column --line-number --no-heading --color=always --smart-case --hidden --glob '!.git'"
+  # Resolve the Enter action up front: with $EDITOR baked into the command
+  # text, a multi-word value (e.g. "code -w") still word-splits in fzf's
+  # child shell; an unquoted runtime $EDITOR would not under zsh.
+  local opener='cursor -g {1}:{2}:{3}'
+  command -v cursor >/dev/null 2>&1 || opener="${EDITOR:-vim} {1} +{2}"
+  local tmp
+  tmp=$(mktemp -d) || return 1
+  # Per-mode query stashes; pre-created so the first toggle's `cat` is quiet.
+  local rq="$tmp/rg-query" fq="$tmp/fzf-query" ret
+  : >"$rq"
+  : >"$fq"
+  # Stash queries with `printf %s`, not `echo`: fzf runs binds via $SHELL -c,
+  # and zsh's echo would expand regex escapes like \b in the stashed query.
   : | fzf --ansi --disabled --query "${*:-}" \
+    --prompt 'rg> ' \
+    --header 'CTRL-T: toggle ripgrep <-> fuzzy filtering' \
+    --color 'hl:-1:underline,hl+:-1:underline:reverse' \
     --bind "start:reload:[ -n {q} ] && $rg_prefix -- {q} || :" \
     --bind "change:reload:sleep 0.1; [ -n {q} ] && $rg_prefix -- {q} || :" \
+    --bind "ctrl-t:transform:[ \"\$FZF_PROMPT\" = 'rg> ' ] &&
+      printf %s \"unbind(change)+change-prompt(fzf> )+enable-search+transform-query:printf %s \\{q} >'$rq'; cat '$fq'\" ||
+      printf %s \"rebind(change)+change-prompt(rg> )+disable-search+transform-query:printf %s \\{q} >'$fq'; cat '$rq'\"" \
     --delimiter : \
     --preview 'bat --color=always --style=numbers --highlight-line {2} -- {1}' \
     --preview-window 'right,60%,border-left,+{2}+3/3' \
-    --bind 'enter:become(cursor -g {1}:{2}:{3})'
+    --bind "enter:become($opener)"
+  ret=$?
+  rm -rf -- "$tmp"
+  return "$ret"
 }
