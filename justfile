@@ -13,6 +13,9 @@ gum := require("gum")
 # Ni: https://github.com/antfu-collective/ni
 nlx := require("nlx")
 
+# 1Password CLI: https://developer.1password.com/docs/cli/
+op := require("op")
+
 # ShellCheck: https://github.com/koalaman/shellcheck
 shellcheck := require("shellcheck")
 
@@ -36,8 +39,12 @@ GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc
     just --list
 
 # Apply changes to the root directory using chezmoi
+[script("bash")]
 @apply:
-    chezmoi apply
+    OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
+    signin_output="$({{ op }} signin --account "$OP_ACCOUNT")"
+    [[ -z "$signin_output" ]] || eval "$signin_output"
+    OP_ACCOUNT="$OP_ACCOUNT" chezmoi apply
 alias a := apply
 
 # Sync dotfiles and apply changes
@@ -57,7 +64,10 @@ sync msg="":
     else
         echo "No changes to commit"
     fi
-    gum spin --spinner dot --title "Applying dotfiles..." -- chezmoi apply --force
+    OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
+    signin_output="$({{ op }} signin --account "$OP_ACCOUNT")"
+    [[ -z "$signin_output" ]] || eval "$signin_output"
+    OP_ACCOUNT="$OP_ACCOUNT" gum spin --spinner dot --title "Applying dotfiles..." -- chezmoi apply --force
 
 # ---------------------------------------------------------------------------- #
 #                                    CHECKS                                    #

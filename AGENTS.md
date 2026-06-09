@@ -22,16 +22,16 @@ subsequent `chezmoi apply` on both platforms. Test on both when possible.
 
 Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 
-| Recipe                | Alias | Action                                                                  |
-| --------------------- | ----- | ----------------------------------------------------------------------- |
-| `just`                | —     | List recipes                                                            |
-| `just apply`          | `a`   | `chezmoi apply`                                                         |
-| `just sync [msg]`     | —     | `git add -A`, commit (uses `ccc` if no msg), push to `main`, then apply |
-| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`                                 |
-| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`                            |
-| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`                            |
-| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts                   |
-| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                                       |
+| Recipe                | Alias | Action                                                                           |
+| --------------------- | ----- | -------------------------------------------------------------------------------- |
+| `just`                | —     | List recipes                                                                     |
+| `just apply`          | `a`   | `op signin`, then `chezmoi apply`                                                |
+| `just sync [msg]`     | —     | `git add -A`, commit (uses `ccc` if no msg), push to `main`, then signin + apply |
+| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`                                          |
+| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`                                     |
+| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`                                     |
+| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts                            |
+| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                                                |
 
 ### chezmoi
 
@@ -50,7 +50,8 @@ Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 ### Validation (before committing)
 
 - `just full-check` — Prettier + ShellCheck + shfmt
-- `chezmoi apply --dry-run --verbose` (or `chezmoi diff`) — confirm a clean apply
+- `op signin --account "${OP_ACCOUNT:-my.1password.com}"`, then `chezmoi apply --dry-run --verbose` (or `chezmoi diff`)
+  — confirm a clean apply
 
 ## Project Structure
 
@@ -139,11 +140,12 @@ account auth:
 - `prompt = false` — skips chezmoi's own `op signin` prompt and relies on the 1Password desktop-app CLI integration
   (Touch ID). Enable it in 1Password -> Settings -> Developer.
 
-Before `chezmoi apply`, unlock the 1Password desktop app, then authenticate the shell explicitly:
+`just apply` and `just sync` handle 1Password auth before running `chezmoi apply`. For direct `chezmoi` or `op`
+commands, unlock the 1Password desktop app, then authenticate the shell explicitly:
 
 ```sh
 export OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
-op signin --account "$OP_ACCOUNT"
+eval "$(op signin --account "$OP_ACCOUNT")"
 op whoami --account "$OP_ACCOUNT"
 ```
 
@@ -151,6 +153,10 @@ Use the same preflight before any shell command that loads 1Password data (`op r
 `chezmoi execute-template`, `chezmoi diff`, `chezmoi apply`). `op signin` is idempotent with the desktop-app
 integration: it only prompts when the shell is not already authenticated. If multiple accounts are available, prefer
 `--account` or `OP_ACCOUNT` over relying on the most recently signed-in terminal.
+
+`dot_config/npm/private_npmrc.tmpl` deliberately uses npm's `${NPM_TOKEN}` environment interpolation instead of
+`onepasswordRead` so npm auth does not create an apply-time 1Password dependency. Set `NPM_TOKEN` only in shells that
+need private npm registry access.
 
 If `chezmoi apply` prompts for the account password, check the 1Password desktop-app CLI integration before changing the
 repo back to service-account mode.
