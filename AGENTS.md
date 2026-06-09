@@ -154,6 +154,13 @@ Use the same preflight before any shell command that loads 1Password data (`op r
 integration: it only prompts when the shell is not already authenticated. If multiple accounts are available, prefer
 `--account` or `OP_ACCOUNT` over relying on the most recently signed-in terminal.
 
+`op signin` cannot persist across new shells in the normal env-var sense. When the CLI emits shell code,
+`eval "$(op signin ...)"` sets an `OP_SESSION` token only in the current shell, and that token expires after inactivity.
+Do not put `OP_SESSION` tokens or `eval "$(op signin ...)"` in shell startup files. If this remains annoying, future
+work should either fix true 1Password desktop-app integration so `op` authenticates through the app without
+session-token exports, or switch back to service-account mode with `OP_SERVICE_ACCOUNT_TOKEN` for noninteractive
+`chezmoi apply`.
+
 `dot_config/npm/private_npmrc.tmpl` deliberately uses npm's `${NPM_TOKEN}` environment interpolation instead of
 `onepasswordRead` so npm auth does not create an apply-time 1Password dependency. Set `NPM_TOKEN` only in shells that
 need private npm registry access.
