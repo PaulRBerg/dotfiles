@@ -3,16 +3,18 @@
 # pnpm 11 reads registry/auth settings from rc/.npmrc, but all other settings
 # live here or in a project's pnpm-workspace.yaml.
 #
-# Packages exempt from the cooldown: our own published packages + the TypeScript
-# toolchain we bump often. `sablier`/`typescript` are unscoped, so a `@scope/*` glob
-# wouldn't cover them — entries are explicit to match the exact set and mirror bun
-# (which cannot glob at all).
+# Packages exempt from the cooldown: our own published packages, the TypeScript
+# toolchain we bump often, and MCP servers we run via `pnpm dlx`/`bunx` pinned to
+# `@latest` (the cooldown would otherwise stall every fresh release). `sablier`/
+# `typescript` are unscoped, so a `@scope/*` glob wouldn't cover them — entries are
+# explicit to match the exact set and mirror bun (which cannot glob at all).
 minimumReleaseAge: 10080 # 7 days
 minimumReleaseAgeExclude:
   - "@sablier/devkit"
-  - sablier
-  - "@sablier/price-data"
   - "@sablier/indexers"
+  - "@sablier/price-data"
   - "@types/node"
-  - typescript
   - "@typescript/native-preview"
+  - chrome-devtools-mcp
+  - sablier
+  - typescript

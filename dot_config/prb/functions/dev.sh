@@ -10,30 +10,38 @@ function pm_update() {
   nlx taze --group --interactive --recursive --maturity-period 3
 }
 
-# Upgrade outdated global npm packages to their latest versions.
-# Reinstalls each outdated global at `latest`, which reliably moves past the
-# installed semver range (unlike `npm update -g`). No-op when nothing's outdated.
-function npm_update() {
-  local outdated names
-  outdated=$(npm outdated -g --parseable --depth=0 | cut -d: -f4)
+# Upgrade global bun packages to their latest versions.
+# `bun update -g` only moves within each package's saved semver range (and has
+# been unreliable for globals — oven-sh/bun#10341), so reinstall each global at
+# `latest`, which reliably crosses majors. The 7-day cooldown in ~/.bunfig.toml
+# still applies. No-op when nothing is installed.
+function bun_update() {
+  local manifest names
+  manifest="${BUN_INSTALL:-${XDG_DATA_HOME:-$HOME/.local/share}/bun}/install/global/package.json"
 
-  if [[ -z "$outdated" ]]; then
-    echo "All global npm packages are up to date."
+  if [[ ! -f "$manifest" ]]; then
+    echo "No global bun packages installed."
     return 0
   fi
 
-  echo "Upgrading:"
-  echo "  ${outdated//$'\n'/$'\n'  }"
+  # bun is guaranteed on PATH here; let it read its own manifest (no jq needed).
+  names=$(bun --print "Object.keys(require('$manifest').dependencies ?? {}).join('\n')")
 
-  # npm 11+ warns about (and will eventually block) packages' install scripts.
-  # Grant them for exactly the packages being upgraded so postinstall steps
-  # (e.g. bun downloading its binary) run, without a blanket allow-all policy.
-  # Strip the trailing `@version` from each spec, keeping scoped names intact.
-  names=$(echo "$outdated" | sed 's/@[^@]*$//' | paste -sd, -)
+  if [[ -z "$names" ]]; then
+    echo "No global bun packages installed."
+    return 0
+  fi
 
-  # Word-split the newline-separated spec list into per-package install args.
-  # shellcheck disable=SC2086
-  npm install -g $outdated --allow-scripts "$names"
+  echo "Upgrading global bun packages:"
+  echo "  ${names//$'\n'/$'\n'  }"
+
+  # Build an explicit arg array; zsh does not word-split scalars by default.
+  local specs=() name
+  while IFS= read -r name; do
+    [[ -n "$name" ]] && specs+=("$name@latest")
+  done <<<"$names"
+
+  bun add --global "${specs[@]}"
 }
 
 # Copy Chromium browser profile while excluding files specific to one browser or system
