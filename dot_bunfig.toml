@@ -1,2 +1,13 @@
 [install]
 minimumReleaseAge = 604800
+# Packages exempt from the cooldown (our own published packages + the TypeScript
+# toolchain we bump often). bun matches EXACT names only — no glob (oven-sh/bun#28967).
+minimumReleaseAgeExcludes = [
+  "@sablier/devkit",
+  "sablier",
+  "@sablier/price-data",
+  "@sablier/indexers",
+  "@types/node",
+  "typescript",
+  "@typescript/native-preview",
+]

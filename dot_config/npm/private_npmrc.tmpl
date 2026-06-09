@@ -1,5 +1,14 @@
 //registry.npmjs.org/:_authToken={{ onepasswordRead "op://Keys/npm/credential" }}
 min-release-age=7
+# No exemptions are set here — and none are currently possible: npm has no
+# per-package allowlist for min-release-age, so this 7-day cooldown applies to
+# ALL packages, including our own first-party scopes (@sablier/*, @prb/*, etc.).
+# pnpm (~/.config/pnpm/config.yaml) and bun (~/.bunfig.toml) DO support an exclude
+# list (minimumReleaseAgeExclude / minimumReleaseAgeExcludes); npm does not yet.
+# Tracking issue for adding exclusion support to npm:
+#   https://github.com/npm/cli/issues/8994
+# Until it ships, override per-invocation when a fresh release is needed now:
+#   npm install <pkg> --min-release-age=0
 
 # Allow install (life-cycle) scripts only for these trusted packages during
 # `npm install -g` / npx (npm 11+ allow-scripts policy). Each name is matched
