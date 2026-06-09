@@ -4,17 +4,31 @@
 # live here or in a project's pnpm-workspace.yaml.
 #
 # Packages exempt from the cooldown: our own published packages, the TypeScript
-# toolchain we bump often, and MCP servers we run via `pnpm dlx`/`bunx` pinned to
-# `@latest` (the cooldown would otherwise stall every fresh release). `sablier`/
-# `typescript` are unscoped, so a `@scope/*` glob wouldn't cover them — entries are
-# explicit to match the exact set and mirror bun (which cannot glob at all).
+# toolchain we bump often, the Effect-TS ecosystem used in sablier/new-ui, and MCP
+# servers we run via `pnpm dlx`/`bunx` pinned to `@latest` (the cooldown would
+# otherwise stall every fresh release). `effect`/`sablier`/`typescript` are
+# unscoped, so a `@scope/*` glob wouldn't cover them — entries are explicit to
+# match the exact set and mirror bun (which cannot glob at all).
 minimumReleaseAge: 10080 # 7 days
 minimumReleaseAgeExclude:
+  - "@effect-atom/atom"
+  - "@effect-atom/atom-react"
+  - "@effect/cli"
+  - "@effect/opentelemetry"
+  - "@effect/platform"
+  - "@effect/platform-node"
+  - "@effect/vitest"
+  - "@prb/effect-evm"
+  - "@prb/effect-evm-safe"
+  - "@prb/effect-next"
+  - "@prb/effect-xstate"
+  - "@prb/math"
   - "@sablier/devkit"
   - "@sablier/indexers"
   - "@sablier/price-data"
   - "@types/node"
   - "@typescript/native-preview"
   - chrome-devtools-mcp
+  - effect
   - sablier
   - typescript
