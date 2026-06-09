@@ -140,6 +140,19 @@ uses service-account auth:
 
 Use `just apply` or `chezmoi-service apply` for local runs. If raw `chezmoi apply` fails with
 `onepassword.mode is service, but OP_SERVICE_ACCOUNT_TOKEN is not set`, export the token explicitly or use the wrapper.
+On macOS, set it from Keychain for one command:
+
+```sh
+OP_SERVICE_ACCOUNT_TOKEN="$(security find-generic-password -a "$USER" -s chezmoi-op-service-account-token -w)" chezmoi apply
+```
+
+If the Keychain item is missing, seed it once after unlocking 1Password:
+
+```sh
+token="$(op read --no-newline 'op://Keys/1Password Service Account - Chezmoi/credential')"
+security add-generic-password -a "$USER" -s chezmoi-op-service-account-token -w "$token" -U
+unset token
+```
 
 Review secret-backed and machine-specific templates before applying on a new machine:
 `dot_config/prb/load_env_macos.sh.tmpl`, `load_env_linux.sh.tmpl`, `aliases/locations.sh`, `path_macos.sh`, `agents.sh`,
