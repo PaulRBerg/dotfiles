@@ -3,9 +3,26 @@
 USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
 PRB_SETUP_DIR="${PRB_SETUP_DIR:-$HOME/.setup}"
 
-# Helper to add path only if it exists
+# Keep the first PATH entry when duplicates appear. In zsh, PATH and path are
+# tied, so fnm and other late startup hooks keep their prepended priority.
+if [[ -n "${ZSH_VERSION:-}" ]]; then
+  # shellcheck disable=SC2034 # zsh ties path/PATH; assigning path mutates PATH.
+  typeset -gU path PATH
+fi
+
+# Helper to add path only if it exists.
 add_path() {
-  [[ -d "$1" ]] && export PATH="$1:$PATH"
+  [[ -d "$1" ]] || return 0
+
+  if [[ -n "${ZSH_VERSION:-}" ]]; then
+    path=("$1" "${path[@]}")
+    export PATH
+  else
+    case ":$PATH:" in
+    *":$1:"*) ;;
+    *) export PATH="$1:$PATH" ;;
+    esac
+  fi
 }
 
 ###############################################################################

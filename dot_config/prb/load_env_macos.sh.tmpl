@@ -4,31 +4,31 @@
 # APIs                                                                        #
 ###############################################################################
 
+# shellcheck disable=SC1003
 # Blockscout
-export API_KEY_BLOCKSCOUT={{ onepasswordRead "op://Keys/Blockscout/credential" }}
-export BLOCKSCOUT_API_KEY={{ onepasswordRead "op://Keys/Blockscout/credential" }}
+export API_KEY_BLOCKSCOUT='{{ onepasswordRead "op://Keys/Blockscout/credential" | replace "'" "'\\''" }}'
+export BLOCKSCOUT_API_KEY='{{ onepasswordRead "op://Keys/Blockscout/credential" | replace "'" "'\\''" }}'
 
 # Context7
-export API_KEY_CONTEXT7_MCP={{ onepasswordRead "op://Keys/Context7 MCP/credential" }}
-
+export API_KEY_CONTEXT7_MCP='{{ onepasswordRead "op://Keys/Context7 MCP/credential" | replace "'" "'\\''" }}'
 
 # Etherscan
-export API_KEY_ETHERSCAN={{ onepasswordRead "op://Keys/Etherscan/credential" }}
-export ETHERSCAN_API_KEY={{ onepasswordRead "op://Keys/Etherscan/credential" }}
+export API_KEY_ETHERSCAN='{{ onepasswordRead "op://Keys/Etherscan/credential" | replace "'" "'\\''" }}'
+export ETHERSCAN_API_KEY='{{ onepasswordRead "op://Keys/Etherscan/credential" | replace "'" "'\\''" }}'
 
 # Foundry
-export ETH_RPC_URL=https://sepolia.infura.io/v3/{{ onepasswordRead "op://Keys/Infura/credential" }}
-export EHT_MNEMONIC={{ onepasswordRead "op://Keys/Default Tester - Mnemonic/credential" }}
-export ETH_PRIVATE_KEY={{ onepasswordRead "op://Keys/Default Tester - Private Key/credential" }}
+export ETH_RPC_URL='https://sepolia.infura.io/v3/{{ onepasswordRead "op://Keys/Infura/credential" | replace "'" "'\\''" }}'
+export ETH_MNEMONIC='{{ onepasswordRead "op://Keys/Default Tester - Mnemonic/credential" | replace "'" "'\\''" }}'
+export ETH_PRIVATE_KEY='{{ onepasswordRead "op://Keys/Default Tester - Private Key/credential" | replace "'" "'\\''" }}'
 
 # RouteMesh
-export ROUTEMESH_API_KEY={{ onepasswordRead "op://Keys/RouteMesh/credential" }}
+export ROUTEMESH_API_KEY='{{ onepasswordRead "op://Keys/RouteMesh/credential" | replace "'" "'\\''" }}'
 
 # GitHub
-export GITHUB_TOKEN={{ onepasswordRead "op://Keys/GitHub/credential" }}
+export GITHUB_TOKEN='{{ onepasswordRead "op://Keys/GitHub/credential" | replace "'" "'\\''" }}'
 
 # OpenAI
-export OPENAI_API_KEY={{ onepasswordRead "op://Keys/OpenAI/credential" }}
+export OPENAI_API_KEY='{{ onepasswordRead "op://Keys/OpenAI/credential" | replace "'" "'\\''" }}'
 
 ###############################################################################
 # Languages and Tools                                                         #

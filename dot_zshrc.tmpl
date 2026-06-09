@@ -37,6 +37,7 @@ export HYPHEN_INSENSITIVE="false"
 
 # Load custom functions
 # shellcheck disable=SC2206
+typeset -gU fpath FPATH
 fpath=("$HOME/.zfunc" $fpath)
 
 # Keep compdump stable and skip compaudit for faster startup
@@ -95,9 +96,6 @@ fi
 
 # fzf
 [[ -r ~/.fzf.zsh ]] && source ~/.fzf.zsh
-
-# Vite+ bin (https://viteplus.dev)
-[[ -r "$HOME/.vite-plus/env" ]] && . "$HOME/.vite-plus/env"
 
 # bun completions
 [[ -s "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun" ]] && source "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun"

@@ -9,10 +9,22 @@ mkdir -p "$ZFUNC_DIR"
 
 generate() {
   local name="$1"
+  local target="$2"
   shift
-  if command -v "$name" &>/dev/null; then
-    echo "  ✓ $name" >&2
-    "$@" >"$ZFUNC_DIR/_$name"
+  shift
+
+  if command -v "$name" >/dev/null 2>&1; then
+    local output tmp
+    output="$ZFUNC_DIR/_$target"
+    tmp=$(mktemp "${output}.XXXXXX")
+
+    if "$@" >"$tmp"; then
+      mv "$tmp" "$output"
+      echo "  ✓ $target" >&2
+    else
+      rm -f "$tmp"
+      echo "  ⚠ $target (generation failed)" >&2
+    fi
   else
     echo "  ⊘ $name (not installed)" >&2
   fi
@@ -21,11 +33,24 @@ generate() {
 echo "🔧 Generating zsh completions..." >&2
 echo "" >&2
 
-generate openclaw openclaw completion -s zsh
-generate anchor anchor completions zsh
-generate avm avm completions zsh
-generate sentry-cli sentry-cli completions zsh
-generate solana solana completion -s zsh
+generate chezmoi chezmoi chezmoi completion zsh
+generate gh gh gh completion -s zsh
+generate just just just --completions zsh
+generate uv uv uv generate-shell-completion zsh
+generate starship starship starship completions zsh
+generate atuin atuin atuin gen-completions --shell zsh
+generate zellij zellij zellij setup --generate-completion zsh
+generate op op op completion zsh
+generate docker docker docker completion zsh
+generate kubectl kubectl kubectl completion zsh
+generate ast-grep ast-grep ast-grep completions zsh
+generate sg sg sg completions zsh
+
+generate openclaw openclaw openclaw completion -s zsh
+generate anchor anchor anchor completions zsh
+generate avm avm avm completions zsh
+generate sentry-cli sentry-cli sentry-cli completions zsh
+generate solana solana solana completion -s zsh
 
 echo "" >&2
 echo "✓ Completions generated in $ZFUNC_DIR" >&2

@@ -47,6 +47,8 @@
     # Diff shortcuts.
     df = diff
     dfc = diff --cached
+    dft = -c diff.external=difft diff
+    dftc = -c diff.external=difft diff --cached
 
     # `git di $number` shows the diff between the state `$number` revisions ago and the current state.
     di = !"d() { git diff --patch-with-stat HEAD~$1; }; git diff-index --quiet HEAD -- || clear; d"
@@ -86,7 +88,7 @@
     go = "!f() { git checkout -b \"$1\" 2> /dev/null || git checkout \"$1\"; }; f"
 
     # Delete branches with deleted remote.
-    gone = !git fetch -p && git for-each-ref --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" {print $1}' | xargs -r git branch -D
+    gone = "!f() { git fetch -p && git for-each-ref --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" {print $1}' | while IFS= read -r branch; do git branch -D \"$branch\"; done; }; f"
 
     # Pretty log graph with abbreviated commits and relative time.
     l = "!f() { git log --abbrev-commit --graph --pretty=format:'%C(auto)%h%d %C(dim)(%cr)%C(reset)%n%B' \"$@\"; }; f"
@@ -137,6 +139,9 @@
     sp = stash pop
     ss = stash
 
+    # Show commit with difftastic.
+    showt = -c diff.external=difft show --ext-diff
+
     # Switch branches.
     sw = switch
     sw- = switch -
@@ -179,7 +184,7 @@
 
 {{- if eq .chezmoi.os "darwin" }}
 [commit]
-    # https://help.github.com/articles/signing-commits-using-gpg/
+    # Sign commits with SSH keys via 1Password.
     gpgsign = true
 {{- end }}
 
@@ -343,9 +348,11 @@
 
 {{- if eq .chezmoi.os "darwin" }}
 [gpg]
-    # Path to gnupg.
-    program = /opt/homebrew/bin/gpg
+    format = ssh
+
+[gpg "ssh"]
+    program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
 
 [user]
-    signingKey = {{ onepasswordRead "op://Keys/GPG/password" }}
+    signingKey = ~/.ssh/github/key.pub
 {{- end }}

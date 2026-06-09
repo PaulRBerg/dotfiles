@@ -19,8 +19,13 @@ MACOS_FORMULAE=(
   bat
   bats-core
   bottom
+  difftastic
   duf
   eza
+  fd
+  fnm
+  fzf
+  git-delta
   gum
   just
   killport
@@ -39,13 +44,16 @@ MACOS_FORMULAE=(
   tree
 
   # Development tools
+  direnv
   gh
   git
+  git-absorb
   git-lfs
   golangci-lint
   jq
   ls-lint
   lua
+  neovim
   rlwrap
   shellcheck
   shfmt
@@ -90,20 +98,20 @@ UBUNTU_APT_PACKAGES=(
   xsel
 
   # Modern CLI tools
-  ripgrep
-  fd-find
   bat
   bats
+  fd-find
   fzf
   git-delta
+  ripgrep
   zoxide
 
   # File and archive utilities
+  moreutils
   p7zip-full
   pigz
   pv
   rename
-  moreutils
   rsync
   tree
 
@@ -111,9 +119,11 @@ UBUNTU_APT_PACKAGES=(
   direnv
   gh
   git
+  git-absorb
   git-lfs
   jq
   just
+  neovim
   shellcheck
   shfmt
   vim

@@ -1,0 +1,12 @@
+# Managed by chezmoi. Used by `chezmoi-service` to render secret-backed templates
+# with a 1Password service account token from macOS Keychain.
+
+[data.chezmoi]
+{{- if eq .chezmoi.os "darwin" }}
+  hostname = "personal"
+{{- else }}
+  hostname = "aws"
+{{- end }}
+
+[onepassword]
+  mode = "service"
