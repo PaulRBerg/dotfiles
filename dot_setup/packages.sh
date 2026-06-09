@@ -33,6 +33,8 @@ MACOS_FORMULAE=(
   procs
   ripgrep
   starship
+  television
+  ugrep
   zoxide
 
   # File and archive utilities

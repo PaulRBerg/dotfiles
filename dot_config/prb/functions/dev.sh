@@ -134,3 +134,19 @@ function fnm_bump_node() {
 
   echo "Node.js $(node -v) is now the default"
 }
+
+# Interactive live grep: ripgrep re-runs on every keystroke and streams matches
+# into fzf, with a syntax-highlighted bat preview centered on the hit. Enter
+# opens the match in Cursor at the exact line/column. An optional argument seeds
+# the initial query. Empty query shows nothing (no full-repo dump on launch).
+# Usage: rgf [query]
+function rgf() {
+  local rg_prefix="rg --column --line-number --no-heading --color=always --smart-case"
+  : | fzf --ansi --disabled --query "${*:-}" \
+    --bind "start:reload:[ -n {q} ] && $rg_prefix -- {q} || :" \
+    --bind "change:reload:sleep 0.1; [ -n {q} ] && $rg_prefix -- {q} || :" \
+    --delimiter : \
+    --preview 'bat --color=always --style=numbers --highlight-line {2} -- {1}' \
+    --preview-window 'right,60%,border-left,+{2}+3/3' \
+    --bind 'enter:become(cursor -g {1}:{2}:{3})'
+}
