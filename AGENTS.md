@@ -15,6 +15,7 @@ subsequent `chezmoi apply` on both platforms. Test on both when possible.
 - **just** — task runner (`justfile`). Requires `gum`, `nlx`, `shellcheck`, and `shfmt` on `PATH` (declared via
   `require()`).
 - **Prettier** — formats Markdown/YAML. **ShellCheck** + **shfmt** lint and format shell.
+- **Gitleaks** — scans the current tree and Git history for committed secrets.
 - **1Password CLI** (`op`) — secret injection in templates via `onepasswordRead`.
 - **Homebrew** (macOS) / **APT + Snap** (Ubuntu) — package provisioning.
 
@@ -50,6 +51,7 @@ Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 ### Validation (before committing)
 
 - `just full-check` — Prettier + ShellCheck + shfmt
+- `gitleaks git --redact --no-banner --no-color` — scan current files and Git history for secrets
 - `op signin --account "${OP_ACCOUNT:-my.1password.com}"`, then `chezmoi apply --dry-run --verbose` (or `chezmoi diff`)
   — confirm a clean apply
 
@@ -171,6 +173,18 @@ repo back to service-account mode.
 Review secret-backed and machine-specific templates before applying on a new machine:
 `dot_config/prb/load_env_macos.sh.tmpl`, `load_env_linux.sh.tmpl`, `aliases/locations.sh`, `path_macos.sh`, `agents.sh`,
 and `web3.sh`.
+
+## Secrets
+
+- Never commit raw secrets, tokens, passwords, private keys, recovery phrases, session tokens, or rendered secret-backed
+  templates. This includes `OP_SESSION`, `OP_SERVICE_ACCOUNT_TOKEN`, SSH/GPG private keys, npm tokens, GitHub tokens,
+  API keys, wallet keys, and mnemonics.
+- Store secret values in 1Password and reference them with `onepasswordRead`, runtime keychain reads, or environment
+  interpolation such as `${NPM_TOKEN}`. Only commit references, variable names, and documented setup commands.
+- Keep secret scans and debugging output redacted. Do not paste rendered template output, command traces, diffs, logs,
+  or scanner findings that include the secret value itself.
+- If a secret may have been exposed, treat it as compromised: revoke or rotate it first, then remove it from the current
+  tree and history as needed, and rerun `gitleaks git --redact --no-banner --no-color`.
 
 ## Code Style
 

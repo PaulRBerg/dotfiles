@@ -49,6 +49,7 @@ MACOS_FORMULAE=(
   git
   git-absorb
   git-lfs
+  gitleaks
   golangci-lint
   jq
   ls-lint
