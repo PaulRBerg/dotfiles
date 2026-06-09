@@ -132,27 +132,28 @@ Fetch secrets in templates with `onepasswordRead`:
 {{ onepasswordRead "op://Vault/Item/field" }}
 ```
 
-See `dot_config/prb/load_env_macos.sh.tmpl` for examples. The default chezmoi config at `~/.config/chezmoi/chezmoi.toml`
-uses service-account auth:
+See `dot_config/prb/load_env_macos.sh.tmpl` for examples. The chezmoi config at `~/.config/chezmoi/chezmoi.toml` uses
+account auth:
 
-- `mode = "service"` — requires `OP_SERVICE_ACCOUNT_TOKEN` in the environment.
-- `chezmoi-service` — loads `OP_SERVICE_ACCOUNT_TOKEN` from macOS Keychain, then execs `chezmoi`.
+- `mode = "account"` — interactive 1Password CLI (`op signin`). Use for local development.
+- `prompt = false` — skips chezmoi's own `op signin` prompt and relies on the 1Password desktop-app CLI integration
+  (Touch ID). Enable it in 1Password -> Settings -> Developer.
 
-Use `just apply` or `chezmoi-service apply` for local runs. If raw `chezmoi apply` fails with
-`onepassword.mode is service, but OP_SERVICE_ACCOUNT_TOKEN is not set`, export the token explicitly or use the wrapper.
-On macOS, set it from Keychain for one command:
-
-```sh
-OP_SERVICE_ACCOUNT_TOKEN="$(security find-generic-password -a "$USER" -s chezmoi-op-service-account-token -w)" chezmoi apply
-```
-
-If the Keychain item is missing, seed it once after unlocking 1Password:
+Before `chezmoi apply`, unlock the 1Password desktop app, then authenticate the shell explicitly:
 
 ```sh
-token="$(op read --no-newline 'op://Keys/1Password Service Account - Chezmoi/credential')"
-security add-generic-password -a "$USER" -s chezmoi-op-service-account-token -w "$token" -U
-unset token
+export OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
+op signin --account "$OP_ACCOUNT"
+op whoami --account "$OP_ACCOUNT"
 ```
+
+Use the same preflight before any shell command that loads 1Password data (`op read`, `op item get`,
+`chezmoi execute-template`, `chezmoi diff`, `chezmoi apply`). `op signin` is idempotent with the desktop-app
+integration: it only prompts when the shell is not already authenticated. If multiple accounts are available, prefer
+`--account` or `OP_ACCOUNT` over relying on the most recently signed-in terminal.
+
+If `chezmoi apply` prompts for the account password, check the 1Password desktop-app CLI integration before changing the
+repo back to service-account mode.
 
 Review secret-backed and machine-specific templates before applying on a new machine:
 `dot_config/prb/load_env_macos.sh.tmpl`, `load_env_linux.sh.tmpl`, `aliases/locations.sh`, `path_macos.sh`, `agents.sh`,

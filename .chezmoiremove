@@ -7,3 +7,7 @@
 
 # Orphaned: tmux config is no longer managed by this source state.
 .config/tmux/tmux.conf
+
+# Orphaned: service-account 1Password setup was removed in favor of account mode.
+.config/chezmoi/chezmoi-service.toml
+.config/prb/bin/chezmoi-service

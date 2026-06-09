@@ -37,7 +37,7 @@ GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc
 
 # Apply changes to the root directory using chezmoi
 @apply:
-    chezmoi-service apply
+    chezmoi apply
 alias a := apply
 
 # Sync dotfiles and apply changes
@@ -57,7 +57,7 @@ sync msg="":
     else
         echo "No changes to commit"
     fi
-    gum spin --spinner dot --title "Applying dotfiles..." -- chezmoi-service apply --force
+    gum spin --spinner dot --title "Applying dotfiles..." -- chezmoi apply --force
 
 # ---------------------------------------------------------------------------- #
 #                                    CHECKS                                    #
@@ -89,7 +89,6 @@ doctor:
         git-absorb
         gum
         just
-        chezmoi-service
         nlx
         nvim
         prettier
@@ -131,11 +130,11 @@ doctor:
 
     echo
     echo "== chezmoi doctor =="
-    chezmoi-service doctor || status=1
+    chezmoi doctor || status=1
 
     echo
     echo "== chezmoi dry-run apply =="
-    chezmoi-service apply --dry-run --verbose || status=1
+    chezmoi apply --dry-run --verbose || status=1
 
     echo
     echo "== rendered shell templates =="
@@ -145,7 +144,7 @@ doctor:
         local rendered
 
         rendered=$(mktemp)
-        if chezmoi-service execute-template <"$file" >"$rendered"; then
+        if chezmoi execute-template <"$file" >"$rendered"; then
             if "$shell_bin" -n "$rendered"; then
                 printf 'ok  %s\n' "$file"
             else

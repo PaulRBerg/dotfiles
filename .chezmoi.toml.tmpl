@@ -9,6 +9,7 @@
 {{- end }}
 
 [onepassword]
-  mode = "service"
-  # Requires OP_SERVICE_ACCOUNT_TOKEN. `chezmoi-service` loads it from macOS
-  # Keychain before execing chezmoi.
+  mode = "account"
+  # Skip chezmoi's own `op signin`; rely on the 1Password desktop-app CLI
+  # integration (Touch ID). Enable it in 1Password -> Settings -> Developer.
+  prompt = false
