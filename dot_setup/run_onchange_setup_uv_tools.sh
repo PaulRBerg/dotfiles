@@ -35,12 +35,23 @@ readonly TOOLS=(
   sqlfluff
 )
 
+# Extra packages injected into a tool's venv via --with (plugins, extensions).
+# mdformat: without these plugins it corrupts YAML frontmatter and lacks GFM
+# support (tables, strikethrough, autolinks, task lists).
+declare -rA TOOL_PLUGINS=(
+  [mdformat]="mdformat-frontmatter mdformat-gfm"
+)
+
 log_info "Installing uv-managed CPython ${PYTHON_VERSION}..."
 uv python install "${PYTHON_VERSION}"
 
 log_info "Installing ${#TOOLS[@]} uv tools on CPython ${PYTHON_VERSION}..."
 for tool in "${TOOLS[@]}"; do
-  uv tool install "${tool}" --python "${PYTHON_VERSION}"
+  install_args=("${tool}" --python "${PYTHON_VERSION}")
+  for plugin in ${TOOL_PLUGINS[$tool]:-}; do
+    install_args+=(--with "${plugin}")
+  done
+  uv tool install "${install_args[@]}"
 done
 
 # Repair drift if an interpreter was ever removed:
