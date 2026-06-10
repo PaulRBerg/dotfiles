@@ -8,8 +8,7 @@ USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
 
 [[ -n "${TTY:-}" ]] && export GPG_TTY="$TTY" # https://stackoverflow.com/a/42265848/96656
 
-export HISTCONTROL="${HISTCONTROL:-ignoreboth}" # Omit duplicates and commands that begin with a space from history.
-export MANPAGER="${MANPAGER:-less -X}"          # Don't clear the screen after quitting a manual page.
+export MANPAGER="${MANPAGER:-less -X}" # Don't clear the screen after quitting a manual page.
 
 # Node
 export NODE_REPL_HISTORY="${NODE_REPL_HISTORY:-$HOME/.node_history}" # Enable persistent REPL history for `node`.

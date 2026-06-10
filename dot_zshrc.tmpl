@@ -31,9 +31,15 @@ export CASE_SENSITIVE="true"
 # see "man strftime" for details.
 export HIST_STAMPS="yyyy-mm-dd"
 
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-export HYPHEN_INSENSITIVE="false"
+# Persist the full in-memory history: Oh My Zsh floors SAVEHIST at 10k while
+# HISTSIZE is 50k, and zsh-autosuggestions feeds on file-backed history.
+# shellcheck disable=SC2034
+SAVEHIST=50000
+
+# Skip url-quote-magic and bracketed-paste-magic: they slow down and can
+# mangle large pastes with zsh-autosuggestions. URLs with ?& need quoting.
+# shellcheck disable=SC2034
+DISABLE_MAGIC_FUNCTIONS="true"
 
 # Load custom functions
 # shellcheck disable=SC2206
@@ -51,11 +57,24 @@ mkdir -p "${ZSH_COMPDUMP:h}"
 # shellcheck disable=SC2034
 plugins=(
   command-not-found
+  extract
   fnm
-  git
+  fzf # Ctrl-T files, Alt-C cd, **<Tab> completion; atuin re-binds Ctrl-R later
+  magic-enter
+  sudo
   zsh-autosuggestions     # custom: https://github.com/zsh-users/zsh-autosuggestions
   zsh-syntax-highlighting # custom, must be the last one: https://github.com/zsh-users/zsh-syntax-highlighting
 )
+
+# magic-enter: command to run when pressing Enter on an empty buffer
+# shellcheck disable=SC2034
+MAGIC_ENTER_GIT_COMMAND='git status -sb'
+# shellcheck disable=SC2034
+MAGIC_ENTER_OTHER_COMMAND='l'
+
+# Suggest from history first, falling back to the completion engine
+# shellcheck disable=SC2034
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 # No theme - starship handles the prompt
 export ZSH_THEME=""
@@ -65,6 +84,12 @@ zstyle ":omz:update" mode auto # update automatically without asking
 
 # Skip aliases defined in Oh My Zsh lib files (ls, l, .., etc.)
 zstyle ":omz:lib:*" aliases no
+
+# fnm plugin: eval `fnm env --use-on-cd` (auto-switch Node on cd) + completions
+zstyle ":omz:plugins:fnm" autostart yes
+
+# Don't auto-set the terminal title (defaults to user@hostname:cwd); let the terminal manage it
+DISABLE_AUTO_TITLE="true"
 
 # Skip compaudit security check on non-login shells (saves ~15-20ms per shell startup)
 if [[ -o login ]]; then
@@ -84,18 +109,12 @@ if command -v zoxide &>/dev/null; then
   eval "$(zoxide init zsh)"
 fi
 
-# fnm - must be after Homebrew to take priority for node/npm
-command -v fnm >/dev/null && eval "$(fnm env)"
-
 {{- if eq .chezmoi.os "darwin" }}
 # Atuin - enhanced shell history with sync (must be after oh-my-zsh)
 if command -v atuin &>/dev/null; then
   eval "$(atuin init zsh)"
 fi
 {{- end }}
-
-# fzf
-[[ -r ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
 # bun completions
 [[ -s "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun" ]] && source "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun"
@@ -137,4 +156,8 @@ if command -v starship &>/dev/null; then
     return ret
   }
   zle -N zle-line-init
+fi
+
+if [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
+  test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 fi
