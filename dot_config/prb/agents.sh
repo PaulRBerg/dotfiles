@@ -94,6 +94,19 @@ function ccbump() {
     --print "/bump-release $*"
 }
 
+# Add skills globally for the agents that support global installs.
+function add_skill() {
+  if [[ $# -lt 1 ]]; then
+    echo "Usage: add_skill <repo> [--skill <skill> ...]" >&2
+    return 2
+  fi
+
+  local repo="$1"
+  shift
+
+  npx skills add "$repo" --global --yes --agent codex claude-code "$@"
+}
+
 ###############################################################################
 # PRIVATE                                                                     #
 ###############################################################################
