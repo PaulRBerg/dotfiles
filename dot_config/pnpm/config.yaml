@@ -1,3 +1,9 @@
+# pnpm 11 defaults verify-deps-before-run to "install", which prints
+# "Already up to date / Done in Xms" before every `pnpm exec`/`pnpm run`
+# (twice for bare `pnpm <bin>` invocations like ni's `na`). Disable it;
+# run `pnpm install` manually after lockfile changes.
+verifyDepsBeforeRun: false
+
 # pnpm supply-chain policy.
 #
 # pnpm 11 reads registry/auth settings from rc/.npmrc, but all other settings
