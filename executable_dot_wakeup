@@ -20,6 +20,7 @@ PULL_REPOS=(
   "$HOME/.effect"
   "$HOME/.claude"
   "$HOME/.agents"
+  "$HOME/.local/share/chezmoi"
   "$HOME/projects/agent-skills"
 )
 
@@ -58,6 +59,37 @@ if [[ -d "$CODEX_DIR/.git" ]] && [[ -z "$(git -C "$CODEX_DIR" status --porcelain
   fi
   echo "Pushing Codex"
   git -C "$CODEX_DIR" push origin 2>&1 || true
+fi
+
+# ------------------------------
+# Update package managers
+# ------------------------------
+# bun lives in its own install dir and npm comes from fnm; neither is on
+# sleepwatcher's PATH
+export PATH="$HOME/.local/share/bun/bin:$HOME/Library/Application Support/fnm/aliases/default/bin:$PATH"
+
+if command -v bun >/dev/null; then
+  echo "Updating bun"
+  bun upgrade 2>&1 || true
+  echo "Updating pnpm"
+  bun add --global pnpm 2>&1 || true
+fi
+
+if command -v npm >/dev/null; then
+  echo "Updating npm"
+  npm install -g npm 2>&1 || true
+fi
+
+# ------------------------------
+# Update uv and its tools
+# ------------------------------
+# Standalone install; not on sleepwatcher's PATH
+UV="$HOME/.local/bin/uv"
+if [[ -x "$UV" ]]; then
+  echo "Updating uv"
+  "$UV" self update 2>&1 || true
+  echo "Updating uv tools"
+  "$UV" tool upgrade --all 2>&1 || true
 fi
 
 # ------------------------------
