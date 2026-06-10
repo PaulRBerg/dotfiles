@@ -158,6 +158,8 @@ if command -v starship &>/dev/null; then
   zle -N zle-line-init
 fi
 
-if [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
+# Login-shell guard: `zsh -i <script>` (e.g. just recipes) fires preexec without
+# precmd, and iterm2_preexec reads ITERM2_PRECMD_PS1, which breaks under `set -u`.
+if [[ "$TERM_PROGRAM" == "iTerm.app" && -o login ]]; then
   test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 fi
