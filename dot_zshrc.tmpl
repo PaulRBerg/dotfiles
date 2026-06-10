@@ -66,6 +66,12 @@ plugins=(
   zsh-syntax-highlighting # custom, must be the last one: https://github.com/zsh-users/zsh-syntax-highlighting
 )
 
+# Drop fzf in headless shells (no controlling tty, e.g. CI or tool-spawned
+# `zsh -ic`): zle can't be enabled there, so fzf's option save/restore
+# prints "can't change option: zle" on load.
+# shellcheck disable=SC2206
+{ : </dev/tty; } 2>/dev/null || plugins=(${plugins[@]/#%fzf/})
+
 # magic-enter: command to run when pressing Enter on an empty buffer
 # shellcheck disable=SC2034
 MAGIC_ENTER_GIT_COMMAND='git status -sb'
