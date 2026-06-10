@@ -6,6 +6,7 @@
 alias dot='cd "$(chezmoi source-path)"'
 alias dotfiles="dot"
 alias effect="cd ~/.effect"
+alias mo="cd ~/work/mailops"
 alias pad="cd ~/pad"
 alias projects="cd ~/projects"
 alias template="cd ~/work/templates/next-template"
