@@ -50,7 +50,6 @@ packages=(
   next
   openclaw
   playwright
-  pnpm
   prettier
   skills
   taskbook

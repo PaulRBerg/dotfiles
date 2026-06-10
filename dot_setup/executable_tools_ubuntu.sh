@@ -139,6 +139,30 @@ install_golangci_lint() {
   fi
 }
 
+install_pnpm() {
+  log_info "Installing pnpm..."
+
+  # No APT package or official snap exists (Homebrew provides it on macOS).
+  # Fetch the standalone binary so it stays independent of fnm Node versions,
+  # and skip get.pnpm.io/install.sh, which edits the invoking user's shell rc.
+  if ! command -v pnpm &>/dev/null; then
+    local arch
+    case "$(dpkg --print-architecture)" in
+    amd64) arch="x64" ;;
+    arm64) arch="arm64" ;;
+    *)
+      log_info "Unsupported architecture for pnpm; skipping"
+      return 0
+      ;;
+    esac
+    curl -fsSL "https://github.com/pnpm/pnpm/releases/latest/download/pnpm-linux-${arch}" -o /usr/local/bin/pnpm
+    chmod +x /usr/local/bin/pnpm
+    log_success "pnpm installed"
+  else
+    log_info "pnpm already installed"
+  fi
+}
+
 install_vim_runtime() {
   log_info "Installing ultimate Vim configuration (amix/vimrc)..."
 
@@ -193,6 +217,7 @@ main() {
   install_fnm
   install_uv
   install_golangci_lint
+  install_pnpm
   install_vim_runtime
   install_tailscale
   install_starship

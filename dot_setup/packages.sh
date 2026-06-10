@@ -57,6 +57,7 @@ MACOS_FORMULAE=(
   ls-lint
   lua
   neovim
+  pnpm
   rlwrap
   shellcheck
   shfmt

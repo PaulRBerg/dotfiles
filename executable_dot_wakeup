@@ -71,8 +71,13 @@ export PATH="$HOME/.local/share/bun/bin:$HOME/Library/Application Support/fnm/al
 if command -v bun >/dev/null; then
   echo "Updating bun"
   bun upgrade 2>&1 || true
+fi
+
+# pnpm comes from Homebrew; upgrade only when a newer bottle is already known
+# locally, without triggering brew's network auto-update on every wake.
+if command -v brew >/dev/null; then
   echo "Updating pnpm"
-  bun add --global pnpm 2>&1 || true
+  HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade pnpm 2>&1 || true
 fi
 
 if command -v npm >/dev/null; then
