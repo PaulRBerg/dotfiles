@@ -65,7 +65,7 @@ function ccc() {
 
   # shellcheck disable=SC2016
   gum spin --spinner dot --title "Claude is git committing..." -- \
-    sh -c "GIT_TERMINAL_PROMPT=0 ${timeout_cmd} "'claude --model sonnet --no-session-persistence --output-format json --strict-mcp-config --tools "Bash,Read" --print "/commit $1" >"$2" 2>"$3"' \
+    sh -c "GIT_TERMINAL_PROMPT=0 ${timeout_cmd} "'claude --no-session-persistence --output-format json --strict-mcp-config --tools "Bash,Read" --print "/commit $1" >"$2" 2>"$3"' \
     _ "$*" "$out" "$err"
   rc=$?
 
@@ -90,7 +90,7 @@ function cccp() {
 function ccbump() {
   _require_gum || return 1
   gum spin --spinner dot --title "Claude is bumping release..." -- \
-    claude --model "sonnet" --no-session-persistence --output-format json \
+    claude --no-session-persistence --output-format json \
     --print "/bump-release $*"
 }
 
