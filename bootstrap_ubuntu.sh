@@ -42,10 +42,11 @@ install_snap() {
 # ==============================================================================
 
 install_omz_plugin() {
-  local plugin_name="$1"
-  local repo_url="$2"
+  local omz_dir="$1"
+  local plugin_name="$2"
+  local repo_url="$3"
 
-  su - "${SUDO_USER}" -c "git clone '${repo_url}' \${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/${plugin_name} 2>/dev/null || true"
+  su - "${SUDO_USER}" -c "git clone '${repo_url}' '${omz_dir}/custom/plugins/${plugin_name}' 2>/dev/null || true"
 }
 
 install_zsh() {
@@ -61,10 +62,13 @@ install_ohmyzsh() {
 
   if [[ -n "${SUDO_USER:-}" ]]; then
     local user_home="/home/${SUDO_USER}"
+    # The applied .zshrc sources Oh My Zsh from ZSH=$XDG_DATA_HOME/oh-my-zsh
+    # (set in env_core.sh), not the installer default ~/.oh-my-zsh.
+    local omz_dir="${user_home}/.local/share/oh-my-zsh"
 
-    if [[ ! -d "${user_home}/.oh-my-zsh" ]]; then
+    if [[ ! -d "${omz_dir}" ]]; then
       # Install Oh My Zsh for the regular user (not root)
-      su - "${SUDO_USER}" -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
+      su - "${SUDO_USER}" -c "ZSH='${omz_dir}' sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" '' --unattended"
 
       # Set Zsh as default shell for the user
       chsh -s "$(command -v zsh)" "${SUDO_USER}"
@@ -77,13 +81,13 @@ install_ohmyzsh() {
     # Install Oh My Zsh plugins
     log_info "Installing Oh My Zsh plugins..."
 
-    install_omz_plugin "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
-    install_omz_plugin "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting"
+    install_omz_plugin "${omz_dir}" "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
+    install_omz_plugin "${omz_dir}" "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting"
 
     log_success "Oh My Zsh plugins installed"
   else
     log_error "Cannot determine regular user for Oh My Zsh installation"
-    log_error "Please install manually: sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
+    log_error "Please install manually: ZSH=\"\$HOME/.local/share/oh-my-zsh\" sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
   fi
 }
 

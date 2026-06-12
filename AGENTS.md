@@ -2,11 +2,6 @@
 
 Guidelines for AI agents and developers working on this dotfiles repository.
 
-## Most Important Thing
-
-**Maintain cross-platform compatibility between macOS and Linux.** Every change must work after `chezmoi init` and a
-subsequent `chezmoi apply` on both platforms. Test on both when possible.
-
 ## Stack
 
 - **chezmoi** — dotfile manager; source state uses Go templates (`.tmpl`). Fetch current chezmoi docs via the context7
@@ -95,6 +90,9 @@ Layout:
 `path.sh`.
 
 ## Cross-Platform Patterns
+
+Maintain compatibility between macOS and Linux: changes should work after `chezmoi init` and a subsequent
+`chezmoi apply` on both platforms. Test on both when possible.
 
 ### chezmoi templates
 
