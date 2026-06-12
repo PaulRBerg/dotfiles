@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Point iTerm2 at the chezmoi-managed settings folder and auto-save changes there
+# shellcheck disable=SC2034
+
+readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+# run_onchange_ scripts execute from a temp dir, so source from the installed path
+source "$HOME/.setup/lib/common.sh"
+
+PREFS_DIR="$HOME/.config/iterm2"
+
+defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$PREFS_DIR"
+defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
+
+# Save mode (iTermPreferenceSavePrefsMode): 0 = on quit, 1 = never, 2 = automatically
+defaults write com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile -bool true
+defaults write com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile_selection -int 2
+
+log_success "iTerm2 loads settings from ${PREFS_DIR} (auto-save enabled)"

@@ -41,6 +41,8 @@ GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc
 # Apply changes to the root directory using chezmoi
 [script("bash")]
 @apply:
+    # Capture iTerm2-side settings changes before apply overwrites them
+    [[ -f "$HOME/.config/iterm2/com.googlecode.iterm2.plist" ]] && chezmoi re-add "$HOME/.config/iterm2/com.googlecode.iterm2.plist" || true
     OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
     signin_output="$({{ op }} signin --account "$OP_ACCOUNT")"
     [[ -z "$signin_output" ]] || eval "$signin_output"
@@ -50,6 +52,8 @@ alias a := apply
 # Sync dotfiles and apply changes
 [script("bash")]
 sync msg="":
+    # Capture iTerm2-side settings changes so they get committed
+    [[ -f "$HOME/.config/iterm2/com.googlecode.iterm2.plist" ]] && chezmoi re-add "$HOME/.config/iterm2/com.googlecode.iterm2.plist" || true
     git add -A
     # Only commit if there are staged changes
     if ! git diff --cached --quiet; then

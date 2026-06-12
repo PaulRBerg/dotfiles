@@ -18,16 +18,16 @@ Guidelines for AI agents and developers working on this dotfiles repository.
 
 Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 
-| Recipe                | Alias | Action                                                                           |
-| --------------------- | ----- | -------------------------------------------------------------------------------- |
-| `just`                | —     | List recipes                                                                     |
-| `just apply`          | `a`   | `op signin`, then `chezmoi apply`                                                |
-| `just sync [msg]`     | —     | `git add -A`, commit (uses `ccc` if no msg), push to `main`, then signin + apply |
-| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`                                          |
-| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`                                     |
-| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`                                     |
-| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts                            |
-| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                                                |
+| Recipe                | Alias | Action                                                                                                |
+| --------------------- | ----- | ----------------------------------------------------------------------------------------------------- |
+| `just`                | —     | List recipes                                                                                          |
+| `just apply`          | `a`   | Re-add iTerm2 plist, `op signin`, then `chezmoi apply`                                                |
+| `just sync [msg]`     | —     | Re-add iTerm2 plist, `git add -A`, commit (uses `ccc` if no msg), push to `main`, then signin + apply |
+| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`                                                               |
+| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`                                                          |
+| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`                                                          |
+| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts                                                 |
+| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                                                                     |
 
 ### chezmoi
 
@@ -62,20 +62,21 @@ chezmoi source-state naming (source name → target):
 
 Layout:
 
-| Path                                    | Purpose                                                |
-| --------------------------------------- | ------------------------------------------------------ |
-| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                      |
-| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`  |
-| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)              |
-| `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`   |
-| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                     |
-| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)  |
-| `dot_setup/packages.sh`                 | Shared package manifest — source of truth              |
-| `dot_setup/lib/common.sh`               | Shared setup helpers                                   |
-| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …) |
-| `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                         |
-| `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi) |
-| `justfile`                              | Task runner                                            |
+| Path                                    | Purpose                                                      |
+| --------------------------------------- | ------------------------------------------------------------ |
+| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                            |
+| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`        |
+| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                    |
+| `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`         |
+| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                           |
+| `dot_config/iterm2/`                    | iTerm2 settings plist (macOS; loaded via custom-folder sync) |
+| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)        |
+| `dot_setup/packages.sh`                 | Shared package manifest — source of truth                    |
+| `dot_setup/lib/common.sh`               | Shared setup helpers                                         |
+| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)       |
+| `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                               |
+| `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi)       |
+| `justfile`                              | Task runner                                                  |
 
 ### Shell Startup Order
 
@@ -124,6 +125,16 @@ Keep installers thin and platform-specific; source `packages.sh` rather than dup
 
 Portable `pbcopy`/`pbpaste` shims live in `dot_config/prb/bin/` (on `PATH`). Shell functions and git aliases call them
 directly, so clipboard workflows work on macOS and Linux without per-OS aliases.
+
+### iTerm2 settings (macOS only)
+
+iTerm2 loads its settings from the chezmoi-managed folder `~/.config/iterm2` via its built-in custom-folder sync
+(Settings → General → Settings), with save mode "Automatically". The pointer defaults are written by
+`dot_setup/run_onchange_setup_iterm2_macos.sh`; the folder is excluded on Linux in `.chezmoiignore.tmpl`.
+
+Because iTerm2 writes GUI changes back to the target file, `just apply` and `just sync` run a targeted `chezmoi re-add`
+on `~/.config/iterm2/com.googlecode.iterm2.plist` before applying. After changing iTerm2 settings, prefer those recipes
+over a bare `chezmoi apply`, which would overwrite the saved changes with the older source copy.
 
 ## 1Password Integration
 
