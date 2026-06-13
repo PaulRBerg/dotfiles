@@ -32,7 +32,14 @@ readonly TOOLS=(
   pytest
   python-lsp-server
   ruff
+  serena-agent
   sqlfluff
+)
+
+# Tool-specific interpreter pins. Serena's upstream install docs currently
+# recommend CPython 3.13 explicitly.
+declare -rA TOOL_PYTHONS=(
+  ["serena-agent"]="3.13"
 )
 
 # Extra packages injected into a tool's venv via --with (plugins, extensions).
@@ -44,10 +51,13 @@ declare -rA TOOL_PLUGINS=(
 
 log_info "Installing uv-managed CPython ${PYTHON_VERSION}..."
 uv python install "${PYTHON_VERSION}"
+for tool_python in "${TOOL_PYTHONS[@]}"; do
+  uv python install "${tool_python}"
+done
 
 log_info "Installing ${#TOOLS[@]} uv tools on CPython ${PYTHON_VERSION}..."
 for tool in "${TOOLS[@]}"; do
-  install_args=("${tool}" --python "${PYTHON_VERSION}")
+  install_args=("${tool}" --python "${TOOL_PYTHONS[$tool]:-$PYTHON_VERSION}")
   for plugin in ${TOOL_PLUGINS[$tool]:-}; do
     install_args+=(--with "${plugin}")
   done
