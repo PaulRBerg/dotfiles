@@ -17,7 +17,6 @@ fi
 # Pull repos
 # ------------------------------
 PULL_REPOS=(
-  "$HOME/.effect"
   "$HOME/.claude"
   "$HOME/.agents"
   "$HOME/.local/share/chezmoi"
@@ -35,6 +34,29 @@ for repo in "${PULL_REPOS[@]}"; do
   echo "Pulling $repo"
   git -C "$repo" pull --ff-only 2>&1 || true
 done
+
+# ------------------------------
+# Effect: pin to latest npm release
+# ------------------------------
+# The Effect monorepo ships breaking changes on main between releases. Keep the
+# local checkout pinned to the most recent published release instead of main,
+# exposed as a local `release` branch built from the newest effect@* tag
+# reachable on origin/main (every package in a release shares that commit).
+EFFECT_DIR="$HOME/.effect"
+if [[ -d "$EFFECT_DIR/.git" ]] && [[ -z "$(git -C "$EFFECT_DIR" status --porcelain 2>/dev/null)" ]]; then
+  echo "Fetching Effect"
+  git -C "$EFFECT_DIR" fetch --tags --prune origin 2>&1 || true
+  latest_tag="$(git -C "$EFFECT_DIR" describe --tags --match 'effect@*' --abbrev=0 origin/main 2>/dev/null)"
+  if [[ -n "$latest_tag" ]]; then
+    release_commit="$(git -C "$EFFECT_DIR" rev-list -n1 "$latest_tag")"
+    if [[ "$release_commit" != "$(git -C "$EFFECT_DIR" rev-parse HEAD)" ]]; then
+      echo "Pinning Effect to $latest_tag"
+      git -C "$EFFECT_DIR" checkout -B release "$release_commit" 2>&1 || true
+    else
+      echo "Effect already on $latest_tag"
+    fi
+  fi
+fi
 
 # ------------------------------
 # Merge Claude settings
