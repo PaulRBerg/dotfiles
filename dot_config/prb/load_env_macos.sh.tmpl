@@ -18,8 +18,6 @@ export ETHERSCAN_API_KEY='{{ onepasswordRead "op://Keys/Etherscan/credential" | 
 
 # Foundry
 export ETH_RPC_URL='https://sepolia.infura.io/v3/{{ onepasswordRead "op://Keys/Infura/credential" | replace "'" "'\\''" }}'
-export ETH_MNEMONIC='{{ onepasswordRead "op://Keys/Default Tester - Mnemonic/credential" | replace "'" "'\\''" }}'
-export ETH_PRIVATE_KEY='{{ onepasswordRead "op://Keys/Default Tester - Private Key/credential" | replace "'" "'\\''" }}'
 
 # RouteMesh
 export ROUTEMESH_API_KEY='{{ onepasswordRead "op://Keys/RouteMesh/credential" | replace "'" "'\\''" }}'
