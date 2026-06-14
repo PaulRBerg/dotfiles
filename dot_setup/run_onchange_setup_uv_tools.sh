@@ -50,9 +50,9 @@ declare -rA TOOL_PLUGINS=(
 )
 
 log_info "Installing uv-managed CPython ${PYTHON_VERSION}..."
-uv python install "${PYTHON_VERSION}"
+uv python install --quiet "${PYTHON_VERSION}"
 for tool_python in "${TOOL_PYTHONS[@]}"; do
-  uv python install "${tool_python}"
+  uv python install --quiet "${tool_python}"
 done
 
 log_info "Installing ${#TOOLS[@]} uv tools on CPython ${PYTHON_VERSION}..."
@@ -61,7 +61,7 @@ for tool in "${TOOLS[@]}"; do
   for plugin in ${TOOL_PLUGINS[$tool]:-}; do
     install_args+=(--with "${plugin}")
   done
-  uv tool install "${install_args[@]}"
+  uv tool install --quiet "${install_args[@]}"
 done
 
 # Repair drift if an interpreter was ever removed:
