@@ -16,9 +16,6 @@ export API_KEY_CONTEXT7_MCP='{{ onepasswordRead "op://Keys/Context7 MCP/credenti
 export API_KEY_ETHERSCAN='{{ onepasswordRead "op://Keys/Etherscan/credential" | replace "'" "'\\''" }}'
 export ETHERSCAN_API_KEY='{{ onepasswordRead "op://Keys/Etherscan/credential" | replace "'" "'\\''" }}'
 
-# Foundry
-export ETH_RPC_URL='https://sepolia.infura.io/v3/{{ onepasswordRead "op://Keys/Infura/credential" | replace "'" "'\\''" }}'
-
 # RouteMesh
 export ROUTEMESH_API_KEY='{{ onepasswordRead "op://Keys/RouteMesh/credential" | replace "'" "'\\''" }}'
 
