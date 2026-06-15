@@ -23,6 +23,11 @@ for formula in "${MACOS_FORMULAE[@]}"; do
   brew install "$formula"
 done
 
+# Install all casks
+for cask in "${MACOS_CASKS[@]}"; do
+  brew install --cask "$cask"
+done
+
 # Create symlink for sha256sum
 BREW_PREFIX=$(brew --prefix)
 ln -sf "${BREW_PREFIX}/bin/gsha256sum" "${BREW_PREFIX}/bin/sha256sum"

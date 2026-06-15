@@ -92,6 +92,12 @@ MACOS_FORMULAE=(
   zellij
 )
 
+MACOS_CASKS=(
+  # Quick Look extensions
+  qlmarkdown
+  syntax-highlight
+)
+
 UBUNTU_APT_PACKAGES=(
   # Core utilities
   bash
