@@ -90,9 +90,19 @@ fi
 # sleepwatcher's PATH
 export PATH="$HOME/.local/share/bun/bin:$HOME/Library/Application Support/fnm/aliases/default/bin:$PATH"
 
+BUN_UPDATE_SOURCE="${XDG_CONFIG_HOME:-$HOME/.config}/prb/functions/dev.sh"
+if [[ -r "$BUN_UPDATE_SOURCE" ]]; then
+  # shellcheck source=dot_config/prb/functions/dev.sh
+  source "$BUN_UPDATE_SOURCE"
+fi
+
 if command -v bun >/dev/null; then
   echo "Updating bun"
   bun upgrade 2>&1 || true
+  if declare -F bun_update >/dev/null; then
+    echo "Updating global bun packages"
+    bun_update 2>&1 || true
+  fi
 fi
 
 # pnpm comes from Homebrew; upgrade only when a newer bottle is already known
