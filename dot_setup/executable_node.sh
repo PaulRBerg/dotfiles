@@ -36,23 +36,17 @@ echo ""
 packages=(
   @antfu/ni
   @biomejs/biome
-  @google/gemini-cli
   @mariozechner/claude-trace
   @mariozechner/pi-coding-agent
-  @mixedbread/mgrep
-  @playwright/mcp
   @steipete/summarize
   @typescript/native-preview
-  @upstash/context7-mcp
   ccstatusline
   chrome-devtools-mcp
   jscpd
   next
-  openclaw
   playwright
   prettier
   skills
-  taskbook
   taze
   ts-node
   tsx
@@ -73,12 +67,11 @@ for package in "${packages[@]}"; do
   echo "" >&2
 done
 
-# Transitive deps whose lifecycle scripts bun blocks by default but that need
-# them for native prebuilds (keytar, koffi). bunfig.toml has no trust option —
-# bun records trust only in the global package.json — so re-assert it here to
-# keep fresh-machine provisioning reproducible.
+# Deps whose lifecycle scripts bun blocks by default but that need them for
+# preinstall/native prebuild setup. bunfig.toml has no trust option — bun
+# records trust only in the global package.json — so re-assert it here to keep
+# fresh-machine provisioning reproducible.
 trusted=(
-  @github/keytar
   @google/genai
   koffi
   protobufjs
@@ -89,11 +82,5 @@ trusted=(
 # the subcommand name as if it were a package — bun quirk), hence the guard.
 echo "🔏 Trusting lifecycle scripts: ${trusted[*]}" >&2
 bun pm -g trust "${trusted[@]}" || echo "⚠️ bun pm trust: nothing untrusted (or a package is missing)" >&2
-
-# bun's tarball extraction drops the executable bit. node-pty (dep of
-# @google/gemini-cli) needs its spawn-helper executable on macOS, else
-# pty.spawn fails with "posix_spawnp failed".
-find "$BUN_INSTALL/install/global/node_modules/node-pty/prebuilds" \
-  -name spawn-helper -exec chmod +x {} + 2>/dev/null || true
 
 echo "🎉 All global packages installed!" >&2
