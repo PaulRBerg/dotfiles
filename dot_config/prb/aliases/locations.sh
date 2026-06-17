@@ -3,6 +3,7 @@
 ###############################################################################
 # PERSONAL                                                                    #
 ###############################################################################
+alias cd_nvim="cd ~/.config/nvim"
 alias dot='cd "$(chezmoi source-path)"'
 alias dotfiles="dot"
 alias effect="cd ~/.effect"
