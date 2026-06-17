@@ -36,6 +36,16 @@ for repo in "${PULL_REPOS[@]}"; do
 done
 
 # ------------------------------
+# Refresh CLI-backed agent skills
+# ------------------------------
+REFRESH_CLI_SKILLS="$HOME/.config/prb/wakeup/refresh_cli_skills.sh"
+if [[ -x "$REFRESH_CLI_SKILLS" ]]; then
+  "$REFRESH_CLI_SKILLS" 2>&1 || true
+else
+  echo "Skipping CLI-backed skill refresh (missing $REFRESH_CLI_SKILLS)"
+fi
+
+# ------------------------------
 # Effect: pin to latest npm release
 # ------------------------------
 # The Effect monorepo ships breaking changes on main between releases. Keep the
