@@ -11,7 +11,8 @@ CODEX_MODEL="gpt-5.5"
 # ALIASES                                                                     #
 ###############################################################################
 
-alias c="claude --dangerously-skip-permissions"
+alias c="codex"
+alias cl="claude --dangerously-skip-permissions"
 alias c5l="codex -m $CODEX_MODEL -c model_reasoning_effort=low"
 alias c5m="codex -m $CODEX_MODEL -c model_reasoning_effort=medium"
 alias c5h="codex -m $CODEX_MODEL -c model_reasoning_effort=high"
