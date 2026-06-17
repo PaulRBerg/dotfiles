@@ -2813,7 +2813,9 @@
 			<key>Description</key>
 			<string>Default</string>
 			<key>Disable Window Resizing</key>
-			<false/>
+			<true/>
+			<key>Disable Window Resizing by Unfocused Sessions</key>
+			<true/>
 			<key>Faint Text Alpha (Dark)</key>
 			<real>0.5</real>
 			<key>Faint Text Alpha (Light)</key>
@@ -3152,6 +3154,10 @@
 			<string>/Users/prb/sablier/new-ui</string>
 		</dict>
 	</array>
+	<key>NoSyncSuppressPromptToEnableResizing</key>
+	<true/>
+	<key>NoSyncSuppressPromptToEnableUnfocusedResizing</key>
+	<true/>
 	<key>PasteSpecialChunkDelay</key>
 	<real>0.01</real>
 	<key>PasteSpecialChunkSize</key>
