@@ -18,16 +18,16 @@ Guidelines for AI agents and developers working on this dotfiles repository.
 
 Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 
-| Recipe                | Alias | Action                                                                                                |
-| --------------------- | ----- | ----------------------------------------------------------------------------------------------------- |
-| `just`                | —     | List recipes                                                                                          |
-| `just apply`          | `a`   | Re-add iTerm2 plist, `op signin`, then `chezmoi apply`                                                |
-| `just sync [msg]`     | —     | Re-add iTerm2 plist, `git add -A`, commit (uses `ccc` if no msg), push to `main`, then signin + apply |
-| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`                                                               |
-| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`                                                          |
-| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`                                                          |
-| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts                                                 |
-| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                                                                     |
+| Recipe                | Alias | Action                                                                          |
+| --------------------- | ----- | ------------------------------------------------------------------------------- |
+| `just`                | —     | List recipes                                                                    |
+| `just apply`          | `a`   | Migrate legacy iTerm2 target prefs if needed, `op signin`, then `chezmoi apply` |
+| `just sync [msg]`     | —     | Migrate legacy iTerm2 target prefs if needed, commit, push, then signin + apply |
+| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`                                         |
+| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`                                    |
+| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`                                    |
+| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts                           |
+| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                                               |
 
 ### chezmoi
 
@@ -128,13 +128,12 @@ directly, so clipboard workflows work on macOS and Linux without per-OS aliases.
 
 ### iTerm2 settings (macOS only)
 
-iTerm2 loads its settings from the chezmoi-managed folder `~/.config/iterm2` via its built-in custom-folder sync
+iTerm2 loads its settings from the chezmoi source-state folder `dot_config/iterm2` via its built-in custom-folder sync
 (Settings → General → Settings), with save mode "Automatically". The pointer defaults are written by
-`dot_setup/run_onchange_setup_iterm2_macos.sh`; the folder is excluded on Linux in `.chezmoiignore.tmpl`.
+`dot_setup/run_onchange_setup_iterm2_macos.sh.tmpl`; the target folder is excluded on Linux in `.chezmoiignore.tmpl`.
 
-Because iTerm2 writes GUI changes back to the target file, `just apply` and `just sync` run a targeted `chezmoi re-add`
-on `~/.config/iterm2/com.googlecode.iterm2.plist` before applying. After changing iTerm2 settings, prefer those recipes
-over a bare `chezmoi apply`, which would overwrite the saved changes with the older source copy.
+Because iTerm2 writes GUI changes directly back to `dot_config/iterm2/com.googlecode.iterm2.plist`, those changes appear
+as normal Git source changes and a bare `chezmoi apply` can copy them to the target without a target-modified prompt.
 
 ## 1Password Integration
 

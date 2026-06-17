@@ -75,8 +75,8 @@ chicken-and-egg failures.
 
 6. Optional, recommended:
    - macOS defaults (Dock, Finder, input, etc.): `~/.setup/macos.sh`
-   - iTerm2 (not in the brew manifest): `brew install --cask iterm2` — it loads its settings from the chezmoi-managed
-     `~/.config/iterm2` automatically; the apply hooks already wrote the pointer defaults in step 4.
+   - iTerm2 (not in the brew manifest): `brew install --cask iterm2` — it loads its settings from the chezmoi
+     source-state `dot_config/iterm2` automatically; the apply hooks already wrote the pointer defaults in step 4.
    - Agent configs: `git clone git@github.com:PaulRBerg/dot-claude.git ~/.claude` and
      `git clone git@github.com:PaulRBerg/dot-agents.git ~/.agents`
    - Shell history sync: `atuin login`

@@ -41,8 +41,7 @@ GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc
 # Apply changes to the root directory using chezmoi
 [script("bash")]
 @apply:
-    # Capture iTerm2-side settings changes before apply overwrites them
-    [[ -f "$HOME/.config/iterm2/com.googlecode.iterm2.plist" ]] && chezmoi re-add "$HOME/.config/iterm2/com.googlecode.iterm2.plist" || true
+    just _capture-legacy-iterm-prefs
     OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
     signin_output="$({{ op }} signin --account "$OP_ACCOUNT")"
     [[ -z "$signin_output" ]] || eval "$signin_output"
@@ -52,8 +51,7 @@ alias a := apply
 # Sync dotfiles and apply changes
 [script("bash")]
 sync msg="":
-    # Capture iTerm2-side settings changes so they get committed
-    [[ -f "$HOME/.config/iterm2/com.googlecode.iterm2.plist" ]] && chezmoi re-add "$HOME/.config/iterm2/com.googlecode.iterm2.plist" || true
+    just _capture-legacy-iterm-prefs
     git add -A
     # Only commit if there are staged changes
     if ! git diff --cached --quiet; then
@@ -72,6 +70,23 @@ sync msg="":
     signin_output="$({{ op }} signin --account "$OP_ACCOUNT")"
     [[ -z "$signin_output" ]] || eval "$signin_output"
     OP_ACCOUNT="$OP_ACCOUNT" gum spin --spinner dot --title "Applying dotfiles..." -- chezmoi apply --force
+
+# Capture iTerm2 settings from the old target-backed custom folder before the
+# first source-backed apply migrates the pointer.
+[private]
+[script("bash")]
+_capture-legacy-iterm-prefs:
+    if ! command -v defaults >/dev/null 2>&1; then
+        exit 0
+    fi
+
+    prefs_file="$HOME/.config/iterm2/com.googlecode.iterm2.plist"
+    prefs_dir="${prefs_file%/*}"
+    current_dir="$(defaults read com.googlecode.iterm2 PrefsCustomFolder 2>/dev/null || true)"
+
+    if [[ "$current_dir" == "$prefs_dir" && -f "$prefs_file" ]]; then
+        chezmoi re-add "$prefs_file" || true
+    fi
 
 # ---------------------------------------------------------------------------- #
 #                                    CHECKS                                    #
