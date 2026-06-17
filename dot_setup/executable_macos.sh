@@ -161,9 +161,11 @@ sudo pmset -a hibernatemode 0
 # Screen                                                                      #
 ###############################################################################
 
-# Require password immediately after sleep or screen saver begins
-defaults write com.apple.screensaver askForPassword -int 1
-defaults write com.apple.screensaver askForPasswordDelay -int 0
+# Require password immediately after sleep or screen saver begins.
+# The `com.apple.screensaver askForPassword[Delay]` defaults are silent no-ops
+# since Big Sur; `sysadminctl -screenLock` is the supported path. `-password -`
+# prompts interactively (separate from the sudo prompt) so no secret is stored.
+sysadminctl -screenLock immediate -password -
 
 # Enable subpixel font rendering on non-Apple LCDs
 # Reference: https://github.com/kevinSuttle/macOS-Defaults/issues/17#issuecomment-266633501
@@ -333,83 +335,93 @@ defaults write com.apple.dock showhidden -bool true
 # Don't show recent applications in Dock
 defaults write com.apple.dock show-recents -bool true
 
-# Reset Launchpad, but keep the desktop wallpaper intact
-find "${HOME}/Library/Application Support/Dock" -name "*-*.db" -maxdepth 1 -delete
-
 ###############################################################################
 # Safari & WebKit                                                             #
 ###############################################################################
 
-# Privacy: don't send search queries to Apple
-defaults write com.apple.Safari UniversalSearchEnabled -bool false
-defaults write com.apple.Safari SuppressSearchSuggestions -bool true
-
-# Press Tab to highlight each item on a web page
-defaults write com.apple.Safari WebKitTabToLinksPreferenceKey -bool true
-
-# Show the full URL in the address bar (note: this still hides the scheme)
-defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
-
-# Set Safari's home page to `about:blank` for faster loading
-defaults write com.apple.Safari HomePage -string "about:blank"
-
-# Prevent Safari from opening 'safe' files automatically after downloading
-defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
-
-# Hide Safari's bookmarks bar by default
-defaults write com.apple.Safari ShowFavoritesBar -bool false
-
-# Disable Safari's thumbnail cache for History and Top Sites
-defaults write com.apple.Safari DebugSnapshotsUpdatePolicy -int 2
-
-# Enable Safari's debug menu
-defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-
-# Make Safari's search banners default to Contains instead of Starts With
-defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
-
-# Remove useless icons from Safari's bookmarks bar
-defaults write com.apple.Safari ProxiesInBookmarksBar "()"
-
-# Enable the Develop menu and the Web Inspector in Safari
-defaults write com.apple.Safari IncludeDevelopMenu -bool true
-defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-
 # Add a context menu item for showing the Web Inspector in web views
+# (NSGlobalDomain, so it applies even without Full Disk Access)
 defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
 
-# Enable continuous spellchecking
-defaults write com.apple.Safari WebContinuousSpellCheckingEnabled -bool true
+# Safari keeps its prefs in a TCC-protected plist, so `defaults write
+# com.apple.Safari ...` silently no-ops unless the terminal running this script
+# has Full Disk Access (System Settings -> Privacy & Security -> Full Disk
+# Access). Probe by reading the domain and skip the block with a clear message
+# when access is missing, instead of pretending the settings were applied.
+if defaults read com.apple.Safari >/dev/null 2>&1; then
 
-# Disable auto-correct
-defaults write com.apple.Safari WebAutomaticSpellingCorrectionEnabled -bool false
+  # Privacy: don't send search queries to Apple
+  defaults write com.apple.Safari UniversalSearchEnabled -bool false
+  defaults write com.apple.Safari SuppressSearchSuggestions -bool true
 
-# Disable AutoFill
-defaults write com.apple.Safari AutoFillFromAddressBook -bool false
-defaults write com.apple.Safari AutoFillPasswords -bool false
-defaults write com.apple.Safari AutoFillCreditCardData -bool false
-defaults write com.apple.Safari AutoFillMiscellaneousForms -bool false
+  # Press Tab to highlight each item on a web page
+  defaults write com.apple.Safari WebKitTabToLinksPreferenceKey -bool true
 
-# Warn about fraudulent websites
-defaults write com.apple.Safari WarnAboutFraudulentWebsites -bool true
+  # Show the full URL in the address bar (note: this still hides the scheme)
+  defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
 
-# Block pop-up windows
-defaults write com.apple.Safari WebKitJavaScriptCanOpenWindowsAutomatically -bool false
+  # Set Safari's home page to `about:blank` for faster loading
+  defaults write com.apple.Safari HomePage -string "about:blank"
 
-# Enable "Do Not Track"
-defaults write com.apple.Safari SendDoNotTrackHTTPHeader -bool true
+  # Prevent Safari from opening 'safe' files automatically after downloading
+  defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
 
-# Update extensions automatically
-defaults write com.apple.Safari InstallExtensionUpdatesAutomatically -bool true
+  # Hide Safari's bookmarks bar by default
+  defaults write com.apple.Safari ShowFavoritesBar -bool false
 
-# Modern privacy settings (optional - add these for enhanced privacy)
-defaults write com.apple.Safari PrivacyPreservingAdMeasurementEnabled -bool false
-defaults write com.apple.Safari WebKitPreferences.privateClickMeasurementEnabled -bool false
-defaults write com.apple.Safari WebKitPreferences.advancedPrivacyProtections -bool true
+  # Disable Safari's thumbnail cache for History and Top Sites
+  defaults write com.apple.Safari DebugSnapshotsUpdatePolicy -int 2
 
-# Expand save/open panels by default
-defaults write com.apple.Safari NSNavPanelExpandedStateForSaveMode -bool true
-defaults write com.apple.Safari NSNavPanelExpandedStateForOpenMode -bool true
+  # Enable Safari's debug menu
+  defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
+
+  # Make Safari's search banners default to Contains instead of Starts With
+  defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
+
+  # Remove useless icons from Safari's bookmarks bar
+  defaults write com.apple.Safari ProxiesInBookmarksBar "()"
+
+  # Enable the Develop menu and the Web Inspector in Safari
+  defaults write com.apple.Safari IncludeDevelopMenu -bool true
+  defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+
+  # Enable continuous spellchecking
+  defaults write com.apple.Safari WebContinuousSpellCheckingEnabled -bool true
+
+  # Disable auto-correct
+  defaults write com.apple.Safari WebAutomaticSpellingCorrectionEnabled -bool false
+
+  # Disable AutoFill
+  defaults write com.apple.Safari AutoFillFromAddressBook -bool false
+  defaults write com.apple.Safari AutoFillPasswords -bool false
+  defaults write com.apple.Safari AutoFillCreditCardData -bool false
+  defaults write com.apple.Safari AutoFillMiscellaneousForms -bool false
+
+  # Warn about fraudulent websites
+  defaults write com.apple.Safari WarnAboutFraudulentWebsites -bool true
+
+  # Block pop-up windows
+  defaults write com.apple.Safari WebKitJavaScriptCanOpenWindowsAutomatically -bool false
+
+  # Enable "Do Not Track"
+  defaults write com.apple.Safari SendDoNotTrackHTTPHeader -bool true
+
+  # Update extensions automatically
+  defaults write com.apple.Safari InstallExtensionUpdatesAutomatically -bool true
+
+  # Modern privacy settings (optional - add these for enhanced privacy)
+  defaults write com.apple.Safari PrivacyPreservingAdMeasurementEnabled -bool false
+  defaults write com.apple.Safari WebKitPreferences.privateClickMeasurementEnabled -bool false
+  defaults write com.apple.Safari WebKitPreferences.advancedPrivacyProtections -bool true
+
+  # Expand save/open panels by default
+  defaults write com.apple.Safari NSNavPanelExpandedStateForSaveMode -bool true
+  defaults write com.apple.Safari NSNavPanelExpandedStateForOpenMode -bool true
+
+else
+  echo "⏭️  Skipping Safari preferences — grant this terminal Full Disk Access" >&2
+  echo "    (System Settings -> Privacy & Security -> Full Disk Access), then re-run." >&2
+fi
 
 ###############################################################################
 # Spotlight                                                                   #
