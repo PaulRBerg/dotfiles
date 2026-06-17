@@ -221,5 +221,8 @@ and `web3.sh`.
 
 - Default branch: `main`. `just sync` commits and pushes directly to `main` (personal repo; no PR flow).
 - Run `just full-check` before committing and fix any Prettier / ShellCheck / shfmt findings.
+- After committing and pushing without `just sync`, apply only changed source-state paths not ignored by
+  `.chezmoiignore.tmpl`: for 1-3 apply-eligible files, run `chezmoi apply --source-path <path>...` from the source
+  directory; for more than 3 apply-eligible files, run `chezmoi apply`; if no changed files are apply-eligible, skip it.
 - No CI — validation is local only.
 - `CLAUDE.md` is a symlink to `AGENTS.md`; both paths resolve to this file. Edit `AGENTS.md` directly.
