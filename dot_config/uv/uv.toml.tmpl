@@ -1,0 +1,5 @@
+# Keep uv's cache with uv's data/tool state instead of ~/.cache.
+cache-dir = "{{ .chezmoi.homeDir }}/.local/share/uv/cache"
+
+# Always use uv-managed CPython, never Homebrew/system interpreters.
+python-preference = "only-managed"

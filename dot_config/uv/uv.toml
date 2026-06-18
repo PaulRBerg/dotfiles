@@ -1,2 +1,0 @@
-# Always use uv-managed CPython, never Homebrew/system interpreters.
-python-preference = "only-managed"

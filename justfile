@@ -42,7 +42,7 @@ GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc
 
 # Apply changes to the root directory using chezmoi
 [script("bash")]
-@apply:
+apply:
     OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
     signin_output="$({{ op }} signin --account "$OP_ACCOUNT")"
     [[ -z "$signin_output" ]] || eval "$signin_output"
