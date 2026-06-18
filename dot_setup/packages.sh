@@ -21,6 +21,7 @@ MACOS_FORMULAE=(
   bottom
   difftastic
   duf
+  dua-cli
   eza
   fd
   fnm
@@ -81,6 +82,7 @@ MACOS_FORMULAE=(
   gmp
   gnu-sed
   gnupg
+  mac-cleanup-go
   openssh
   pinentry-mac
   screen
