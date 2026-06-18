@@ -22,6 +22,7 @@ fi
 FOUNDRY_DIR="${FOUNDRY_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/foundry}"
 export FOUNDRY_DIR
 foundry_bin="$FOUNDRY_DIR/bin"
+changed=0
 
 # Pre-seed PATH so the upstream installer detects the bin dir and skips rc edits.
 case ":$PATH:" in
@@ -32,12 +33,16 @@ esac
 if ! command -v foundryup &>/dev/null; then
   log_info "Installing foundryup..."
   curl -L https://foundry.paradigm.xyz | bash
+  changed=1
 fi
 
 # Bootstrap the toolchain on first install. To update later, run: foundryup
 if ! command -v forge &>/dev/null; then
   log_info "Installing the Foundry toolchain (forge, cast, anvil, chisel)..."
   foundryup
+  changed=1
 fi
 
-log_success "Foundry toolchain ready"
+if ((changed)); then
+  log_success "Foundry toolchain ready"
+fi
