@@ -117,6 +117,7 @@ UBUNTU_APT_PACKAGES=(
   zoxide
 
   # File and archive utilities
+  libplist-utils
   moreutils
   p7zip-full
   pigz

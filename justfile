@@ -13,6 +13,8 @@ gum := require("gum")
 # Ni: https://github.com/antfu-collective/ni
 nlx := require("nlx")
 
+# plist formatter: macOS plutil or libplist-utils plistutil on Linux.
+
 # 1Password CLI: https://developer.1password.com/docs/cli/
 op := require("op")
 
@@ -73,12 +75,21 @@ sync msg="":
 #                                    CHECKS                                    #
 # ---------------------------------------------------------------------------- #
 
-# Run all checks (chezmoi, prettier, shellcheck, shfmt)
+# Run all checks (prettier, plist, shellcheck, shfmt)
 [group("checks")]
 full-check:
     just prettier-check
+    just plist-check
     just shell-check
 alias fc := full-check
+
+# Format files with project formatters
+[group("checks")]
+full-write:
+    just prettier-write
+    just plist-write
+    just shell-write
+alias fw := full-write
 
 # Run local health checks for this chezmoi source tree
 [group("checks")]
@@ -108,6 +119,9 @@ doctor:
     )
     if [[ "$(uname -s)" == "Darwin" ]]; then
         required+=(difft)
+        required+=(plutil)
+    else
+        required+=(plistutil)
     fi
     for cmd in "${required[@]}"; do
         if command -v "$cmd" >/dev/null 2>&1; then
@@ -179,6 +193,10 @@ doctor:
     just prettier-check || status=1
 
     echo
+    echo "== plist =="
+    just plist-check || status=1
+
+    echo
     echo "== shell-check =="
     just shell-check || status=1
 
@@ -196,6 +214,103 @@ alias pc := prettier-check
 @prettier-write:
     nlx prettier --write "**/*.{md,yaml,yml}"
 alias pw := prettier-write
+
+# Check plist syntax and canonical XML formatting
+[group("checks")]
+@plist-check:
+    PLIST_MODE=check just _plist
+alias plc := plist-check
+
+# Format plist files as canonical XML
+[group("checks")]
+@plist-write:
+    PLIST_MODE=write just _plist
+alias plw := plist-write
+
+# Run plist check/write implementation
+[group("checks")]
+[private]
+[script("bash")]
+_plist:
+    mode="${PLIST_MODE:-}"
+    case "$mode" in
+    check | write) ;;
+    *)
+        echo "unknown plist mode: $mode" >&2
+        exit 1
+        ;;
+    esac
+
+    formatter=""
+    if command -v plutil >/dev/null 2>&1; then
+        formatter=plutil
+    elif command -v plistutil >/dev/null 2>&1; then
+        formatter=plistutil
+    else
+        echo "missing plist formatter: install Xcode Command Line Tools (plutil) or libplist-utils (plistutil)" >&2
+        exit 1
+    fi
+
+    status=0
+    found=0
+    tmpdir=$(mktemp -d)
+    trap 'rm -rf "$tmpdir"' EXIT
+
+    format_plist() {
+        local file="$1"
+        local output="$2"
+
+        case "$formatter" in
+        plutil)
+            plutil -convert xml1 -o "$output" "$file"
+            ;;
+        plistutil)
+            plistutil -i "$file" -f xml -o "$output"
+            ;;
+        esac
+    }
+
+    while IFS= read -r -d '' file; do
+        found=1
+        case "$mode" in
+        check)
+            if [[ "$formatter" == "plutil" ]] && ! plutil -lint "$file" >/dev/null; then
+                status=1
+                continue
+            fi
+
+            tmp=$(mktemp "$tmpdir/plist.XXXXXX")
+            if ! format_plist "$file" "$tmp"; then
+                status=1
+                continue
+            fi
+            if ! cmp -s "$file" "$tmp"; then
+                printf 'needs format  %s\n' "$file" >&2
+                status=1
+            fi
+            ;;
+        write)
+            case "$formatter" in
+            plutil)
+                plutil -convert xml1 "$file" || status=1
+                ;;
+            plistutil)
+                tmp=$(mktemp "$tmpdir/plist.XXXXXX")
+                if plistutil -i "$file" -f xml -o "$tmp"; then
+                    cp "$tmp" "$file"
+                else
+                    status=1
+                fi
+                ;;
+            esac
+            ;;
+        esac
+    done < <(fd -HI -0 -e plist .)
+
+    if ((found == 0)); then
+        echo "No plist files found"
+    fi
+    exit "$status"
 
 # Check shell scripts with ShellCheck and shfmt
 [group("checks")]
