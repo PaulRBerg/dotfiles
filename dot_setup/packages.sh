@@ -70,6 +70,7 @@ MACOS_FORMULAE=(
   gs
   lynx
   pngquant
+  poppler # provides pdftotext
   sfnt2woff
   sfnt2woff-zopfli
   woff2
