@@ -17,6 +17,7 @@ minimumReleaseAgeExcludes = [
   "@prb/effect-evm",
   "@prb/effect-evm-safe",
   "@prb/effect-next",
+  "@prb/effect-solana",
   "@prb/effect-xstate",
   "@prb/math",
   "@sablier/devkit",
