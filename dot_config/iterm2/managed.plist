@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Default Profile</key>
+	<dict>
+		<key>Match</key>
+		<dict>
+			<key>Guid</key>
+			<string>83E5B0AD-9A80-4965-8B4A-B619C8EF3736</string>
+			<key>Name</key>
+			<string>Default</string>
+		</dict>
+		<key>Settings</key>
+		<dict>
+			<key>ASCII Anti Aliased</key>
+			<true/>
+			<key>Blinking Cursor</key>
+			<true/>
+			<key>Columns</key>
+			<integer>80</integer>
+			<key>Cursor Type</key>
+			<integer>1</integer>
+			<key>Flashing Bell</key>
+			<false/>
+			<key>Mouse Reporting</key>
+			<true/>
+			<key>Non Ascii Font</key>
+			<string>Monaco 12</string>
+			<key>Non-ASCII Anti Aliased</key>
+			<true/>
+			<key>Normal Font</key>
+			<string>Hack-Regular 13</string>
+			<key>Option Key Sends</key>
+			<integer>0</integer>
+			<key>Prompt Before Closing 2</key>
+			<false/>
+			<key>Right Option Key Sends</key>
+			<integer>0</integer>
+			<key>Rows</key>
+			<integer>25</integer>
+			<key>Scrollback Lines</key>
+			<integer>1000</integer>
+			<key>Silence Bell</key>
+			<false/>
+			<key>Terminal Type</key>
+			<string>xterm-256color</string>
+			<key>Unlimited Scrollback</key>
+			<false/>
+			<key>Use Bold Font</key>
+			<true/>
+			<key>Use Bright Bold</key>
+			<true/>
+			<key>Use Non-ASCII Font</key>
+			<false/>
+			<key>Visual Bell</key>
+			<true/>
+		</dict>
+	</dict>
+	<key>Global Settings</key>
+	<dict>
+		<key>AIFeatureFunctionCalling</key>
+		<true/>
+		<key>AIFeatureHostedCodeInterpeter</key>
+		<true/>
+		<key>AIFeatureHostedFileSearch</key>
+		<true/>
+		<key>AIFeatureHostedWebSearch</key>
+		<true/>
+		<key>AIFeatureStreamingResponses</key>
+		<true/>
+		<key>AITermAPI</key>
+		<integer>2</integer>
+		<key>AIVectorStore</key>
+		<integer>0</integer>
+		<key>AiMaxTokens</key>
+		<integer>1050000</integer>
+		<key>AiModel</key>
+		<string>gpt-5.5</string>
+		<key>AiResponseMaxTokens</key>
+		<integer>128000</integer>
+		<key>AitermURL</key>
+		<string>https://api.openai.com/v1/responses</string>
+		<key>AllowClipboardAccess</key>
+		<true/>
+		<key>HapticFeedbackForEsc</key>
+		<false/>
+		<key>IRMemory</key>
+		<integer>4</integer>
+		<key>ShowFullScreenTabBar</key>
+		<false/>
+		<key>SoundForEsc</key>
+		<false/>
+		<key>TabStyleWithAutomaticOption</key>
+		<integer>1</integer>
+		<key>VisualIndicatorForEsc</key>
+		<false/>
+	</dict>
+</dict>
+</plist>

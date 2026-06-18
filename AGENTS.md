@@ -18,16 +18,16 @@ Guidelines for AI agents and developers working on this dotfiles repository.
 
 Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 
-| Recipe                | Alias | Action                                                                          |
-| --------------------- | ----- | ------------------------------------------------------------------------------- |
-| `just`                | —     | List recipes                                                                    |
-| `just apply`          | `a`   | Migrate legacy iTerm2 target prefs if needed, `op signin`, then `chezmoi apply` |
-| `just sync [msg]`     | —     | Migrate legacy iTerm2 target prefs if needed, commit, push, then signin + apply |
-| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`                                         |
-| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`                                    |
-| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`                                    |
-| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts                           |
-| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                                               |
+| Recipe                | Alias | Action                                                |
+| --------------------- | ----- | ----------------------------------------------------- |
+| `just`                | —     | List recipes                                          |
+| `just apply`          | `a`   | `op signin`, then `chezmoi apply`                     |
+| `just sync [msg]`     | —     | Commit, push, then signin + apply                     |
+| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`               |
+| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`          |
+| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`          |
+| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts |
+| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                     |
 
 ### chezmoi
 
@@ -62,21 +62,21 @@ chezmoi source-state naming (source name → target):
 
 Layout:
 
-| Path                                    | Purpose                                                      |
-| --------------------------------------- | ------------------------------------------------------------ |
-| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                            |
-| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`        |
-| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                    |
-| `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`         |
-| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                           |
-| `dot_config/iterm2/`                    | iTerm2 settings plist (macOS; loaded via custom-folder sync) |
-| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)        |
-| `dot_setup/packages.sh`                 | Shared package manifest — source of truth                    |
-| `dot_setup/lib/common.sh`               | Shared setup helpers                                         |
-| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)       |
-| `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                               |
-| `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi)       |
-| `justfile`                              | Task runner                                                  |
+| Path                                    | Purpose                                                            |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                                  |
+| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`              |
+| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                          |
+| `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`               |
+| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                                 |
+| `dot_config/iterm2/`                    | Selected iTerm2 settings overlay (macOS; merged into global prefs) |
+| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)              |
+| `dot_setup/packages.sh`                 | Shared package manifest — source of truth                          |
+| `dot_setup/lib/common.sh`               | Shared setup helpers                                               |
+| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)             |
+| `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                                     |
+| `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi)             |
+| `justfile`                              | Task runner                                                        |
 
 ### Shell Startup Order
 
@@ -128,12 +128,13 @@ directly, so clipboard workflows work on macOS and Linux without per-OS aliases.
 
 ### iTerm2 settings (macOS only)
 
-iTerm2 loads its settings from the chezmoi source-state folder `dot_config/iterm2` via its built-in custom-folder sync
-(Settings → General → Settings), with save mode "Automatically". The pointer defaults are written by
-`dot_setup/run_onchange_setup_iterm2_macos.sh.tmpl`; the target folder is excluded on Linux in `.chezmoiignore.tmpl`.
+iTerm2 uses its normal global preferences domain (`com.googlecode.iterm2`). Do not point iTerm2 at the chezmoi
+source-state folder as a custom settings folder; iTerm rewrites that plist during normal GUI use.
 
-Because iTerm2 writes GUI changes directly back to `dot_config/iterm2/com.googlecode.iterm2.plist`, those changes appear
-as normal Git source changes and a bare `chezmoi apply` can copy them to the target without a target-modified prompt.
+Track only selected settings in `dot_config/iterm2/managed.plist`. The macOS apply hook
+`dot_setup/run_onchange_setup_iterm2_macos.sh.tmpl` exports the current iTerm2 defaults, merges the managed overlay into
+them, imports the result, and disables custom-folder loading. The live prefs file
+`dot_config/iterm2/com.googlecode.iterm2.plist` is intentionally ignored and should not be re-added.
 
 ## 1Password Integration
 

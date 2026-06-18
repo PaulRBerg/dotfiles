@@ -1,19 +1,52 @@
 #!/usr/bin/env bash
-# Point iTerm2 at the chezmoi source-state settings folder and auto-save changes there
+# Merge selected dotfiles-managed iTerm2 settings into the normal macOS defaults domain.
 # shellcheck disable=SC2034
+set -euo pipefail
 
 readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
 # run_onchange_ scripts execute from a temp dir, so source from the installed path
 source "$HOME/.setup/lib/common.sh"
 
-readonly PREFS_DIR='{{ joinPath .chezmoi.sourceDir "dot_config/iterm2" }}'
+readonly MANAGED_PLIST='{{ joinPath .chezmoi.sourceDir "dot_config/iterm2/managed.plist" }}'
+readonly MERGE_SCRIPT='{{ joinPath .chezmoi.sourceDir "dot_setup/executable_merge_iterm2_prefs.py" }}'
 
-defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$PREFS_DIR"
-defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
+if [[ ! -f "$MANAGED_PLIST" ]]; then
+  log_error "Managed iTerm2 plist not found: ${MANAGED_PLIST}"
+  exit 1
+fi
 
-# Save mode (iTermPreferenceSavePrefsMode): 0 = on quit, 1 = never, 2 = automatically
-defaults write com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile -bool true
-defaults write com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile_selection -int 2
+if [[ ! -f "$MERGE_SCRIPT" ]]; then
+  log_error "iTerm2 merge helper not found: ${MERGE_SCRIPT}"
+  exit 1
+fi
 
-log_success "iTerm2 loads settings from ${PREFS_DIR} (auto-save enabled)"
+python_cmd=()
+if command -v uv >/dev/null 2>&1; then
+  python_cmd=(uv run --quiet python)
+elif command -v python3 >/dev/null 2>&1; then
+  python_cmd=(python3)
+else
+  log_error "python3 or uv is required to merge iTerm2 preferences"
+  exit 1
+fi
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+
+current_plist="${tmp_dir}/current.plist"
+merged_plist="${tmp_dir}/merged.plist"
+
+if ! defaults export com.googlecode.iterm2 "$current_plist" >/dev/null 2>&1; then
+  plutil -create xml1 "$current_plist"
+fi
+
+"${python_cmd[@]}" "$MERGE_SCRIPT" "$MANAGED_PLIST" "$current_plist" "$merged_plist"
+defaults import com.googlecode.iterm2 "$merged_plist"
+
+defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool false
+defaults delete com.googlecode.iterm2 PrefsCustomFolder >/dev/null 2>&1 || true
+defaults delete com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile >/dev/null 2>&1 || true
+defaults delete com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile_selection >/dev/null 2>&1 || true
+
+log_success "Merged managed iTerm2 settings into the normal macOS preferences domain"
