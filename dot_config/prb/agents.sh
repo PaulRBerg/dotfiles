@@ -58,15 +58,25 @@ function ccc() {
   # pipe. Claude spawns background workers (prefetch/keychain reads) that can
   # inherit the capture pipe and hold it open after the commit already landed,
   # wedging `$(...)`/gum forever. Writing to a file breaks that fd inheritance.
+  # The commit skill runs helper scripts; this wrapper is noninteractive, so
+  # Claude needs bypass mode instead of a permission prompt it cannot surface.
   # GIT_TERMINAL_PROMPT=0 turns a hidden credential prompt (e.g. cccp/--push)
   # into a fast failure instead of an invisible hang behind the spinner.
   local out err rc
   out=$(mktemp) || return 1
   err=$(mktemp) || return 1
 
-  # shellcheck disable=SC2016
   gum spin --spinner dot --title "Claude is git committing..." -- \
-    sh -c "GIT_TERMINAL_PROMPT=0 ${timeout_cmd} "'claude --no-session-persistence --output-format json --strict-mcp-config --tools "Bash,Read" --print "/commit $1" >"$2" 2>"$3"' \
+    sh -c "GIT_TERMINAL_PROMPT=0 ${timeout_cmd} \
+      claude \
+        --no-session-persistence \
+        --output-format json \
+        --strict-mcp-config \
+        --tools \"Bash,Read\" \
+        --permission-mode bypassPermissions \
+        --print \"/commit \$1\" \
+        >\"\$2\" \
+        2>\"\$3\"" \
     _ "$*" "$out" "$err"
   rc=$?
 

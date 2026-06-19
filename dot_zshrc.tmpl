@@ -57,11 +57,14 @@ mkdir -p "${ZSH_COMPDUMP:h}"
 # shellcheck disable=SC2034
 plugins=(
   command-not-found
+  colored-man-pages
   extract
   fnm
   fzf # Ctrl-T files, Alt-C cd, **<Tab> completion; atuin re-binds Ctrl-R later
+  gitfast
   magic-enter
   sudo
+  fzf-tab                 # custom: https://github.com/Aloxaf/fzf-tab
   zsh-autosuggestions     # custom: https://github.com/zsh-users/zsh-autosuggestions
   zsh-syntax-highlighting # custom, must be the last one: https://github.com/zsh-users/zsh-syntax-highlighting
 )
@@ -94,6 +97,17 @@ zstyle ":omz:lib:*" aliases no
 # fnm plugin: eval `fnm env --use-on-cd` (auto-switch Node on cd) + completions
 zstyle ":omz:plugins:fnm" autostart yes
 
+# fzf-tab: use zsh's completion data, but render the selector through fzf.
+zstyle ":completion:*:descriptions" format "[%d]"
+[[ -n "${LS_COLORS:-}" ]] && eval 'zstyle ":completion:*" list-colors ${(s.:.)LS_COLORS}'
+zstyle ":completion:*" menu no
+zstyle ":completion:*:git-checkout:*" sort false
+zstyle ":completion:*:git-switch:*" sort false
+zstyle ":fzf-tab:*" switch-group "<" ">"
+zstyle ":fzf-tab:complete:cd:*" fzf-preview "eza -1 --color=always --icons=auto --group-directories-first -- \$realpath"
+zstyle ":fzf-tab:complete:git-checkout:argument-rest:*" fzf-preview "git log --oneline --graph --color=always -20 \$word --"
+zstyle ":fzf-tab:complete:git-switch:argument-rest:*" fzf-preview "git log --oneline --graph --color=always -20 \$word --"
+
 # Don't auto-set the terminal title (defaults to user@hostname:cwd); let the terminal manage it
 DISABLE_AUTO_TITLE="true"
 
@@ -121,6 +135,22 @@ if command -v atuin &>/dev/null; then
   eval "$(atuin init zsh)"
 fi
 {{- end }}
+
+# Television widgets: Ctrl-X Ctrl-F file, Ctrl-X Ctrl-D directory,
+# Ctrl-X Ctrl-R repo, Ctrl-X Ctrl-B branch, Ctrl-X Ctrl-J just recipe.
+if command -v tv &>/dev/null && [[ -o interactive ]]; then
+  zle -N prb-tv-file-widget
+  zle -N prb-tv-dir-widget
+  zle -N prb-tv-repo-widget
+  zle -N prb-tv-branch-widget
+  zle -N prb-tv-just-widget
+
+  bindkey "^X^F" prb-tv-file-widget
+  bindkey "^X^D" prb-tv-dir-widget
+  bindkey "^X^R" prb-tv-repo-widget
+  bindkey "^X^B" prb-tv-branch-widget
+  bindkey "^X^J" prb-tv-just-widget
+fi
 
 # bun completions
 [[ -s "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun" ]] && source "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun"
@@ -167,5 +197,17 @@ fi
 # Login-shell guard: `zsh -i <script>` (e.g. just recipes) fires preexec without
 # precmd, and iterm2_preexec reads ITERM2_PRECMD_PS1, which breaks under `set -u`.
 if [[ "$TERM_PROGRAM" == "iTerm.app" && -o login ]]; then
+  export ITERM_ENABLE_SHELL_INTEGRATION_WITH_TMUX="${ITERM_ENABLE_SHELL_INTEGRATION_WITH_TMUX:-1}"
+  iterm2_print_user_vars() {
+    local repo branch
+    repo=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ -n "$repo" ]]; then
+      branch=$(git -C "$repo" branch --show-current 2>/dev/null || true)
+    else
+      branch=""
+    fi
+    iterm2_set_user_var prbRepo "$repo"
+    iterm2_set_user_var prbBranch "$branch"
+  }
   test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 fi

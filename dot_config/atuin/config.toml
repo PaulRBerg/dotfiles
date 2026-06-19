@@ -1,0 +1,22 @@
+auto_sync = true
+sync_frequency = "5m"
+search_mode = "fuzzy"
+filter_mode = "global"
+workspaces = true
+filter_mode_shell_up_key_binding = "workspace"
+search_mode_shell_up_key_binding = "fuzzy"
+style = "compact"
+inline_height = 20
+inline_height_shell_up_key_binding = 12
+show_preview = true
+max_preview_height = 4
+show_tabs = false
+enter_accept = true
+secrets_filter = true
+
+[sync]
+records = true
+
+[daemon]
+enabled = true
+sync_frequency = 300

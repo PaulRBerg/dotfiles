@@ -27,6 +27,9 @@ if [[ -d "$HOME/.local/share/google-cloud-sdk" ]]; then
   add_path "$HOME/.local/share/google-cloud-sdk/bin"
 fi
 
+# iTerm2 shell integration utilities
+add_path "$HOME/.iterm2"
+
 # Solana
 add_path "$HOME/.local/share/solana/install/active_release/bin"
 add_path "$HOME/.avm/bin"
