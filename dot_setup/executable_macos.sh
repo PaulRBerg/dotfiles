@@ -204,6 +204,9 @@ defaults write com.apple.finder ShowStatusBar -bool true
 # Finder: show path bar
 defaults write com.apple.finder ShowPathbar -bool true
 
+# Hide favorite tag color shortcuts in Finder context menus
+defaults write com.apple.finder FavoriteTagNames -array
+
 # Display full POSIX path as Finder window title
 defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
 
