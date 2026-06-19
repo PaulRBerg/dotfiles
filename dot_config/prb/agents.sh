@@ -69,6 +69,7 @@ function ccc() {
   gum spin --spinner dot --title "Claude is git committing..." -- \
     sh -c "GIT_TERMINAL_PROMPT=0 ${timeout_cmd} \
       claude \
+        --model sonnet \
         --no-session-persistence \
         --output-format json \
         --strict-mcp-config \
