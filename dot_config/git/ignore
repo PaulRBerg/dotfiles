@@ -52,7 +52,10 @@ yarn-error.log
 .playwright-mcp/
 
 # Python
+.mypy_cache/
+.pytest_cache/
 .python-version
+.ruff_cache/
 /env
 __pycache__/
 *.py[cod]
