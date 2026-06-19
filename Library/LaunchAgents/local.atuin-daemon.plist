@@ -16,16 +16,16 @@
 	</array>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/opt/homebrew/opt/atuin/bin/atuin</string>
-		<string>daemon</string>
-		<string>start</string>
-		<string>--force</string>
+		<string>/bin/bash</string>
+		<string>-c</string>
+		<string>source "$HOME/.config/prb/env_core.sh"
+log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/atuin"
+mkdir -p "$log_dir"
+exec &gt;&gt;"$log_dir/daemon.log" 2&gt;&amp;1
+source "$HOME/.config/prb/path.sh"
+exec atuin daemon start --force</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
-	<key>StandardErrorPath</key>
-	<string>/opt/homebrew/var/log/atuin-daemon.log</string>
-	<key>StandardOutPath</key>
-	<string>/opt/homebrew/var/log/atuin-daemon.log</string>
 </dict>
 </plist>

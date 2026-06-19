@@ -45,15 +45,15 @@ function _mac_cleanup_limit_lines() {
 }
 
 function _mac_cleanup_du_kib() {
-  local path="$1"
+  local du_path="$1"
   local timeout_seconds="${MAC_CLEANUP_DU_TIMEOUT_SECONDS:-20}"
 
   if command -v gtimeout >/dev/null 2>&1; then
-    gtimeout "$timeout_seconds" du -sk "$path"
+    gtimeout "$timeout_seconds" du -sk "$du_path"
   elif command -v timeout >/dev/null 2>&1; then
-    timeout "$timeout_seconds" du -sk "$path"
+    timeout "$timeout_seconds" du -sk "$du_path"
   else
-    du -sk "$path"
+    du -sk "$du_path"
   fi
 }
 

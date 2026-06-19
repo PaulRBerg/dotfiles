@@ -17,9 +17,9 @@ fi
 add_path "$HOME/.lmstudio/bin"
 
 # OpenSSL
-if [[ -d "/opt/homebrew/opt/openssl" ]]; then
-  export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl/lib/pkgconfig"
-  add_path "/opt/homebrew/opt/openssl/bin"
+if [[ -n "${HOMEBREW_PREFIX:-}" && -d "$HOMEBREW_PREFIX/opt/openssl" ]]; then
+  export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/opt/openssl/lib/pkgconfig"
+  add_path "$HOMEBREW_PREFIX/opt/openssl/bin"
 fi
 
 # Google Cloud SDK

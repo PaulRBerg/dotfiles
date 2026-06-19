@@ -20,8 +20,8 @@ MACOS_FORMULAE=(
   bats-core
   bottom
   difftastic
-  duf
   dua-cli
+  duf
   eza
   fd
   fnm

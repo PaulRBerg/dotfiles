@@ -48,11 +48,12 @@ chicken-and-egg failures.
    ```
 
 3. Install Oh My Zsh **into the XDG location** the tracked `.zshrc` expects (`~/.local/share/oh-my-zsh`, not the
-   installer's default), plus the two custom plugins:
+   installer's default), plus the three custom plugins:
 
    ```sh
    export ZSH="$HOME/.local/share/oh-my-zsh"
    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+   git clone https://github.com/Aloxaf/fzf-tab "$ZSH/custom/plugins/fzf-tab"
    git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH/custom/plugins/zsh-autosuggestions"
    git clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH/custom/plugins/zsh-syntax-highlighting"
    ```

@@ -81,6 +81,7 @@ install_ohmyzsh() {
     # Install Oh My Zsh plugins
     log_info "Installing Oh My Zsh plugins..."
 
+    install_omz_plugin "${omz_dir}" "fzf-tab" "https://github.com/Aloxaf/fzf-tab"
     install_omz_plugin "${omz_dir}" "zsh-autosuggestions" "https://github.com/zsh-users/zsh-autosuggestions"
     install_omz_plugin "${omz_dir}" "zsh-syntax-highlighting" "https://github.com/zsh-users/zsh-syntax-highlighting"
 
