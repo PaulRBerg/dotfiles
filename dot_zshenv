@@ -4,6 +4,9 @@ export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
+# ripgrep does not auto-load config files; point it at the XDG config.
+export RIPGREP_CONFIG_PATH="${RIPGREP_CONFIG_PATH:-$XDG_CONFIG_HOME/ripgrep/config}"
+
 # Keep user-managed shims ahead of system binaries for all zsh invocations,
 # including non-interactive shells that do not read ~/.zshrc.
 if [[ -d "$HOME/.local/bin" ]]; then
