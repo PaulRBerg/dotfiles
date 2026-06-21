@@ -76,5 +76,8 @@ add_path "${GOBIN:-${GOPATH:-$HOME/go}/bin}"
 # OpenCode
 add_path "$HOME/.opencode/bin"
 
+# Grok (installer also writes ~/.grok/bin/agent; PATH points here, agent removed by design)
+add_path "$HOME/.grok/bin"
+
 # Rindexer
 add_path "${XDG_CONFIG_HOME:-$HOME/.config}/.rindexer/bin"
