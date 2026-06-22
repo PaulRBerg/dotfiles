@@ -96,9 +96,6 @@ MACOS_FORMULAE=(
 )
 
 MACOS_CASKS=(
-  # Browsers
-  chromium
-
   # Quick Look extensions
   qlmarkdown
   syntax-highlight
