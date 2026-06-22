@@ -237,7 +237,11 @@ checks from AGENTS.md, then stop without committing."
 
   if _wakeup_run_claude_in_agent_skills "Refreshing CLI-backed agent skills" "$prompt"; then
     if [[ -n "$(git -C "$AGENT_SKILLS_DIR" status --porcelain 2>/dev/null)" ]]; then
-      _wakeup_run_claude_in_agent_skills "Committing CLI-backed skill refresh" "/commit --push" || true
+      # Worktree was clean before the refresh, so everything dirty now is the
+      # refresh's output. Stage it and commit exactly that index with --staged
+      # (deterministic; no reliance on a fresh session inferring what to stage).
+      git -C "$AGENT_SKILLS_DIR" add -A
+      _wakeup_run_claude_in_agent_skills "Committing CLI-backed skill refresh" "/commit --staged --push" || true
     else
       echo "No CLI-backed skill changes to commit"
     fi
