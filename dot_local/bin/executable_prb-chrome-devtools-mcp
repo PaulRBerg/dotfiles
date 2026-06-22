@@ -1,16 +1,16 @@
 #!/bin/zsh
 set -eu
 
-port="${PRB_AGENT_CHROME_PORT:-9222}"
-profile_dir="${PRB_AGENT_CHROME_PROFILE:-$HOME/Library/Application Support/prb-agent-chrome}"
-chrome_bin="${PRB_AGENT_CHROME_BIN:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
-state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/prb-agent-chrome"
-log_file="$state_dir/chrome.log"
+port="${PRB_AGENT_CHROMIUM_PORT:-9222}"
+profile_dir="${PRB_AGENT_CHROMIUM_PROFILE:-$HOME/Library/Application Support/prb-agent-chromium}"
+chromium_bin="${PRB_AGENT_CHROMIUM_BIN:-/Applications/Chromium.app/Contents/MacOS/Chromium}"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/prb-agent-chromium"
+log_file="$state_dir/chromium.log"
 
 mkdir -p "$profile_dir" "$state_dir"
 
 if ! curl -fsS "http://127.0.0.1:$port/json/version" >/dev/null 2>&1; then
-  "$chrome_bin" \
+  "$chromium_bin" \
     "--remote-debugging-port=$port" \
     "--user-data-dir=$profile_dir" \
     "--no-first-run" \
@@ -22,7 +22,7 @@ if ! curl -fsS "http://127.0.0.1:$port/json/version" >/dev/null 2>&1; then
   while ! curl -fsS "http://127.0.0.1:$port/json/version" >/dev/null 2>&1; do
     attempts=$((attempts + 1))
     if [ "$attempts" -ge 100 ]; then
-      echo "Chrome did not expose CDP on 127.0.0.1:$port. See $log_file" >&2
+      echo "Chromium did not expose CDP on 127.0.0.1:$port. See $log_file" >&2
       exit 1
     fi
     sleep 0.1
