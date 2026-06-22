@@ -98,6 +98,17 @@ function cccp() {
   ccc --all --push
 }
 
+# Claude Code commit staged
+# Commits only the currently staged index (git add your specific changes first)
+function ccs() {
+  ccc --staged "$@"
+}
+
+# Claude Code commit staged and push
+function ccsp() {
+  ccc --staged --push "$@"
+}
+
 # Claude Code bump release
 function ccbump() {
   _require_gum || return 1
