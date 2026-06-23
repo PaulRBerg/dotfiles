@@ -15,13 +15,12 @@ if ! curl -fsS "http://127.0.0.1:$port/json/version" >/dev/null 2>&1; then
     "--user-data-dir=$profile_dir" \
     "--no-first-run" \
     "--no-default-browser-check" \
-    about:blank \
     >"$log_file" 2>&1 &
 
   attempts=0
   while ! curl -fsS "http://127.0.0.1:$port/json/version" >/dev/null 2>&1; do
     attempts=$((attempts + 1))
-    if [ "$attempts" -ge 100 ]; then
+    if [[ "$attempts" -ge 100 ]]; then
       echo "Chromium did not expose CDP on 127.0.0.1:$port. See $log_file" >&2
       exit 1
     fi
