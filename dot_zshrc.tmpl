@@ -111,6 +111,15 @@ zstyle ":fzf-tab:complete:git-switch:argument-rest:*" fzf-preview "git log --one
 # Don't auto-set the terminal title (defaults to user@hostname:cwd); let the terminal manage it
 DISABLE_AUTO_TITLE="true"
 
+# Clear any stale window title on return to the prompt. Some tools set it via OSC 0
+# (window + tab) and never reset on exit — e.g. the grok CLI writes `…- grok`, which
+# then lingers under claude/codex. OSC 2 blanks only the window title; live app titles
+# are untouched since precmd fires only once control is back at the shell.
+if [[ -o interactive ]]; then
+  _prb_reset_window_title() { print -n '\e]2;\a'; }
+  precmd_functions+=(_prb_reset_window_title)
+fi
+
 # Skip compaudit security check on non-login shells (saves ~15-20ms per shell startup)
 if [[ -o login ]]; then
   zstyle ":omz:lib:compfix" skip no
