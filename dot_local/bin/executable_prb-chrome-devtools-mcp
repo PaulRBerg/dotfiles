@@ -1,8 +1,9 @@
 #!/bin/zsh
 set -eu
 
-port="${PRB_AGENT_CHROMIUM_PORT:-9222}"
-profile_dir="${PRB_AGENT_CHROMIUM_PROFILE:-$HOME/Library/Application Support/prb-agent-chromium}"
+port="9222"
+profile_dir="$HOME/Library/Application Support/prb-agent-chromium"
+profile_name="Default"
 chromium_bin="${PRB_AGENT_CHROMIUM_BIN:-/Applications/Chromium.app/Contents/MacOS/Chromium}"
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/prb-agent-chromium"
 log_file="$state_dir/chromium.log"
@@ -13,6 +14,7 @@ if ! curl -fsS "http://127.0.0.1:$port/json/version" >/dev/null 2>&1; then
   "$chromium_bin" \
     "--remote-debugging-port=$port" \
     "--user-data-dir=$profile_dir" \
+    "--profile-directory=$profile_name" \
     "--no-first-run" \
     "--no-default-browser-check" \
     >"$log_file" 2>&1 &
