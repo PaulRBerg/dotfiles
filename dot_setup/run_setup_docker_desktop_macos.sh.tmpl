@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+# Keep Docker Desktop's integrity-check inputs aligned with this machine.
+# managed settings hash: {{ include "dot_config/prb/docker-desktop.json" | sha256sum }}
+# shellcheck disable=SC2034
+set -euo pipefail
+
+readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+# run_ scripts execute from a temp dir, so source from the installed path
+source "$HOME/.setup/lib/common.sh"
+
+readonly DOCKER_APP="/Applications/Docker.app"
+readonly DOCKER_INSTALL="${DOCKER_APP}/Contents/MacOS/install"
+readonly MANAGED_SETTINGS='{{ joinPath .chezmoi.sourceDir "dot_config/prb/docker-desktop.json" }}'
+readonly SETTINGS_FILE="${HOME}/Library/Group Containers/group.com.docker/settings-store.json"
+readonly SOCKET_LINK="/var/run/docker.sock"
+readonly SOCKET_TARGET="${HOME}/.docker/run/docker.sock"
+readonly USER_NAME="$(id -un)"
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+broken_docker_symlinks=()
+
+if [[ ! -x "$DOCKER_INSTALL" ]]; then
+  exit 0
+fi
+
+merge_settings() {
+  local tmp_settings="${tmp_dir}/settings-store.json"
+
+  if [[ ! -f "$MANAGED_SETTINGS" ]]; then
+    log_error "Managed Docker Desktop settings not found: ${MANAGED_SETTINGS}"
+    return 0
+  fi
+
+  if ! command -v jq >/dev/null 2>&1; then
+    log_error "jq is required to merge Docker Desktop settings"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$SETTINGS_FILE")"
+  if [[ ! -f "$SETTINGS_FILE" ]]; then
+    printf '{}\n' >"$SETTINGS_FILE"
+  fi
+
+  if ! jq -S -s '.[0] * .[1]' "$SETTINGS_FILE" "$MANAGED_SETTINGS" >"$tmp_settings"; then
+    log_error "Could not merge Docker Desktop settings"
+    return 0
+  fi
+
+  if ! cmp -s "$SETTINGS_FILE" "$tmp_settings"; then
+    cp "$tmp_settings" "$SETTINGS_FILE"
+    log_success "Merged managed Docker Desktop settings"
+  fi
+}
+
+collect_broken_docker_symlinks() {
+  local link
+  local target
+
+  broken_docker_symlinks=()
+  shopt -s nullglob
+  for link in /usr/local/bin/*; do
+    [[ -L "$link" ]] || continue
+
+    target="$(readlink "$link")"
+    [[ "$target" == "$DOCKER_APP/"* ]] || continue
+    [[ -e "$target" ]] && continue
+
+    broken_docker_symlinks+=("$link")
+  done
+  shopt -u nullglob
+}
+
+docker_desktop_symlink_drifted() {
+  local link
+  local target
+
+  collect_broken_docker_symlinks
+  if ((${#broken_docker_symlinks[@]} == 0)); then
+    return 1
+  fi
+
+  for link in "${broken_docker_symlinks[@]}"; do
+    target="$(readlink "$link")"
+    log_error "Broken Docker Desktop symlink: ${link} -> ${target}"
+  done
+  return 0
+}
+
+remove_broken_docker_symlinks() {
+  collect_broken_docker_symlinks
+  if ((${#broken_docker_symlinks[@]} == 0)); then
+    return 0
+  fi
+
+  rm -f "${broken_docker_symlinks[@]}"
+  log_success "Removed stale Docker Desktop symlinks"
+}
+
+socket_symlink_drifted() {
+  if [[ -L "$SOCKET_LINK" ]] && [[ "$(readlink "$SOCKET_LINK")" == "$SOCKET_TARGET" ]]; then
+    return 1
+  fi
+
+  if [[ -e "$SOCKET_LINK" ]]; then
+    log_error "Docker socket path is not the expected symlink: ${SOCKET_LINK}"
+  else
+    log_error "Docker socket symlink is missing: ${SOCKET_LINK}"
+  fi
+  return 0
+}
+
+root_repair_command() {
+  printf 'sudo %s config --user %s' "$DOCKER_INSTALL" "$USER_NAME"
+  printf '\n'
+}
+
+repair_root_managed_state() {
+  local -a install_cmd=("$DOCKER_INSTALL" config --user "$USER_NAME")
+
+  if ((EUID == 0)); then
+    "${install_cmd[@]}"
+    remove_broken_docker_symlinks
+    return
+  fi
+
+  if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+    sudo "${install_cmd[@]}"
+    collect_broken_docker_symlinks
+    if ((${#broken_docker_symlinks[@]} > 0)); then
+      sudo rm -f "${broken_docker_symlinks[@]}"
+      log_success "Removed stale Docker Desktop symlinks"
+    fi
+    return
+  fi
+
+  log_error "Docker Desktop repair needs admin privileges"
+  log_error "Run: $(root_repair_command)"
+  log_error "Then rerun chezmoi apply while sudo is cached to remove stale links left by Docker"
+}
+
+ensure_desktop_context() {
+  local current_context
+
+  if ! command -v docker >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! docker context inspect desktop-linux >/dev/null 2>&1; then
+    return 0
+  fi
+
+  current_context="$(docker context show 2>/dev/null || true)"
+  if [[ "$current_context" == "desktop-linux" ]]; then
+    return 0
+  fi
+
+  docker context use desktop-linux >/dev/null
+  log_success "Docker context set to desktop-linux"
+}
+
+merge_settings
+
+needs_repair=0
+if docker_desktop_symlink_drifted; then
+  needs_repair=1
+fi
+if socket_symlink_drifted; then
+  needs_repair=1
+fi
+if ((needs_repair != 0)); then
+  repair_root_managed_state
+fi
+
+ensure_desktop_context

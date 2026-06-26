@@ -1,0 +1,5 @@
+{
+  "DockerBinInstallPath": "system",
+  "EnableDefaultDockerSocket": true,
+  "EnableIntegrityCheck": true
+}

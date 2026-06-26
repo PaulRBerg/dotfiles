@@ -136,6 +136,28 @@ Track only selected settings in `dot_config/iterm2/managed.plist`. The macOS app
 them, imports the result, and disables custom-folder loading. The live prefs file
 `dot_config/iterm2/com.googlecode.iterm2.plist` is intentionally ignored and should not be re-added.
 
+## Managed App Settings (partial overlays)
+
+Some apps own their settings files and rewrite them whenever you change preferences through their GUI. Tracking the full
+file in chezmoi would fight the app — `chezmoi apply` would clobber legitimate GUI changes, and the app would clobber
+ours. So for these apps we don't manage the whole file. Instead we commit a small overlay of only the settings we always
+want enforced, and an apply hook merges that overlay onto the app's live settings (overlay wins). This re-asserts our
+preferences after GUI drift, a reinstall, or shifting app defaults, while leaving every other setting the app manages
+untouched. The live settings file itself stays untracked.
+
+Apps managed this way:
+
+- **iTerm2** (macOS) — overlay `dot_config/iterm2/managed.plist`, merged into the `com.googlecode.iterm2` defaults
+  domain by `dot_setup/run_onchange_setup_iterm2_macos.sh.tmpl` (via the `dot_setup/executable_merge_iterm2_prefs.py`
+  helper). See the iTerm2 subsection above; the live prefs `dot_config/iterm2/com.googlecode.iterm2.plist` are ignored
+  in `.chezmoiignore.tmpl`.
+- **Docker Desktop** (macOS) — overlay `dot_config/prb/docker-desktop.json`, merged into
+  `~/Library/Group Containers/group.com.docker/settings-store.json` by
+  `dot_setup/run_setup_docker_desktop_macos.sh.tmpl` (via `jq -s '.[0] * .[1]'`, so the overlay wins).
+
+When adding another such app, follow the same shape: a committed overlay of just the settings to enforce, plus a `run_*`
+apply hook that merges it onto the app's live file.
+
 ## 1Password Integration
 
 Fetch secrets in templates with `onepasswordRead`:
