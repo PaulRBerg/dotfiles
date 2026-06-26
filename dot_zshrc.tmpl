@@ -219,4 +219,12 @@ if [[ "$TERM_PROGRAM" == "iTerm.app" && -o login ]]; then
     iterm2_set_user_var prbBranch "$branch"
   }
   test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+  # Starship rewrites PS1 after iTerm2's shell integration decorates it, so the
+  # integration's own OSC-133 prompt mark never survives and ⌘⇧↑/↓ (Previous/
+  # Next Mark) have nothing to jump to. Emit an explicit iTerm2 mark each prompt
+  # (independent of PS1) so shell prompt-to-prompt navigation works.
+  autoload -Uz add-zsh-hook
+  _prb_iterm2_mark() { printf '\033]1337;SetMark\007'; }
+  add-zsh-hook precmd _prb_iterm2_mark
 fi

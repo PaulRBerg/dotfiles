@@ -15,6 +15,8 @@
 		<dict>
 			<key>ASCII Anti Aliased</key>
 			<true/>
+			<key>Badge Text</key>
+			<string>\(user.prbBranch)</string>
 			<key>Blinking Cursor</key>
 			<true/>
 			<key>Columns</key>
@@ -102,6 +104,8 @@
 		<false/>
 		<key>TabStyleWithAutomaticOption</key>
 		<integer>1</integer>
+		<key>UseMetal</key>
+		<true/>
 		<key>VisualIndicatorForEsc</key>
 		<false/>
 	</dict>
