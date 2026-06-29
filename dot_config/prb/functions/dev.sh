@@ -11,10 +11,11 @@ function pm_update() {
 }
 
 # Upgrade global bun packages to their latest versions.
-# `bun update -g` only moves within each package's saved semver range (and has
-# been unreliable for globals — oven-sh/bun#10341), so reinstall each global at
-# `latest`, which reliably crosses majors. The 7-day cooldown in ~/.bunfig.toml
-# still applies. No-op when nothing is installed.
+# `bun update -g` only moves within each package's saved semver range, and is
+# unreliable for globals besides — it updates only the first package
+# (oven-sh/bun#25585), so reinstall each global at `latest`, which reliably
+# crosses majors. The 7-day cooldown in ~/.bunfig.toml still applies. No-op when
+# nothing is installed.
 function bun_update() {
   local manifest names
   manifest="${BUN_INSTALL:-${XDG_DATA_HOME:-$HOME/.local/share}/bun}/install/global/package.json"
