@@ -1,8 +1,7 @@
 # Search dotfiles and dot-directories like .agents by default.
 --hidden
 
-# Search files even when ignore files would exclude them.
---no-ignore
-
 # --hidden includes VCS internals unless they are explicitly excluded.
 --glob=!.git
+
+# Respect .gitignore/.ignore by default; search ignored files on demand with `rg -uu`.
