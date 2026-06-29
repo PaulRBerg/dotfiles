@@ -21,7 +21,7 @@ alias work="cd ~/work"
 ###############################################################################
 alias sablier="cd ~/sablier"
 alias accounting="cd ~/sablier/business/accounting"
-alias devkit="cd ~/sablier/devkit"
+alias devkit="cd ~/projects/devkit"
 alias indexers="cd ~/sablier/backend/indexers"
 alias interfaces="cd ~/sablier/old-ui"
 alias monorepo="cd ~/sablier/evm/monorepo"
