@@ -24,9 +24,38 @@ Audit macOS background load and cache sprawl first, then clean only low-risk reg
 - Treat Helium as the default browser. Do not clear Helium cache by default because it may slow browsing.
 - Do not delete caches or app data that may contain login state, browsing/session context, model downloads, project
   indexes, local databases, simulator devices, wallets, chat history, or unsynced user data.
+- Shell history (atuin) records only CLI invocations: GUI apps never appear in it, so absence from history is not
+  evidence that an app is uninstalled. Verify install state (see "Verifying an app is actually uninstalled") before
+  recommending removal of any app's `~/Library` data.
+- Treat credential-, key-, or content-bearing data as review-only even when the owning app is gone — Keybase keys,
+  GitHub Desktop/CLI tokens, browser profiles with saved passwords, notes apps, and wallet stores. Rotate any secret
+  embedded in a config (e.g. a deploy key in `~/.<tool>.json`) before deleting it.
 - Prefer dry-run, preview, Trash, or vendor cleanup commands over raw `rm -rf`.
 - Keep secret-safe output: report sizes, paths, process names, service names, and counts; do not print environment
   variables, tokens, rendered secret-backed templates, browser data, wallet data, or raw application databases.
+
+## Verifying an app is actually uninstalled
+
+Before flagging any `~/Library` data (Application Support, Containers, Group Containers, Caches, Saved Application
+State) for removal, prove the owning app is gone. A single signal is not enough, and false "not installed" verdicts lead
+to deleting live app data.
+
+- Check every app location, not just `/Applications`: also `~/Applications` (user-scoped apps), vendor subfolders such
+  as `/Applications/Adobe/Adobe Acrobat DC`, Safari extension bundles under `/Applications/Safari/*.app` (e.g. AdBlock,
+  PayPal Honey), `/System/Applications`, and `/Applications/Setapp`.
+- Authoritative lookup by name: `mdfind -name "<AppName>" | grep -i '\.app/\?$'`, then cross-check the data dir's bundle
+  id (`com.vendor.App`) against the result.
+- `mdfind` predicate gotcha: comparison modifiers must be lowercase — `kMDItemDisplayName == '*X*'cd`. An uppercase `C`
+  silently voids the filter and returns every indexed app, so an identical "match" for every name you test is the
+  failure signature. Sanity-check that different names return different results.
+- `brew list --cask` absence alone is insufficient — apps are frequently installed outside Homebrew (direct download,
+  Mac App Store).
+- Calibrate "unused" against the history window: read `min`/`max(timestamp)` from atuin first; "0 hits" means "not in
+  the recorded window," not "never used."
+
+Cautionary example: in one audit a naive `/Applications`-plus-history check falsely reported Warp, WarpPreview,
+MyCrypto, Topaz Photo AI, Adobe Acrobat/Creative Cloud, AdBlock and PayPal Honey (Safari extensions), Tor Browser, and
+Trader Workstation (in `~/Applications`) as "not installed" — every one was present. Verify before recommending removal.
 
 ## Cleanup Policy
 
