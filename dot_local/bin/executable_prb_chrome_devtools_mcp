@@ -1,6 +1,7 @@
 #!/bin/zsh
 set -eu
 
+# Launched by Codex and Claude from ~/.codex/config.toml and ~/.claude.json.
 port="9222"
 profile_dir="$HOME/Library/Application Support/prb-agent-chromium"
 profile_name="Default"
