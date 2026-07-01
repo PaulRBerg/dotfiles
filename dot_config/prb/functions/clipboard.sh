@@ -25,10 +25,31 @@ function copy_rg_paths() {
   rg -l --color=never "$pattern" "${@:-.}" | sort -u | pbcopy
 }
 
-# Yank working directory to clipboard (escapes special chars for shell use)
+# Yank current or selected path to clipboard (escapes special chars for shell use).
+# Usage: ywd [path]
+#        fzf | ywd
 function ywd() {
-  local target="$(pwd)"
-  [[ -n "$1" ]] && target="$target/$1"
+  local selection=""
+  local target
+
+  target="$(pwd)"
+  if [[ $# -gt 0 ]]; then
+    selection="$1"
+  elif [[ ! -t 0 ]]; then
+    IFS= read -r selection || {
+      echo "No path selected" >&2
+      return 1
+    }
+  fi
+
+  if [[ -n "$selection" ]]; then
+    if [[ "$selection" == /* ]]; then
+      target="$selection"
+    else
+      target="$target/$selection"
+    fi
+  fi
+
   if [[ ! -e "$target" ]]; then
     echo "❌ Path does not exist: $target" >&2
     return 1
