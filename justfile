@@ -4,27 +4,6 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 set unstable
 
 # ---------------------------------------------------------------------------- #
-#                                 DEPENDENCIES                                 #
-# ---------------------------------------------------------------------------- #
-
-# Gum: https://github.com/charmbracelet/gum
-gum := require("gum")
-
-# Ni: https://github.com/antfu-collective/ni
-nlx := require("nlx")
-
-# plist formatter: macOS plutil or libplist-utils plistutil on Linux.
-
-# 1Password CLI: https://developer.1password.com/docs/cli/
-op := require("op")
-
-# ShellCheck: https://github.com/koalaman/shellcheck
-shellcheck := require("shellcheck")
-
-# shfmt: https://github.com/mvdan/sh
-shfmt := require("shfmt")
-
-# ---------------------------------------------------------------------------- #
 #                                  CONSTANTS                                   #
 # ---------------------------------------------------------------------------- #
 
@@ -44,7 +23,7 @@ GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc
 [script("bash")]
 apply:
     OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
-    signin_output="$({{ op }} signin --account "$OP_ACCOUNT")"
+    signin_output="$(op signin --account "$OP_ACCOUNT")"
     [[ -z "$signin_output" ]] || eval "$signin_output"
     OP_ACCOUNT="$OP_ACCOUNT" chezmoi apply
 alias a := apply
@@ -67,7 +46,7 @@ sync msg="":
         echo "No changes to commit"
     fi
     OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
-    signin_output="$({{ op }} signin --account "$OP_ACCOUNT")"
+    signin_output="$(op signin --account "$OP_ACCOUNT")"
     [[ -z "$signin_output" ]] || eval "$signin_output"
     OP_ACCOUNT="$OP_ACCOUNT" gum spin --spinner dot --title "Applying dotfiles..." -- chezmoi apply --force
 
