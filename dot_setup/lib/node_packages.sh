@@ -65,22 +65,47 @@ install_bun_globals() {
   echo "" >&2
 
   # Install packages one by one so a single failure doesn't abort the rest.
-  local package
+  local package install_output
   for package in "${BUN_GLOBAL_PACKAGES[@]}"; do
     echo "📦 Installing $package..." >&2
-    if bun add --global "$package"; then
+    if install_output="$(bun add --global --no-progress --no-summary "$package" 2>&1)"; then
       echo "✅ $package installed successfully" >&2
     else
       echo "❌ $package installation failed" >&2
+      printf '%s\n' "$install_output" >&2
     fi
     echo "" >&2
   done
 
-  # NB: exits 1 when everything is already trusted (and its error output
-  # echoes the subcommand name as if it were a package — bun quirk), hence
-  # the guard.
-  echo "🔏 Trusting lifecycle scripts: ${BUN_TRUSTED_PACKAGES[*]}" >&2
-  bun pm -g trust "${BUN_TRUSTED_PACKAGES[@]}" || echo "⚠️ bun pm trust: nothing untrusted (or a package is missing)" >&2
+  local untrusted_packages packages_to_trust=()
+  untrusted_packages="$(
+    { bun pm untrusted -g 2>/dev/null || true; } | awk '
+      /^\.\/node_modules\// {
+        package_path = $1
+        sub(/^.*\/node_modules\//, "", package_path)
+        split(package_path, parts, "/")
+
+        if (parts[1] ~ /^@/ && parts[2] != "") {
+          print parts[1] "/" parts[2]
+        } else {
+          print parts[1]
+        }
+      }
+    ' | sort -u
+  )"
+
+  for package in "${BUN_TRUSTED_PACKAGES[@]}"; do
+    if grep -Fxq -- "$package" <<<"$untrusted_packages"; then
+      packages_to_trust+=("$package")
+    fi
+  done
+
+  if ((${#packages_to_trust[@]} > 0)); then
+    echo "🔏 Trusting lifecycle scripts: ${packages_to_trust[*]}" >&2
+    bun pm trust -g "${packages_to_trust[@]}"
+  else
+    echo "✅ No configured lifecycle scripts need trusting" >&2
+  fi
 
   echo "🎉 All global packages installed!" >&2
 }
