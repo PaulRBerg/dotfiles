@@ -48,6 +48,7 @@ BUN_TRUSTED_PACKAGES=(
 install_bun_globals() {
   export BUN_INSTALL="${BUN_INSTALL:-${XDG_DATA_HOME:-$HOME/.local/share}/bun}"
   export PATH="$BUN_INSTALL/bin:$PATH"
+  local quiet="${BUN_GLOBALS_QUIET:-0}"
 
   # Bootstrap bun via the native installer if it is missing (no-op when
   # present, so repeated calls don't re-fetch it).
@@ -61,20 +62,28 @@ install_bun_globals() {
     return 1
   fi
 
-  echo "🚀 Installing global packages with bun..." >&2
-  echo "" >&2
+  if [[ "$quiet" != "1" ]]; then
+    echo "🚀 Installing global packages with bun..." >&2
+    echo "" >&2
+  fi
 
   # Install packages one by one so a single failure doesn't abort the rest.
   local package install_output
   for package in "${BUN_GLOBAL_PACKAGES[@]}"; do
-    echo "📦 Installing $package..." >&2
+    if [[ "$quiet" != "1" ]]; then
+      echo "📦 Installing $package..." >&2
+    fi
     if install_output="$(bun add --global --no-progress --no-summary "$package" 2>&1)"; then
-      echo "✅ $package installed successfully" >&2
+      if [[ "$quiet" != "1" ]]; then
+        echo "✅ $package installed successfully" >&2
+      fi
     else
       echo "❌ $package installation failed" >&2
       printf '%s\n' "$install_output" >&2
     fi
-    echo "" >&2
+    if [[ "$quiet" != "1" ]]; then
+      echo "" >&2
+    fi
   done
 
   local untrusted_packages packages_to_trust=()
@@ -101,11 +110,23 @@ install_bun_globals() {
   done
 
   if ((${#packages_to_trust[@]} > 0)); then
-    echo "🔏 Trusting lifecycle scripts: ${packages_to_trust[*]}" >&2
-    bun pm trust -g "${packages_to_trust[@]}"
+    if [[ "$quiet" == "1" ]]; then
+      local trust_output
+      if ! trust_output="$(bun pm trust -g "${packages_to_trust[@]}" 2>&1)"; then
+        echo "❌ Failed to trust lifecycle scripts: ${packages_to_trust[*]}" >&2
+        printf '%s\n' "$trust_output" >&2
+      fi
+    else
+      echo "🔏 Trusting lifecycle scripts: ${packages_to_trust[*]}" >&2
+      bun pm trust -g "${packages_to_trust[@]}"
+    fi
   else
-    echo "✅ No configured lifecycle scripts need trusting" >&2
+    if [[ "$quiet" != "1" ]]; then
+      echo "✅ No configured lifecycle scripts need trusting" >&2
+    fi
   fi
 
-  echo "🎉 All global packages installed!" >&2
+  if [[ "$quiet" != "1" ]]; then
+    echo "🎉 All global packages installed!" >&2
+  fi
 }

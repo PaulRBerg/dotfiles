@@ -5,4 +5,4 @@ set -uo pipefail
 
 # run_onchange_ scripts execute from a temp dir, so source from the installed path
 source "$HOME/.setup/lib/node_packages.sh"
-install_bun_globals
+BUN_GLOBALS_QUIET=1 install_bun_globals
