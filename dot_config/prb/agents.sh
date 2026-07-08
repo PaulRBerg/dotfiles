@@ -7,6 +7,21 @@
 
 CODEX_MODEL="gpt-5.5"
 
+# Lite headless Claude: skip hooks, CLAUDE.md, bundled skills, auto-memory, and
+# nonessential network traffic (~3.5x faster one-shot skill runs). Keep
+# --setting-sources user: user settings are what make /commit et al. resolve.
+# --bare would be faster still but refuses OAuth/keychain auth (needs an API key).
+CLAUDE_LITE_ENV="CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
+CLAUDE_CODE_DISABLE_CLAUDE_MDS=1 \
+CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 \
+CLAUDE_CODE_DISABLE_AUTO_MEMORY=1"
+CLAUDE_LITE_FLAGS="--no-session-persistence \
+--output-format json \
+--setting-sources user \
+--settings '{\"disableAllHooks\":true}' \
+--strict-mcp-config \
+--permission-mode bypassPermissions"
+
 ###############################################################################
 # ALIASES                                                                     #
 ###############################################################################
@@ -45,51 +60,8 @@ function ccc() {
 
   [[ $# -eq 0 ]] && set -- --all
 
-  # Hard timeout so a stall can never become an unbounded hang (coreutils
-  # ships `gtimeout` on macOS, `timeout` on Linux). Override with CCC_TIMEOUT.
-  local timeout_cmd=""
-  if command -v timeout &>/dev/null; then
-    timeout_cmd="timeout ${CCC_TIMEOUT:-300}"
-  elif command -v gtimeout &>/dev/null; then
-    timeout_cmd="gtimeout ${CCC_TIMEOUT:-300}"
-  fi
-
-  # Redirect Claude's JSON to a file instead of capturing it through gum's
-  # pipe. Claude spawns background workers (prefetch/keychain reads) that can
-  # inherit the capture pipe and hold it open after the commit already landed,
-  # wedging `$(...)`/gum forever. Writing to a file breaks that fd inheritance.
-  # The commit skill runs helper scripts; this wrapper is noninteractive, so
-  # Claude needs bypass mode instead of a permission prompt it cannot surface.
-  # GIT_TERMINAL_PROMPT=0 turns a hidden credential prompt (e.g. cccp/--push)
-  # into a fast failure instead of an invisible hang behind the spinner.
-  local out err rc
-  out=$(mktemp) || return 1
-  err=$(mktemp) || return 1
-
-  gum spin --spinner dot --title "Claude is git committing..." -- \
-    sh -c "GIT_TERMINAL_PROMPT=0 ${timeout_cmd} \
-      claude \
-        --model sonnet \
-        --no-session-persistence \
-        --output-format json \
-        --strict-mcp-config \
-        --tools \"Bash,Read\" \
-        --permission-mode bypassPermissions \
-        --print \"/commit \$1\" \
-        >\"\$2\" \
-        2>\"\$3\"" \
-    _ "$*" "$out" "$err"
-  rc=$?
-
-  if ((rc != 0)) || [[ ! -s "$out" ]]; then
-    echo "❌ ccc failed (exit ${rc}; 124 = timed out)" >&2
-    [[ -s "$err" ]] && sed 's/^/   /' "$err" >&2
-    rm -f "$out" "$err"
-    return 1
-  fi
-
-  jq -r '.result' "$out"
-  rm -f "$out" "$err"
+  _run_claude_skill "Claude is git committing..." "/commit $*" \
+    --model sonnet --effort low --tools Bash,Read
 }
 
 # Claude Code commit and push
@@ -112,9 +84,7 @@ function ccsp() {
 # Claude Code bump release
 function ccbump() {
   _require_gum || return 1
-  gum spin --spinner dot --title "Claude is bumping release..." -- \
-    claude --no-session-persistence --output-format json \
-    --print "/bump-release $*"
+  _run_claude_skill "Claude is bumping release..." "/bump-release $*"
 }
 
 # Add skills globally for the agents that support global installs.
@@ -141,4 +111,52 @@ function _require_gum() {
     echo "Install: brew install gum (macOS) or sudo apt install gum (Ubuntu)"
     return 1
   fi
+}
+
+# _run_claude_skill <spinner-title> <prompt> [extra claude flags...]
+# Runs a headless Claude skill in lite mode (see CLAUDE_LITE_ENV/CLAUDE_LITE_FLAGS).
+function _run_claude_skill() {
+  local title="$1" prompt="$2"
+  shift 2
+
+  # Hard timeout so a stall can never become an unbounded hang (coreutils
+  # ships `gtimeout` on macOS, `timeout` on Linux). Override with CCC_TIMEOUT.
+  local timeout_cmd=""
+  if command -v timeout &>/dev/null; then
+    timeout_cmd="timeout ${CCC_TIMEOUT:-300}"
+  elif command -v gtimeout &>/dev/null; then
+    timeout_cmd="gtimeout ${CCC_TIMEOUT:-300}"
+  fi
+
+  # Redirect Claude's JSON to a file instead of capturing it through gum's
+  # pipe. Claude spawns background workers (prefetch/keychain reads) that can
+  # inherit the capture pipe and hold it open after the run already landed,
+  # wedging `$(...)`/gum forever. Writing to a file breaks that fd inheritance.
+  # The skills this runs invoke helper scripts; this wrapper is noninteractive,
+  # so Claude needs bypass mode instead of a permission prompt it cannot
+  # surface. GIT_TERMINAL_PROMPT=0 turns a hidden credential prompt (e.g.
+  # cccp/--push) into a fast failure instead of an invisible hang behind the
+  # spinner.
+  local out err rc
+  out=$(mktemp) || return 1
+  err=$(mktemp) || return 1
+
+  gum spin --spinner dot --title "$title" -- \
+    sh -c "GIT_TERMINAL_PROMPT=0 ${CLAUDE_LITE_ENV} ${timeout_cmd} \
+      claude ${CLAUDE_LITE_FLAGS} $* \
+        --print \"\$1\" \
+        >\"\$2\" \
+        2>\"\$3\"" \
+    _ "$prompt" "$out" "$err"
+  rc=$?
+
+  if ((rc != 0)) || [[ ! -s "$out" ]]; then
+    echo "❌ claude skill failed (exit ${rc}; 124 = timed out)" >&2
+    [[ -s "$err" ]] && sed 's/^/   /' "$err" >&2
+    rm -f "$out" "$err"
+    return 1
+  fi
+
+  jq -r '.result' "$out"
+  rm -f "$out" "$err"
 }
