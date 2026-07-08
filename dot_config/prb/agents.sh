@@ -61,7 +61,7 @@ function ccc() {
   [[ $# -eq 0 ]] && set -- --all
 
   _run_claude_skill "Claude is git committing..." "/commit $*" \
-    --model sonnet --effort low --tools Bash,Read
+    --model sonnet --effort medium --tools Bash,Read
 }
 
 # Claude Code commit and push
