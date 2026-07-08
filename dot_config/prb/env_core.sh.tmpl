@@ -14,6 +14,20 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 export LANG="${LANG:-en_US.UTF-8}"
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 
+{{- if eq .chezmoi.os "darwin" }}
+# macOS defaults terminal shells to a low FD soft limit; agent/tool stacks need more.
+_prb_nofile_soft="$(ulimit -n 2>/dev/null || true)"
+case "$_prb_nofile_soft" in
+'' | *[!0-9]*) ;;
+*)
+  if [ "$_prb_nofile_soft" -lt 65536 ]; then
+    ulimit -n 65536 2>/dev/null || true
+  fi
+  ;;
+esac
+unset _prb_nofile_soft
+{{- end }}
+
 # Bun
 export BUN_INSTALL="${BUN_INSTALL:-$XDG_DATA_HOME/bun}"
 
