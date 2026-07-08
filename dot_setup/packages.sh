@@ -35,6 +35,7 @@ MACOS_FORMULAE=(
   ripgrep
   starship
   television
+  tokei
   ugrep
   zoxide
 

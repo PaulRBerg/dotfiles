@@ -163,6 +163,43 @@ install_pnpm() {
   fi
 }
 
+install_tokei() {
+  log_info "Installing tokei..."
+
+  # Ubuntu LTS releases do not package tokei. Use the newest upstream release
+  # that still publishes Linux binaries.
+  if ! command -v tokei &>/dev/null; then
+    local arch target download_url tmp_dir
+    case "$(dpkg --print-architecture)" in
+    amd64) target="x86_64-unknown-linux-gnu" ;;
+    arm64) target="aarch64-unknown-linux-gnu" ;;
+    *)
+      log_info "Unsupported architecture for tokei; skipping"
+      return 0
+      ;;
+    esac
+
+    download_url="$(
+      curl -fsSL "https://api.github.com/repos/XAMPPRocky/tokei/releases?per_page=100" |
+        jq -r --arg asset "tokei-${target}.tar.gz" '[.[] | select((.prerelease | not) and (.tag_name | test("(alpha|beta|rc)"; "i") | not)) | .assets[]? | select(.name == $asset) | .browser_download_url][0] // empty'
+    )"
+
+    if [[ -z "$download_url" ]]; then
+      log_info "No upstream tokei binary found for ${target}; skipping"
+      return 0
+    fi
+
+    tmp_dir="$(mktemp -d)"
+    curl -fsSL "$download_url" -o "${tmp_dir}/tokei.tar.gz"
+    tar -xzf "${tmp_dir}/tokei.tar.gz" -C "$tmp_dir"
+    install -m 0755 "${tmp_dir}/tokei" /usr/local/bin/tokei
+    rm -rf "$tmp_dir"
+    log_success "tokei installed"
+  else
+    log_info "tokei already installed"
+  fi
+}
+
 install_vim_runtime() {
   log_info "Installing ultimate Vim configuration (amix/vimrc)..."
 
@@ -218,6 +255,7 @@ main() {
   install_uv
   install_golangci_lint
   install_pnpm
+  install_tokei
   install_vim_runtime
   install_tailscale
   install_starship
