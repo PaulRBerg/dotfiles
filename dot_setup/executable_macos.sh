@@ -20,6 +20,22 @@ while true; do
 done 2>/dev/null &
 
 ###############################################################################
+# System limits                                                               #
+###############################################################################
+
+# Keep GUI-launched agents/editors from inheriting macOS's tiny default
+# launchd maxfiles soft limit. Shell startup also raises `ulimit -n`; this
+# covers processes that do not start from an interactive shell.
+desired_maxfiles_soft=65536
+current_maxfiles_soft="$(launchctl limit maxfiles 2>/dev/null | awk '$1 == "maxfiles" { print $2 }')"
+if [[ "$current_maxfiles_soft" =~ ^[0-9]+$ ]] && ((current_maxfiles_soft < desired_maxfiles_soft)); then
+  echo "Raising launchd maxfiles soft limit to ${desired_maxfiles_soft}..." >&2
+  launchctl limit maxfiles "$desired_maxfiles_soft" unlimited ||
+    echo "Warning: failed to update launchd maxfiles limit" >&2
+fi
+unset current_maxfiles_soft desired_maxfiles_soft
+
+###############################################################################
 # General UI/UX                                                               #
 ###############################################################################
 
