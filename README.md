@@ -75,7 +75,7 @@ chicken-and-egg failures.
    ```
 
 6. Optional, recommended:
-   - macOS defaults (Dock, Finder, input, etc.): `~/.setup/macos.sh`
+   - macOS defaults (Dock, Finder, input, etc.): `~/.setup/configure_macos_defaults.sh`
    - iTerm2 (not in the brew manifest): `brew install --cask iterm2` — the apply hook merges the selected settings from
      `dot_config/iterm2/managed.plist` into iTerm2's normal macOS preferences domain.
    - Agent configs: `git clone git@github.com:PaulRBerg/dot-claude.git ~/.claude` and
