@@ -5,7 +5,7 @@
 # CONSTANTS                                                                   #
 ###############################################################################
 
-CODEX_MODEL="gpt-5.5"
+CODEX_MODEL="gpt-5.6-sol"
 
 # Lite headless Claude: skip hooks, CLAUDE.md, bundled skills, auto-memory, and
 # nonessential network traffic (~3.5x faster one-shot skill runs). Keep
