@@ -17,10 +17,10 @@ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 \
 CLAUDE_CODE_DISABLE_AUTO_MEMORY=1"
 CLAUDE_LITE_FLAGS="--no-session-persistence \
 --output-format json \
---permission-mode bypassPermissions" \
---settings '{\"disableAllHooks\":true}' \
+--permission-mode bypassPermissions \
+--strict-mcp-config \
 --setting-sources user \
---strict-mcp-config
+--settings '{\"disableAllHooks\":true}'"
 
 ###############################################################################
 # ALIASES                                                                     #
