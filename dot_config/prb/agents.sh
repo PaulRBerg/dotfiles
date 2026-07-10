@@ -17,26 +17,27 @@ CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 \
 CLAUDE_CODE_DISABLE_AUTO_MEMORY=1"
 CLAUDE_LITE_FLAGS="--no-session-persistence \
 --output-format json \
---setting-sources user \
+--permission-mode bypassPermissions" \
 --settings '{\"disableAllHooks\":true}' \
---strict-mcp-config \
---permission-mode bypassPermissions"
+--setting-sources user \
+--strict-mcp-config
 
 ###############################################################################
 # ALIASES                                                                     #
 ###############################################################################
 
 alias c="codex"
-alias cl="claude --dangerously-skip-permissions"
 alias c5l="codex -m $CODEX_MODEL -c model_reasoning_effort=low"
 alias c5m="codex -m $CODEX_MODEL -c model_reasoning_effort=medium"
 alias c5h="codex -m $CODEX_MODEL -c model_reasoning_effort=high"
 alias c5x="codex -m $CODEX_MODEL -c model_reasoning_effort=xhigh"
+alias c5max="codex -m $CODEX_MODEL -c model_reasoning_effort=max"
 alias cda="cd ~/.agents"
 alias cd_agents="cd ~/.agents"
 alias cd_claude="cd ~/.claude"
 alias cd_codex="cd ~/.codex"
 alias cd_sk="cd ~/projects/agent-skills"
+alias cl="claude --dangerously-skip-permissions"
 alias edit_claude="code ~/.claude"
 alias edit_codex="code ~/.codex"
 
@@ -61,7 +62,9 @@ function ccc() {
   [[ $# -eq 0 ]] && set -- --all
 
   _run_claude_skill "Claude is git committing..." "/commit $*" \
-    --model sonnet --effort medium --tools Bash,Read
+    --effort medium \
+    --model sonnet \
+    --tools Bash,Read
 }
 
 # Claude Code commit and push
@@ -85,19 +88,6 @@ function ccsp() {
 function ccbump() {
   _require_gum || return 1
   _run_claude_skill "Claude is bumping release..." "/bump-release $*"
-}
-
-# Add skills globally for the agents that support global installs.
-function add_skill() {
-  if [[ $# -lt 1 ]]; then
-    echo "Usage: add_skill <repo> [--skill <skill> ...]" >&2
-    return 2
-  fi
-
-  local repo="$1"
-  shift
-
-  npx skills add "$repo" --global --yes --agent codex claude-code "$@"
 }
 
 ###############################################################################
