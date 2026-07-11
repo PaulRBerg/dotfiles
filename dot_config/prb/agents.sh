@@ -27,11 +27,9 @@ CLAUDE_LITE_FLAGS="--no-session-persistence \
 ###############################################################################
 
 alias c="codex"
-alias c5l="codex -m $CODEX_MODEL -c model_reasoning_effort=low"
-alias c5m="codex -m $CODEX_MODEL -c model_reasoning_effort=medium"
-alias c5h="codex -m $CODEX_MODEL -c model_reasoning_effort=high"
-alias c5x="codex -m $CODEX_MODEL -c model_reasoning_effort=xhigh"
-alias c5max="codex -m $CODEX_MODEL -c model_reasoning_effort=max"
+alias c_s="codex -m gpt-5.6-sol"
+alias c_t="codex -m gpt-5.6-terra"
+alias c_l="codex -m gpt-5.6-luna"
 alias cda="cd ~/.agents"
 alias cd_agents="cd ~/.agents"
 alias cd_claude="cd ~/.claude"
