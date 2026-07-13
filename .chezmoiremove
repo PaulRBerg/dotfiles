@@ -11,3 +11,6 @@
 # Orphaned: service-account 1Password setup was removed in favor of account mode.
 .config/chezmoi/chezmoi-service.toml
 .config/prb/bin/chezmoi-service
+
+# Replaced by ~/.local/libexec/mcp/chrome-devtools.
+.local/bin/prb_chrome_devtools_mcp

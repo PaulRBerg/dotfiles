@@ -42,6 +42,11 @@ declare -rA TOOL_PYTHONS=(
   ["serena-agent"]="3.13"
 )
 
+# Tool-specific package sources. Serena intentionally tracks upstream main.
+declare -rA TOOL_SOURCES=(
+  ["serena-agent"]="git+https://github.com/oraios/serena@main"
+)
+
 # Extra packages injected into a tool's venv via --with (plugins, extensions).
 # mdformat: without these plugins it corrupts YAML frontmatter and lacks GFM
 # support (tables, strikethrough, autolinks, task lists).
@@ -57,7 +62,7 @@ done
 
 log_info "Installing ${#TOOLS[@]} uv tools on CPython ${PYTHON_VERSION}..."
 for tool in "${TOOLS[@]}"; do
-  install_args=("${tool}" --python "${TOOL_PYTHONS[$tool]:-$PYTHON_VERSION}")
+  install_args=("${TOOL_SOURCES[$tool]:-$tool}" --python "${TOOL_PYTHONS[$tool]:-$PYTHON_VERSION}")
   for plugin in ${TOOL_PLUGINS[$tool]:-}; do
     install_args+=(--with "${plugin}")
   done
