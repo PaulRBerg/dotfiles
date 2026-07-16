@@ -44,6 +44,7 @@ MACOS_FORMULAE=(
   p7zip
   pigz
   pv
+  qpdf
   rename
   tree
 
@@ -129,6 +130,7 @@ UBUNTU_APT_PACKAGES=(
   p7zip-full
   pigz
   pv
+  qpdf
   rename
   rsync
   tree
