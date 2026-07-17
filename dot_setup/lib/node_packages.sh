@@ -29,6 +29,11 @@ BUN_GLOBAL_PACKAGES=(
   yarn
 )
 
+# macOS-only: no Homebrew formula exists, so install via bun instead.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  BUN_GLOBAL_PACKAGES+=(npkill)
+fi
+
 # Deps whose lifecycle scripts bun blocks by default but that need them for
 # preinstall/native prebuild setup. bunfig.toml has no trust option — bun
 # records trust only in the global package.json — so re-assert it here to keep
