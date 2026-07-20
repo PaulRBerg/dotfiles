@@ -2,39 +2,15 @@
 set -eu
 
 # Launched by Codex and Claude from ~/.codex/config.toml and ~/.claude.json.
+# Upstream: https://github.com/ChromeDevTools/chrome-devtools-mcp
+# Connect only to the existing debugging browser. Do not fall back to launching
+# Chromium: that lets concurrent agents create extra windows or fresh profiles.
 port="${PRB_AGENT_CHROMIUM_PORT:-9222}"
-profile_dir="${PRB_AGENT_CHROMIUM_PROFILE_DIR:-$HOME/Library/Application Support/prb-agent-chromium}"
-profile_name="Default"
-chromium_bin="${PRB_AGENT_CHROMIUM_BIN:-/Applications/Chromium.app/Contents/MacOS/Chromium}"
-state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/prb-agent-chromium"
-log_file="$state_dir/chromium.log"
-
-mkdir -p "$profile_dir" "$state_dir"
 
 # Long browser sessions can retain large accessibility snapshots and exhaust
 # Node's default V8 heap, which closes the MCP transport while Chromium stays
 # healthy. Keep enough headroom for document-heavy workflows.
 export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--max-old-space-size=8192"
-
-if ! curl -fsS "http://127.0.0.1:$port/json/version" >/dev/null 2>&1; then
-  "$chromium_bin" \
-    "--remote-debugging-port=$port" \
-    "--user-data-dir=$profile_dir" \
-    "--profile-directory=$profile_name" \
-    "--no-first-run" \
-    "--no-default-browser-check" \
-    >"$log_file" 2>&1 &
-
-  attempts=0
-  while ! curl -fsS "http://127.0.0.1:$port/json/version" >/dev/null 2>&1; do
-    attempts=$((attempts + 1))
-    if [[ "$attempts" -ge 100 ]]; then
-      echo "Chromium did not expose CDP on 127.0.0.1:$port. See $log_file" >&2
-      exit 1
-    fi
-    sleep 0.1
-  done
-fi
 
 exec bunx -y chrome-devtools-mcp@latest \
   "--browser-url=http://127.0.0.1:$port" \
