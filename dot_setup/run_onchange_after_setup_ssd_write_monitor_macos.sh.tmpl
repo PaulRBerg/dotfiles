@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Reload the SSD write monitor after chezmoi installs or changes its files.
+# monitor hash: {{ include "dot_config/prb/bin/executable_ssd_write_monitor_macos.sh" | sha256sum }}
+# plist hash: {{ include "Library/LaunchAgents/local.ssd-write-monitor.plist" | sha256sum }}
+
+set -euo pipefail
+
+readonly label="local.ssd-write-monitor"
+readonly domain="gui/$(id -u)"
+readonly plist="$HOME/Library/LaunchAgents/$label.plist"
+
+if [[ ! -f "$plist" ]]; then
+  echo "SSD write monitor plist not found: $plist" >&2
+  exit 1
+fi
+
+if ! launchctl print "$domain" >/dev/null 2>&1; then
+  echo "GUI launchd domain unavailable; SSD write monitor will load at the next login" >&2
+  exit 0
+fi
+
+launchctl bootout "$domain/$label" >/dev/null 2>&1 || true
+launchctl bootstrap "$domain" "$plist"
+launchctl print "$domain/$label" >/dev/null
+
+echo "Loaded $label" >&2

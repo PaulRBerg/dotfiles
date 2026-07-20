@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>local.ssd-write-monitor</string>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>-c</string>
+		<string>source "$HOME/.config/prb/env_core.sh"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/ssd-write-monitor"
+mkdir -p "$state_dir"
+exec &gt;&gt;"$state_dir/agent.log" 2&gt;&amp;1
+source "$HOME/.config/prb/path.sh"
+exec "$HOME/.config/prb/bin/ssd_write_monitor_macos.sh"</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>9</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
+</dict>
+</plist>
