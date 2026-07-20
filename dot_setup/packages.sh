@@ -90,6 +90,7 @@ MACOS_FORMULAE=(
   pinentry-mac
   screen
   sleepwatcher
+  smartmontools
   ssh-copy-id
   tmux
   wget
