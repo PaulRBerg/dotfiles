@@ -7,6 +7,7 @@ readonly SECONDS_PER_DAY=86400
 readonly MIN_SAMPLE_SECONDS=3600
 readonly WARNING_BYTES_PER_DAY=500000000000
 readonly CRITICAL_BYTES_PER_DAY=1000000000000
+readonly MAX_SAFE_JSON_INTEGER=9007199254740991
 readonly HISTORY_LIMIT=400
 readonly STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ssd-write-monitor"
 readonly STATE_FILE="$STATE_DIR/state.json"
@@ -124,7 +125,7 @@ readonly device="/dev/$whole_disk"
 
 smartctl_rc=0
 smartctl -Aj "$device" >"$tmp_dir/smart.json" 2>"$tmp_dir/smart.err" || smartctl_rc=$?
-if ! jq -e '
+if ! jq --argjson max_safe_integer "$MAX_SAFE_JSON_INTEGER" -e '
   .nvme_smart_health_information_log as $health
   | [
       $health.data_units_written,
@@ -136,7 +137,7 @@ if ! jq -e '
       $health.num_err_log_entries,
       $health.power_on_hours
     ]
-  | all(.[]; type == "number" and . >= 0)
+  | all(.[]; type == "number" and . >= 0 and . <= $max_safe_integer and floor == .)
 ' "$tmp_dir/smart.json" >/dev/null 2>&1; then
   fail "SMART collection failed for $device (smartctl exit $smartctl_rc)"
 fi
@@ -167,31 +168,53 @@ readonly codex_db_bytes="$(file_size "$HOME/.codex/logs_2.sqlite")"
 readonly codex_wal_bytes="$(file_size "$HOME/.codex/logs_2.sqlite-wal")"
 readonly codex_shm_bytes="$(file_size "$HOME/.codex/logs_2.sqlite-shm")"
 
-have_previous=false
+has_previous=false
 previous_device=""
 previous_timestamp=0
 previous_data_units=0
 previous_percentage_used=0
 previous_media_errors=0
 previous_error_log_entries=0
+previous_rate_timestamp=0
+previous_rate_data_units=0
 
 if [[ -f "$STATE_FILE" ]]; then
-  if ! previous="$(jq -er '
+  if ! previous="$(jq -er --argjson max_safe_integer "$MAX_SAFE_JSON_INTEGER" '
+    def nonnegative_integer: type == "number" and . >= 0 and . <= $max_safe_integer and floor == .;
     select(.schema_version == 1)
+    | select(.device | type == "string" and test("^/dev/disk[0-9]+$"))
+    | (.rate_timestamp_epoch // .timestamp_epoch) as $rate_timestamp
+    | (.rate_data_units_written // .data_units_written) as $rate_data_units
+    | select([
+        .timestamp_epoch,
+        .data_units_written,
+        .percentage_used,
+        .available_spare,
+        .available_spare_threshold,
+        .critical_warning,
+        .media_errors,
+        .error_log_entries,
+        .power_on_hours,
+        $rate_timestamp,
+        $rate_data_units
+      ] | all(.[]; nonnegative_integer))
+    | select($rate_timestamp <= .timestamp_epoch and $rate_data_units <= .data_units_written)
     | [
         .device,
         .timestamp_epoch,
         .data_units_written,
         .percentage_used,
         .media_errors,
-        .error_log_entries
+        .error_log_entries,
+        $rate_timestamp,
+        $rate_data_units
       ]
     | @tsv
   ' "$STATE_FILE")"; then
     fail "invalid monitor state: $STATE_FILE"
   fi
-  IFS=$'\t' read -r previous_device previous_timestamp previous_data_units previous_percentage_used previous_media_errors previous_error_log_entries <<<"$previous"
-  have_previous=true
+  IFS=$'\t' read -r previous_device previous_timestamp previous_data_units previous_percentage_used previous_media_errors previous_error_log_entries previous_rate_timestamp previous_rate_data_units <<<"$previous"
+  has_previous=true
 fi
 
 severity="normal"
@@ -200,12 +223,14 @@ sample_status="baseline"
 delta_data_units=""
 elapsed_seconds=""
 bytes_per_day=""
-compatible_previous=false
+has_compatible_previous=false
+next_rate_timestamp="$timestamp_epoch"
+next_rate_data_units="$data_units_written"
 
-if [[ "$have_previous" == true && "$previous_device" == "$device" && "$timestamp_epoch" -gt "$previous_timestamp" && "$data_units_written" -ge "$previous_data_units" ]]; then
-  compatible_previous=true
-  elapsed_seconds=$((timestamp_epoch - previous_timestamp))
-  delta_data_units=$((data_units_written - previous_data_units))
+if [[ "$has_previous" == true && "$previous_device" == "$device" && "$timestamp_epoch" -gt "$previous_timestamp" && "$data_units_written" -ge "$previous_data_units" ]]; then
+  has_compatible_previous=true
+  elapsed_seconds=$((timestamp_epoch - previous_rate_timestamp))
+  delta_data_units=$((data_units_written - previous_rate_data_units))
 
   if ((elapsed_seconds >= MIN_SAMPLE_SECONDS)); then
     bytes_per_day="$(jq -nr \
@@ -223,8 +248,10 @@ if [[ "$have_previous" == true && "$previous_device" == "$device" && "$timestamp
     fi
   else
     sample_status="short_interval"
+    next_rate_timestamp="$previous_rate_timestamp"
+    next_rate_data_units="$previous_rate_data_units"
   fi
-elif [[ "$have_previous" == true ]]; then
+elif [[ "$has_previous" == true ]]; then
   sample_status="reset"
 fi
 
@@ -235,7 +262,7 @@ if ((available_spare <= available_spare_threshold)); then
   raise_alert critical "available spare ${available_spare}% is at or below its ${available_spare_threshold}% threshold"
 fi
 
-if [[ "$compatible_previous" == true ]]; then
+if [[ "$has_compatible_previous" == true ]]; then
   if ((media_errors > previous_media_errors)); then
     raise_alert critical "media errors increased from $previous_media_errors to $media_errors"
   fi
@@ -299,6 +326,8 @@ jq -n \
   --argjson media_errors "$media_errors" \
   --argjson error_log_entries "$error_log_entries" \
   --argjson power_on_hours "$power_on_hours" \
+  --argjson rate_timestamp_epoch "$next_rate_timestamp" \
+  --argjson rate_data_units_written "$next_rate_data_units" \
   --arg last_status "$sample_status" \
   '{
     schema_version: $schema_version,
@@ -313,6 +342,8 @@ jq -n \
     media_errors: $media_errors,
     error_log_entries: $error_log_entries,
     power_on_hours: $power_on_hours,
+    rate_timestamp_epoch: $rate_timestamp_epoch,
+    rate_data_units_written: $rate_data_units_written,
     last_status: $last_status
   }' >"$tmp_dir/state.json"
 chmod 600 "$tmp_dir/state.json"

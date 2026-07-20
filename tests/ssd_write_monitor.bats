@@ -1,4 +1,6 @@
 #!/usr/bin/env bats
+# Bats isolates each test process, so their mocked clock mutations cannot leak.
+# shellcheck disable=SC2030,SC2031
 
 bats_require_minimum_version 1.5.0
 
@@ -193,7 +195,7 @@ advance_day() {
   write_smart 1000000 0 100 99 0 0 0 100
   run_monitor
   [[ "$status" -eq 0 ]]
-  jq -e '.last_status == "short_interval"' "$XDG_STATE_HOME/ssd-write-monitor/state.json"
+  jq -e '.last_status == "short_interval" and .rate_data_units_written == 1000' "$XDG_STATE_HOME/ssd-write-monitor/state.json"
 
   advance_day
   write_smart 10 0 100 99 0 0 0 124
@@ -201,6 +203,29 @@ advance_day() {
   [[ "$status" -eq 0 ]]
   jq -e '.last_status == "reset"' "$XDG_STATE_HOME/ssd-write-monitor/state.json"
   [[ ! -e "$MOCK_NOTIFICATION_LOG" ]]
+}
+
+@test "retains the rate baseline across short intervals" {
+  run_monitor
+  [[ "$status" -eq 0 ]]
+  state="$XDG_STATE_HOME/ssd-write-monitor/state.json"
+  jq 'del(.rate_timestamp_epoch, .rate_data_units_written)' "$state" >"$TEST_ROOT/legacy-state.json"
+  mv "$TEST_ROOT/legacy-state.json" "$state"
+
+  export MOCK_EPOCH=$((MOCK_EPOCH + 30))
+  write_smart 1172875 0 100 99 0 0 0 100
+  run_monitor
+  [[ "$status" -eq 0 ]]
+  jq -e '.last_status == "short_interval" and .rate_data_units_written == 1000' "$XDG_STATE_HOME/ssd-write-monitor/state.json"
+  [[ ! -e "$MOCK_NOTIFICATION_LOG" ]]
+
+  export MOCK_EPOCH=$((MOCK_EPOCH + 3570))
+  write_smart 1172875 0 100 99 0 0 0 101
+  run_monitor
+
+  [[ "$status" -eq 0 ]]
+  jq -e '.last_status == "critical" and .rate_data_units_written == 1172875' "$XDG_STATE_HOME/ssd-write-monitor/state.json"
+  grep -q $'SSD write monitor critical\thost writes 14400 GB/day' "$MOCK_NOTIFICATION_LOG"
 }
 
 @test "preserves state and notifies when SMART output is invalid" {
@@ -214,6 +239,34 @@ advance_day() {
   [[ "$status" -ne 0 ]]
   cmp -s "$TEST_ROOT/state.before.json" "$XDG_STATE_HOME/ssd-write-monitor/state.json"
   grep -q 'SSD write monitor failed' "$MOCK_NOTIFICATION_LOG"
+}
+
+@test "rejects non-integer SMART counters" {
+  run_monitor
+  [[ "$status" -eq 0 ]]
+  cp "$XDG_STATE_HOME/ssd-write-monitor/state.json" "$TEST_ROOT/state.before.json"
+  jq '.nvme_smart_health_information_log.data_units_written = "1001"' "$MOCK_SMART_JSON" >"$TEST_ROOT/smart.invalid.json"
+  mv "$TEST_ROOT/smart.invalid.json" "$MOCK_SMART_JSON"
+
+  run_monitor
+
+  [[ "$status" -ne 0 ]]
+  cmp -s "$TEST_ROOT/state.before.json" "$XDG_STATE_HOME/ssd-write-monitor/state.json"
+  grep -q 'SMART collection failed' "$MOCK_NOTIFICATION_LOG"
+}
+
+@test "rejects corrupt state before arithmetic" {
+  run_monitor
+  [[ "$status" -eq 0 ]]
+  state="$XDG_STATE_HOME/ssd-write-monitor/state.json"
+  jq '.timestamp_epoch = "1 + 1"' "$state" >"$TEST_ROOT/state.invalid.json"
+  mv "$TEST_ROOT/state.invalid.json" "$state"
+
+  run_monitor
+
+  [[ "$status" -ne 0 ]]
+  grep -q 'invalid monitor state' "$MOCK_NOTIFICATION_LOG"
+  [[ "$(wc -l <"$XDG_STATE_HOME/ssd-write-monitor/history.tsv" | tr -d ' ')" -eq 2 ]]
 }
 
 @test "retains the newest 400 history samples" {
