@@ -7,12 +7,29 @@ set -eu
 # Chromium: that lets concurrent agents create extra windows or fresh profiles.
 port="${PRB_AGENT_CHROMIUM_PORT:-9222}"
 
+# Pin the upstream version so bunx starts straight from the local cache (no
+# registry round-trip on every session) and releases can't rename flags or
+# change tool behavior underneath in-flight agent sessions. Bump deliberately
+# after reading the changelog:
+# https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/CHANGELOG.md
+version="${PRB_CHROME_DEVTOOLS_MCP_VERSION:-1.6.0}"
+
 # Long browser sessions can retain large accessibility snapshots and exhaust
 # Node's default V8 heap, which closes the MCP transport while Chromium stays
 # healthy. Keep enough headroom for document-heavy workflows.
 export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--max-old-space-size=8192"
 
-exec bunx -y chrome-devtools-mcp@latest \
+# Per-process server log (namespace mcp:log; export DEBUG='*' for verbose CDP
+# traffic) so transport drops are diagnosable after the fact. Each agent
+# session spawns its own server process, hence the PID suffix.
+log_dir="${XDG_CACHE_HOME:-$HOME/.cache}/chrome-devtools-mcp/logs"
+mkdir -p "$log_dir"
+find "$log_dir" -name 'server-*.log' -mtime +7 -delete 2>/dev/null || true
+
+# Screenshot flags only set response-side defaults (JPEG ~3-5x smaller than
+# PNG, downscaled to vision-model resolution); tools can still request PNG or
+# full size explicitly.
+exec bunx -y "chrome-devtools-mcp@$version" \
   "--browser-url=http://127.0.0.1:$port" \
   --experimental-page-id-routing \
   --experimental-memory \
@@ -22,4 +39,9 @@ exec bunx -y chrome-devtools-mcp@latest \
   --experimental-ffmpeg-path=/opt/homebrew/bin/ffmpeg \
   --redact-network-headers \
   --no-performance-crux \
-  --no-usage-statistics
+  --no-usage-statistics \
+  --screenshot-format=jpeg \
+  --screenshot-quality=80 \
+  --screenshot-max-width=1600 \
+  --screenshot-max-height=1600 \
+  "--log-file=$log_dir/server-$$.log"
