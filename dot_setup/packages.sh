@@ -65,6 +65,7 @@ MACOS_FORMULAE=(
   ruby # gem runtime for run_onchange_setup_ruby_gems.sh
   shellcheck
   shfmt
+  sqlite-utils
   uv
   vim
 
