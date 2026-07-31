@@ -62,6 +62,7 @@ MACOS_FORMULAE=(
   neovim
   pnpm
   rlwrap
+  ruby # gem runtime for run_onchange_setup_ruby_gems.sh
   shellcheck
   shfmt
   uv

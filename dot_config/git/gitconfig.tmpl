@@ -142,6 +142,11 @@
     sp = stash pop
     ss = stash
 
+    # View the working tree status as a file tree.
+    # Flags live here, not in [status-tree], because the gem's install hook
+    # rewrites that section on every upgrade.
+    st = status-tree --collapse
+
     # Show commit with difftastic.
     showt = -c diff.external=difft show --ext-diff
 
