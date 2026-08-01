@@ -88,6 +88,19 @@ function ccbump() {
   _run_claude_skill "Claude is bumping release..." "/bump-release $*"
 }
 
+# Claude Code todo archive
+function ccta() {
+  _require_gum || return 1
+
+  local prompt='$todo-archive'
+  [[ $# -gt 0 ]] && prompt+=" $*"
+
+  _run_claude_skill "Claude is archiving TODOs..." "$prompt" \
+    --effort medium \
+    --model sonnet \
+    --tools Bash,Read
+}
+
 ###############################################################################
 # PRIVATE                                                                     #
 ###############################################################################
