@@ -238,8 +238,24 @@ and `web3.sh`.
 
 ## Contribution Workflow
 
-- Default branch: `main`. `just sync` commits and pushes directly to `main` (personal repo; no PR flow).
+- Default branch: `main`. `just sync` commits and pushes directly to `main` (personal repo; no PR flow), then runs
+  `chezmoi apply`.
 - Run `just full-check` before committing and fix any Prettier / ShellCheck / shfmt findings.
+- Once a coherent unit of work passes `just full-check`, run `just sync` proactively — don't ask first, and don't stop
+  at "here's the command to run". Pass an explicit message (`just sync "<msg>"`) unless you want the recipe's `ccc`
+  helper to generate one.
+- **Guard first**: `just sync` runs `git add -A`, so it sweeps the entire working tree. Before running it, check
+  `git status --porcelain` and confirm every dirty path is one you edited this session. If anything unrelated is dirty —
+  likely another agent's in-flight work — do **not** run `just sync`. Instead commit and push only your own files:
+
+  ```sh
+  git add <files you edited>
+  git commit -m "<msg>"
+  git push origin main
+  ```
+
+  Then apply manually per the bullet below. Say plainly that you skipped `just sync` because of unrelated dirty paths.
+
 - After committing and pushing without `just sync`, apply only changed source-state paths not ignored by
   `.chezmoiignore.tmpl`: for 1-3 apply-eligible files, run `chezmoi apply --source-path <path>...` from the source
   directory; for more than 3 apply-eligible files, run `chezmoi apply`; if no changed files are apply-eligible, skip it.
