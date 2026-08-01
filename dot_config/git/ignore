@@ -63,8 +63,9 @@ __pycache__/
 # Ruby
 /.bundle
 
-# Serena MCP
-.serena/
+# Serena MCP (project.yml is tracked; memories/caches stay local)
+.serena/*
+!.serena/project.yml
 
 # Temporary files
 /tmp
