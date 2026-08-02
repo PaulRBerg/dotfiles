@@ -9,8 +9,8 @@
 BUN_GLOBAL_PACKAGES=(
   @antfu/ni
   @biomejs/biome
+  @earendil-works/pi-coding-agent
   @mariozechner/claude-trace
-  @mariozechner/pi-coding-agent
   @steipete/summarize
   @typescript/native-preview
   ccstatusline
