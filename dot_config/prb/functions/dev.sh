@@ -67,8 +67,10 @@ function prettier() {
   # Add global prettier ignore if it exists
   [[ -f "$global_ignore" ]] && args+=(--ignore-path "$global_ignore")
 
-  # Add global gitignore if configured and exists
-  git_global_ignore=$(git config --global core.excludesFile 2>/dev/null)
+  # Add global gitignore if configured and exists. --includes is required
+  # because ~/.gitconfig only includes the curated config; git disables
+  # include resolution when a specific file scope such as --global is given.
+  git_global_ignore=$(git config --global --includes core.excludesFile 2>/dev/null)
   [[ -n "$git_global_ignore" && -f "${git_global_ignore/#\~/$HOME}" ]] &&
     args+=(--ignore-path "${git_global_ignore/#\~/$HOME}")
 

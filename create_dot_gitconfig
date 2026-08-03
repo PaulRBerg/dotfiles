@@ -1,0 +1,11 @@
+# Written by tools, never by chezmoi.
+#
+# The create_ prefix means chezmoi writes this file once, when it is missing,
+# and never touches it again. That makes it a safe landing place for
+# `git config --global` writes -- safe.directory entries, credential helpers,
+# git-lfs filters -- which would otherwise be reverted on the next apply.
+#
+# The curated configuration lives in the included file, which chezmoi owns and
+# rewrites on every apply. Anything appended below the include wins over it.
+[include]
+    path = ~/.config/git/gitconfig
