@@ -1,0 +1,40 @@
+{
+  "dependencies": {
+    "@antfu/ni": "^30.3.0",
+    "@biomejs/biome": "^2.5.6",
+    "@covalenthq/goldrush-cli": "^3.0.6",
+    "@earendil-works/pi-coding-agent": "^0.83.0",
+    "@mariozechner/claude-trace": "^1.0.9",
+    "@mariozechner/pi-coding-agent": "^0.73.1",
+    "@mixedbread/mgrep": "^0.1.13",
+    "@playwright/mcp": "^0.0.78",
+    "@steipete/summarize": "^0.21.8",
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2",
+    "@upstash/context7-mcp": "^3.2.5",
+    "@waves/ts-lib-crypto": "^1.5.2",
+    "ccstatusline": "^2.2.27",
+    "chrome-devtools-mcp": "^1.6.0",
+    "jscpd": "^5.0.14",
+    "next": "^16.2.12",
+    "npkill": "^0.12.2",
+    "playwright": "^1.62.1",
+    "prettier": "^3.9.6",
+    "skills": "^1.5.21",
+    "taskbook": "^0.3.0",
+    "taze": "^19.17.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.5",
+    "typescript": "^7.0.2",
+    "vercel": "^58.4.4",
+    "vitest": "^4.1.10",
+    "yarn": "^1.22.22"
+  },
+  "trustedDependencies": [
+    "@github/keytar",
+    "@google/genai",
+    "keytar",
+    "koffi",
+    "protobufjs",
+    "yarn"
+  ]
+}
