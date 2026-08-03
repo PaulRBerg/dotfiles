@@ -239,6 +239,22 @@
     # [default] space-before-tab: looks for spaces before tabs at the beginning of a line
     whitespace = space-before-tab,-indent-with-non-tab,trailing-space
 
+# Curated here rather than left to `gh auth setup-git`, whose writes land in the
+# unmanaged ~/.gitconfig and never reach other machines.
+[credential]
+{{- if eq .chezmoi.os "darwin" }}
+    # Store credentials in the macOS keychain.
+    helper = osxkeychain
+{{- else if lookPath "git-credential-libsecret" }}
+    # Store credentials in the freedesktop.org secret service.
+    helper = libsecret
+{{- else }}
+    # No secret-service helper on PATH. Cache in memory rather than fall back to
+    # `store`, which writes credentials to disk in plaintext. Install
+    # git-credential-libsecret and re-apply to upgrade.
+    helper = cache --timeout=86400
+{{- end }}
+
 [delta]
     line-numbers = true
     navigate = true
@@ -265,6 +281,14 @@
 [fetch]
     # Behave as if the --prune option was given on the command line.
     prune = true
+
+# What `git lfs install` writes, curated so LFS repos work on a fresh machine
+# without running it. git-lfs is installed on both platforms via packages.sh.
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
 
 [help]
     # Automatically correct mistyped commands.
