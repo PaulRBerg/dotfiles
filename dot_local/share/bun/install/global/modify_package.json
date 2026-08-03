@@ -1,0 +1,16 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Enforce trustedDependencies only; bun owns the dependency list. */ -}}
+{{- /* Emit the input verbatim when nothing changes, so bun's own */ -}}
+{{- /* formatting survives and chezmoi reports no diff. */ -}}
+{{- $trusted := list "@github/keytar" "@google/genai" "keytar" "koffi" "protobufjs" "yarn" -}}
+{{- $manifest := dict -}}
+{{- if .chezmoi.stdin -}}
+{{-   $manifest = fromJson .chezmoi.stdin -}}
+{{- end -}}
+{{- $before := toJson $manifest -}}
+{{- $manifest = $manifest | setValueAtPath "trustedDependencies" $trusted -}}
+{{- if eq $before (toJson $manifest) -}}
+{{- .chezmoi.stdin -}}
+{{- else -}}
+{{- toPrettyJson $manifest }}
+{{ end -}}
