@@ -42,7 +42,14 @@ function bun_update() {
     [[ -n "$name" ]] && specs+=("$name@latest")
   done <<<"$names"
 
-  bun add --global "${specs[@]}"
+  bun add --global "${specs[@]}" || return
+
+  # bun rewrote the manifest; pull it back into the chezmoi source state so the
+  # tracked copy does not drift. No-op when the manifest is not managed.
+  if command -v chezmoi >/dev/null 2>&1 && chezmoi source-path "$manifest" >/dev/null 2>&1; then
+    echo "Syncing manifest into chezmoi source state."
+    chezmoi re-add "$manifest"
+  fi
 }
 
 # Copy Chromium browser profile while excluding files specific to one browser or system
