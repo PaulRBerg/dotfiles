@@ -37,6 +37,14 @@ Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 - `chezmoi cd` — open a shell in the source directory
 - `chezmoi update` — pull the repo and apply
 
+**Apply proactively, scoped to what changed.** After editing source-state files, apply without waiting to be asked — but
+don't default to a blanket `chezmoi apply`. Scope it to the files you just touched: for 1-3 apply-eligible files (not
+ignored by `.chezmoiignore.tmpl`), run `chezmoi apply --source-path <path>...` from the source directory; for more than
+3 apply-eligible files, run plain `chezmoi apply`; if no changed file is apply-eligible, skip it. Mind the path-type
+asymmetry: `--source-path` takes source-relative paths (e.g. `dot_config/prb/agents.sh`), whereas `chezmoi diff` and
+bare `chezmoi apply` take target paths (e.g. `~/.config/prb/agents.sh`). Don't chain `chezmoi diff <source-path>` after
+an `apply --source-path` — it fails with `not managed`.
+
 ### Provisioning
 
 - macOS: `~/.setup/tools_macos.sh` (Homebrew)
@@ -256,12 +264,7 @@ and `web3.sh`.
 
   Then apply manually per the bullet below. Say plainly that you skipped `just sync` because of unrelated dirty paths.
 
-- After committing and pushing without `just sync`, apply only changed source-state paths not ignored by
-  `.chezmoiignore.tmpl`: for 1-3 apply-eligible files, run `chezmoi apply --source-path <path>...` from the source
-  directory; for more than 3 apply-eligible files, run `chezmoi apply`; if no changed files are apply-eligible, skip it.
-  Mind the path-type asymmetry: `--source-path` takes source-relative paths (e.g. `dot_config/prb/agents.sh`, resolved
-  from the source dir), whereas `chezmoi diff` and bare `chezmoi apply` take target paths (e.g.
-  `~/.config/prb/agents.sh`). Don't chain a `chezmoi diff <source-path>` after an `apply --source-path` — it fails with
-  `not managed`.
+- After committing and pushing without `just sync`, apply per the scoped-apply rule in the chezmoi section under
+  Commands above.
 - No CI — validation is local only.
 - `CLAUDE.md` is a symlink to `AGENTS.md`; both paths resolve to this file. Edit `AGENTS.md` directly.
