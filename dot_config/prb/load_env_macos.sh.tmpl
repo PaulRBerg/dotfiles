@@ -22,9 +22,6 @@ export GITHUB_TOKEN='{{ onepasswordRead "op://Keys/GitHub/credential" | replace 
 # npm
 export NPM_TOKEN='{{ onepasswordRead "op://Keys/npm/credential" | replace "'" "'\\''" }}'
 
-# OpenAI
-export OPENAI_API_KEY='{{ onepasswordRead "op://Keys/OpenAI/credential" | replace "'" "'\\''" }}'
-
 ###############################################################################
 # Languages and Tools                                                         #
 ###############################################################################
