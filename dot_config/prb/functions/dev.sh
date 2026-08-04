@@ -45,6 +45,73 @@ function bun_update() {
   bun add --global "${specs[@]}"
 }
 
+# Upgrade every Cargo binary that cargo-update can track. --git includes
+# Git-originating installs; path installs remain tied to their local source.
+function cargo_update() {
+  if ! command -v cargo >/dev/null 2>&1; then
+    echo "cargo is not installed." >&2
+    return 1
+  fi
+
+  if ! command -v cargo-install-update >/dev/null 2>&1; then
+    echo "Installing cargo-update..."
+    cargo install cargo-update || return 1
+  fi
+
+  cargo install-update --all --git
+}
+
+# Upgrade Go binaries installed from a published module. Go has no global-install
+# manifest, so recover each binary's main-package path from its embedded build
+# metadata. Locally modified builds are skipped rather than replaced by @latest.
+function go_update() {
+  if ! command -v go >/dev/null 2>&1; then
+    echo "go is not installed." >&2
+    return 1
+  fi
+
+  local bin_dir binary metadata module updated skipped result
+  bin_dir=$(go env GOBIN 2>/dev/null)
+  if [[ -z "$bin_dir" ]]; then
+    bin_dir="$(go env GOPATH 2>/dev/null)"
+    bin_dir="${bin_dir%%:*}/bin"
+  fi
+
+  if [[ ! -d "$bin_dir" ]]; then
+    echo "No Go binaries installed."
+    return 0
+  fi
+
+  updated=0
+  skipped=0
+  result=0
+  for binary in "$bin_dir"/*; do
+    [[ -x "$binary" && ! -d "$binary" ]] || continue
+    metadata=$(go version -m "$binary" 2>/dev/null) || continue
+    module=$(awk '$1 == "path" { print $2; exit }' <<<"$metadata")
+    [[ -n "$module" ]] || continue
+
+    if [[ "$metadata" == *'vcs.modified=true'* || "$metadata" == *'+dirty'* ]]; then
+      echo "Skipping $(basename "$binary"): locally modified build"
+      ((skipped++))
+      continue
+    fi
+
+    echo "Updating $(basename "$binary") from ${module}@latest"
+    if go install "${module}@latest"; then
+      ((updated++))
+    else
+      result=1
+    fi
+  done
+
+  if ((updated == 0 && skipped == 0)); then
+    echo "No Go binaries with embedded module metadata found."
+  fi
+
+  return "$result"
+}
+
 # Copy Chromium browser profile while excluding files specific to one browser or system
 function copy_browser_profile() {
   rsync --archive \
