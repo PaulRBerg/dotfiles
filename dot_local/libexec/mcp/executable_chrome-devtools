@@ -40,6 +40,7 @@ exec bunx -y "chrome-devtools-mcp@$version" \
   --redact-network-headers \
   --no-performance-crux \
   --no-usage-statistics \
+  --allow-unrestricted-paths \
   --screenshot-format=jpeg \
   --screenshot-quality=80 \
   --screenshot-max-width=1600 \
