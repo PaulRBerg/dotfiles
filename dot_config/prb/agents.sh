@@ -85,7 +85,7 @@ function ccsp() {
 # Claude Code bump release
 function ccbump() {
   _require_gum || return 1
-  _run_claude_skill "Claude is bumping release..." "/bump-release $*"
+  _run_claude_skill "Claude is bumping release..." "/release-bumper $*"
 }
 
 # Claude Code todo archive
