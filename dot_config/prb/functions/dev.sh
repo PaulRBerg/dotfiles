@@ -5,7 +5,7 @@
 ###############################################################################
 
 # See https://github.com/oven-sh/bun/issues/10341
-function pm_update() {
+function bump_project_deps() {
   # --maturity-period skips versions published within the last N days to mitigate supply-chain attacks
   nlx taze --group --interactive --recursive --maturity-period 3
 }
@@ -16,7 +16,7 @@ function pm_update() {
 # (oven-sh/bun#25585), so reinstall each global at `latest`, which reliably
 # crosses majors. The 7-day cooldown in ~/.bunfig.toml still applies. No-op when
 # nothing is installed.
-function bun_update() {
+function upgrade_bun_globals() {
   local manifest names
   manifest="${BUN_INSTALL:-${XDG_DATA_HOME:-$HOME/.local/share}/bun}/install/global/package.json"
 
@@ -47,7 +47,7 @@ function bun_update() {
 
 # Upgrade every Cargo binary that cargo-update can track. --git includes
 # Git-originating installs; path installs remain tied to their local source.
-function cargo_update() {
+function upgrade_cargo_globals() {
   if ! command -v cargo >/dev/null 2>&1; then
     echo "cargo is not installed." >&2
     return 1
@@ -64,7 +64,7 @@ function cargo_update() {
 # Upgrade Go binaries installed from a published module. Go has no global-install
 # manifest, so recover each binary's main-package path from its embedded build
 # metadata. Locally modified builds are skipped rather than replaced by @latest.
-function go_update() {
+function upgrade_go_globals() {
   if ! command -v go >/dev/null 2>&1; then
     echo "go is not installed." >&2
     return 1

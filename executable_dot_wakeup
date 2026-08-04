@@ -100,18 +100,18 @@ fi
 # use its default GOPATH bin dir; none are guaranteed on sleepwatcher's PATH.
 export PATH="$HOME/.local/share/bun/bin:${CARGO_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/cargo}/bin:${GOBIN:-${GOPATH:-$HOME/go}/bin}:$HOME/Library/Application Support/fnm/aliases/default/bin:$PATH"
 
-BUN_UPDATE_SOURCE="${XDG_CONFIG_HOME:-$HOME/.config}/prb/functions/dev.sh"
-if [[ -r "$BUN_UPDATE_SOURCE" ]]; then
+DEV_HELPERS_SOURCE="${XDG_CONFIG_HOME:-$HOME/.config}/prb/functions/dev.sh"
+if [[ -r "$DEV_HELPERS_SOURCE" ]]; then
   # shellcheck source=dot_config/prb/functions/dev.sh
-  source "$BUN_UPDATE_SOURCE"
+  source "$DEV_HELPERS_SOURCE"
 fi
 
 if command -v bun >/dev/null; then
   echo "Updating bun"
   bun upgrade 2>&1 || true
-  if declare -F bun_update >/dev/null; then
+  if declare -F upgrade_bun_globals >/dev/null; then
     echo "Updating global bun packages"
-    bun_update 2>&1 || true
+    upgrade_bun_globals 2>&1 || true
   fi
 fi
 
@@ -135,17 +135,17 @@ if command -v rustup >/dev/null; then
   rustup update 2>&1 || true
 fi
 
-if command -v cargo >/dev/null && declare -F cargo_update >/dev/null; then
+if command -v cargo >/dev/null && declare -F upgrade_cargo_globals >/dev/null; then
   echo "Updating global Cargo packages"
-  cargo_update 2>&1 || true
+  upgrade_cargo_globals 2>&1 || true
 fi
 
 # ------------------------------
 # Update Go binaries
 # ------------------------------
-if command -v go >/dev/null && declare -F go_update >/dev/null; then
+if command -v go >/dev/null && declare -F upgrade_go_globals >/dev/null; then
   echo "Updating global Go binaries"
-  go_update 2>&1 || true
+  upgrade_go_globals 2>&1 || true
 fi
 
 # ------------------------------
