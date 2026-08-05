@@ -23,6 +23,8 @@
 			<integer>80</integer>
 			<key>Cursor Type</key>
 			<integer>1</integer>
+			<key>Disable Window Resizing</key>
+			<integer>1</integer>
 			<key>Flashing Bell</key>
 			<false/>
 			<key>Mouse Reporting</key>
