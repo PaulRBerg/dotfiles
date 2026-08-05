@@ -46,6 +46,7 @@ alias edit_codex="code ~/.codex"
 # Claude Code commit
 function ccc() {
   _require_gum || return 1
+  _require_ai_commit || return 1
 
   if ! git rev-parse --git-dir &>/dev/null; then
     echo "❌ Error: Not in a git repository"
@@ -110,6 +111,15 @@ function _require_gum() {
   if ! command -v gum &>/dev/null; then
     echo "❌ Error: gum is required for this command"
     echo "Install: brew install gum (macOS) or sudo apt install gum (Ubuntu)"
+    return 1
+  fi
+}
+
+# Helper to ensure ai-commit is installed (used by Claude's /commit skill).
+function _require_ai_commit() {
+  if ! command -v ai-commit &>/dev/null; then
+    echo "❌ Error: ai-commit is required for this command" >&2
+    echo 'Install: cargo install --git https://github.com/PaulRBerg/ai-commit --locked --root "$HOME/.local"' >&2
     return 1
   fi
 }
