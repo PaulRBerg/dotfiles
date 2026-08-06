@@ -1,0 +1,32 @@
+#compdef qsv
+
+_qsv_commands() {
+  local -a commands
+
+  commands=("${(@f)$(qsv --list 2>/dev/null | awk '$1 ~ /^[[:alnum:]][[:alnum:]-]*$/ { print $1 }')}")
+  (( $#commands )) && _describe -t commands 'qsv command' commands
+}
+
+_qsv() {
+  local context state state_descr line
+  typeset -A opt_args
+
+  _arguments -C -s \
+    '--list[list available commands]' \
+    '--envlist[list qsv environment variables]' \
+    '(-u --update)'{-u,--update}'[update qsv]' \
+    '(-U --updatenow)'{-U,--updatenow}'[update qsv without confirmation]' \
+    '--generate-help-md[generate Markdown help files]' \
+    '(-h --help)'{-h,--help}'[display help]' \
+    '(-v --version)'{-v,--version}'[display the version]' \
+    '1:command:->command' \
+    '*::argument:_files'
+
+  case $state in
+    command)
+      _qsv_commands
+      ;;
+  esac
+}
+
+_qsv "$@"

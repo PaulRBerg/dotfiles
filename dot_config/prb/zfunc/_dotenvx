@@ -1,0 +1,71 @@
+#compdef dotenvx
+
+_dotenvx_keys() {
+  local file
+  local -a files keys
+
+  files=(.env(N) .env.*(N))
+  for file in $files; do
+    keys+=("${(@f)$(sed -nE 's/^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)=.*/\2/p' "$file")}")
+  done
+  typeset -U keys
+  (( $#keys )) && _describe -t environment-keys 'environment key' keys
+}
+
+_dotenvx() {
+  local context state state_descr line
+  typeset -A opt_args
+
+  _arguments -C -s \
+    '(-h --help)'{-h,--help}'[display help]' \
+    '(-V --version)'{-V,--version}'[display the version]' \
+    '(-l --log-level)'{-l,--log-level}'[set the log level]:level:(error warn info verbose debug)' \
+    '(-q --quiet)'{-q,--quiet}'[show only errors]' \
+    '(-v --verbose)'{-v,--verbose}'[show verbose output]' \
+    '(-d --debug)'{-d,--debug}'[show debug output]' \
+    '1:command:->command' \
+    '*::argument:->argument'
+
+  case $state in
+    command)
+      _values 'dotenvx command' \
+        'run[inject environment variables at runtime]' \
+        'get[read a single environment variable]' \
+        'set[encrypt and set an environment variable]' \
+        'encrypt[encrypt environment files]' \
+        'decrypt[decrypt environment files]' \
+        'keypair[print a public/private keypair]' \
+        'ls[list environment files]' \
+        'validate[validate against .env.example]' \
+        'gitignore[append to .gitignore]' \
+        'genexample[generate .env.example]' \
+        'precommit[install a pre-commit guard]' \
+        'prebuild[install a Docker build guard]' \
+        'update[update dotenvx]' \
+        'lock[lock private keys]' \
+        'native[move private keys to the OS secret store]' \
+        'armor[move private keys to Dotenvx Armor]' \
+        'curl[call Dotenvx Armor]' \
+        'login[sign in]' \
+        'ext[manage extensions]'
+      ;;
+    argument)
+      case ${words[2]} in
+        get|set|keypair)
+          (( CURRENT == 3 )) && _dotenvx_keys
+          ;;
+        encrypt|decrypt|validate)
+          _files -g '.env*'
+          ;;
+        ls|genexample|precommit|prebuild)
+          _directories
+          ;;
+        run)
+          (( CURRENT > 3 )) && _command_names
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_dotenvx "$@"

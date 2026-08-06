@@ -1,0 +1,110 @@
+#compdef ni na npx nup
+
+_ni_package_json() {
+  local directory=$PWD
+
+  while [[ $directory != / ]]; do
+    if [[ -f $directory/package.json ]]; then
+      print -r -- "$directory/package.json"
+      return 0
+    fi
+    directory=${directory:h}
+  done
+
+  return 1
+}
+
+_ni_scripts() {
+  local package_json
+  package_json=$(_ni_package_json) || return
+  command jq -r '(.scripts // {}) | keys[]' "$package_json" 2>/dev/null
+}
+
+_ni_dependencies() {
+  local package_json
+  package_json=$(_ni_package_json) || return
+  command jq -r '(.dependencies // {}) + (.devDependencies // {}) + (.optionalDependencies // {}) + (.peerDependencies // {}) | keys[]' "$package_json" 2>/dev/null
+}
+
+_ni_bins() {
+  local package_json bin_directory
+  local -a bins
+
+  package_json=$(_ni_package_json) || return
+  bin_directory=${package_json:h}/node_modules/.bin
+  bins=("$bin_directory"/*(N:t))
+  (( $#bins )) && _describe -t executables executable bins
+}
+
+_ni_complete_scripts() {
+  local -a scripts
+  scripts=("${(@f)$(_ni_scripts)}")
+  (( $#scripts )) && _describe -t scripts 'package script' scripts
+}
+
+_ni_complete_dependencies() {
+  local -a dependencies
+  dependencies=("${(@f)$(_ni_dependencies)}")
+  (( $#dependencies )) && _describe -t dependencies dependency dependencies
+}
+
+_ni() {
+  local context state state_descr line cli=${words[1]}
+  typeset -A opt_args
+
+  case $cli in
+    ni)
+      _arguments -C -s \
+        '(-D --save-dev)'{-D,--save-dev}'[add to devDependencies]' \
+        '(-P --save-peer)'{-P,--save-peer}'[add to peerDependencies]' \
+        '(-O --save-optional)'{-O,--save-optional}'[add to optionalDependencies]' \
+        '(-i --interactive)'{-i,--interactive}'[select packages interactively]' \
+        '(-v --version)'{-v,--version}'[show the selected package manager]' \
+        '--agent[print the selected package manager]' \
+        '1:package:->dependency' \
+        '*::package:->dependency'
+      ;;
+    na)
+      _arguments -C -s \
+        '(-h --help)'{-h,--help}'[display help]' \
+        '1:executable:->bin' \
+        '*::argument:_files'
+      ;;
+    npx)
+      _arguments -C -s \
+        '(-p --package)'{-p,--package}'[package to install]:package:->dependency' \
+        '(-c --call)'{-c,--call}'[command to run]:command:_command_names' \
+        '(-w --workspace)'{-w,--workspace}'[workspace]:workspace:' \
+        '--workspaces[run in all workspaces]' \
+        '--include-workspace-root[include the workspace root]' \
+        '--allow-scripts=[allow install scripts]:packages:->dependency' \
+        '--strict-allow-scripts[require explicitly allowed scripts]' \
+        '--dangerously-allow-all-scripts[run all install scripts]' \
+        '1:package or executable:->bin_or_dependency' \
+        '*::argument:_files'
+      ;;
+    nup)
+      _arguments -C -s \
+        '(-h --help)'{-h,--help}'[display help]' \
+        '1:dependency:->dependency' \
+        '*::dependency:->dependency'
+      ;;
+  esac
+
+  case $state in
+    bin)
+      _ni_bins
+      ;;
+    bin_or_dependency)
+      _alternative 'executables:executable:_ni_bins' 'dependencies:dependency:_ni_complete_dependencies'
+      ;;
+    dependency)
+      _ni_complete_dependencies
+      ;;
+    script)
+      _ni_complete_scripts
+      ;;
+  esac
+}
+
+_ni "$@"

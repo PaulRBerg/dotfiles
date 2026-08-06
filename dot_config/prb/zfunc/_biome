@@ -1,0 +1,41 @@
+#compdef biome
+
+_biome() {
+  local context state state_descr line
+  typeset -A opt_args
+
+  _arguments -C -s \
+    '(-h --help)'{-h,--help}'[display help]' \
+    '(-V --version)'{-V,--version}'[display the version]' \
+    '--config-path=[use a configuration file]:file:_files' \
+    '--use-editorconfig[read EditorConfig settings]' \
+    '--write[write safe fixes]' \
+    '--fix[write safe fixes]' \
+    '--unsafe[include unsafe fixes]' \
+    '--files-max-size=[skip files larger than this]:bytes:' \
+    '1:command:->command' \
+    '*::file:_files'
+
+  case $state in
+    command)
+      _values 'Biome command' \
+        'version[show the Biome version]' \
+        'upgrade[upgrade Biome]' \
+        'rage[print debugging information]' \
+        'start[start the daemon]' \
+        'stop[stop the daemon]' \
+        'check[run formatter, linter, and import sorting]' \
+        'lint[run checks]' \
+        'format[run the formatter]' \
+        'ci[run CI checks]' \
+        'init[create a Biome configuration]' \
+        'lsp-proxy[run the LSP proxy]' \
+        'migrate[migrate a configuration]' \
+        'search[search with Grit patterns]' \
+        'explain[show documentation]' \
+        'clean[remove daemon logs]'
+      ;;
+  esac
+}
+
+_biome "$@"

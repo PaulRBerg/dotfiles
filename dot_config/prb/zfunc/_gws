@@ -1,0 +1,72 @@
+#compdef gws
+
+_gws_subcommands() {
+  local index
+  local -a command_path subcommands
+
+  for ((index = 2; index < CURRENT; index++)); do
+    [[ ${words[index]} == -* ]] && return
+    command_path+=("${words[index]}")
+  done
+  (( $#command_path )) || return
+
+  subcommands=("${(@f)$(gws "${command_path[@]}" --help 2>/dev/null | awk '
+    /^Commands:$/ { commands = 1; next }
+    commands && /^[[:space:]]*$/ { exit }
+    commands && $1 ~ /^\+?[[:alnum:]][[:alnum:]-]*$/ { print $1 }
+  ')}")
+  (( $#subcommands )) && _describe -t subcommands subcommand subcommands
+}
+
+_gws() {
+  local context state state_descr line
+  typeset -A opt_args
+
+  _arguments -C -s \
+    '(-h --help)'{-h,--help}'[display help]' \
+    '--params=[set URL/query parameters]:JSON:' \
+    '--json=[set the request body]:JSON:' \
+    '--upload=[upload media]:file:_files' \
+    '--upload-content-type=[set the upload MIME type]:MIME type:' \
+    '--output=[write a binary response]:file:_files' \
+    '--format=[set the output format]:format:(json table yaml csv)' \
+    '--api-version=[override the API version]:version:' \
+    '--page-all[auto-paginate]' \
+    '--page-limit=[limit pages]:count:' \
+    '--page-delay=[delay between pages]:milliseconds:' \
+    '--sanitize=[sanitize through Model Armor]:template:' \
+    '--dry-run[validate without sending a request]' \
+    '1:service:->service' \
+    '*::subcommand:->subcommand'
+
+  case $state in
+    service)
+      _values 'Google Workspace service' \
+        'auth[manage authentication]' \
+        'schema[inspect an API schema]' \
+        'drive[manage Drive files and shared drives]' \
+        'sheets[read and write spreadsheets]' \
+        'gmail[manage email]' \
+        'calendar[manage calendars and events]' \
+        'admin-reports[audit logs and usage reports]' \
+        'docs[read and write Google Docs]' \
+        'slides[read and write presentations]' \
+        'tasks[manage task lists]' \
+        'people[manage contacts]' \
+        'chat[manage Chat spaces]' \
+        'classroom[manage classes and coursework]' \
+        'forms[manage Google Forms]' \
+        'keep[manage Google Keep notes]' \
+        'meet[manage Meet conferences]' \
+        'events[subscribe to Workspace events]' \
+        'modelarmor[filter user-generated content]' \
+        'workflow[cross-service workflows]' \
+        'script[manage Apps Script projects]'
+      ;;
+    subcommand)
+      _gws_subcommands
+      ;;
+  esac
+}
+
+_gws "$@"

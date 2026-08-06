@@ -1,0 +1,113 @@
+#compdef claude
+
+_claude() {
+  local context state state_descr line
+  typeset -A opt_args
+
+  _arguments -C -s \
+    '(-h --help)'{-h,--help}'[display help]' \
+    '(-v --version)'{-v,--version}'[display the version]' \
+    '(-p --print)'{-p,--print}'[print response and exit]' \
+    '(-c --continue)'{-c,--continue}'[continue the most recent conversation]' \
+    '(-r --resume)'{-r,--resume}'[resume a conversation]:session ID or search term:' \
+    '(-d --debug)'{-d,--debug}'[enable debug mode]:filter:' \
+    '(-n --name)'{-n,--name}'[set the session display name]:name:' \
+    '(-w --worktree)'{-w,--worktree}'[create a worktree]:name:' \
+    '--add-dir=[allow an additional directory]:directory:_directories' \
+    '--agent=[select an agent]:agent:' \
+    '--agents=[define custom agents]:JSON:' \
+    '--allow-dangerously-skip-permissions[allow the permission-bypass option]' \
+    '--allowed-tools=[allow tools]:tools:' \
+    '--allowedTools=[allow tools]:tools:' \
+    '--append-system-prompt=[append to the system prompt]:prompt:' \
+    '--autocompact=[set auto-compaction]:mode:(auto tokens)' \
+    '--ax-screen-reader[use screen-reader-friendly output]' \
+    '--background[run as a background agent]' \
+    '--bare[disable local customizations]' \
+    '--betas=[include beta headers]:headers:' \
+    '--brief[enable SendUserMessage]' \
+    '--chrome[enable Chrome integration]' \
+    '--dangerously-skip-permissions[bypass permission checks]' \
+    '--debug-file=[write debug logs]:file:_files' \
+    '--disable-slash-commands[disable skills]' \
+    '--disallowed-tools=[deny tools]:tools:' \
+    '--disallowedTools=[deny tools]:tools:' \
+    '--effort=[set reasoning effort]:effort:(low medium high xhigh max)' \
+    '--exclude-dynamic-system-prompt-sections[move dynamic system sections to the user message]' \
+    '--fallback-model=[set fallback models]:models:' \
+    '--file=[download a file resource]:file specification:' \
+    '--fork-session[fork a resumed session]' \
+    '--forward-subagent-text[include subagent text in stream output]' \
+    '--from-pr=[resume a PR-linked session]:PR or URL:' \
+    '--ide[connect to an IDE]' \
+    '--include-hook-events[include hook events in stream output]' \
+    '--include-partial-messages[include partial messages in stream output]' \
+    '--input-format=[set input format]:format:(text stream-json)' \
+    '--json-schema=[validate structured output]:schema:' \
+    '--max-budget-usd=[limit API spending]:amount:' \
+    '--mcp-config=[load MCP configuration]:file:_files' \
+    '--model=[select a model]:model:(fable opus sonnet)' \
+    '--no-chrome[disable Chrome integration]' \
+    '--no-session-persistence[do not save the session]' \
+    '--output-format=[set output format]:format:(text json stream-json)' \
+    '--permission-mode=[set permission mode]:mode:(acceptEdits auto bypassPermissions manual dontAsk plan)' \
+    '--plugin-dir=[load a plugin directory]:directory:_directories' \
+    '--plugin-url=[load a plugin URL]:URL:' \
+    '--prompt-suggestions=[enable prompt suggestions]:boolean:(true false)' \
+    '--remote-control=[enable remote control]:name:' \
+    '--remote-control-session-name-prefix=[prefix remote-control sessions]:prefix:' \
+    '--replay-user-messages[re-emit streamed user messages]' \
+    '--safe-mode[disable all customizations]' \
+    '--session-id=[set a session UUID]:UUID:' \
+    '--setting-sources=[select setting sources]:sources:(user project local)' \
+    '--settings=[load settings]:file:_files' \
+    '--strict-mcp-config[use only explicit MCP configuration]' \
+    '--system-prompt=[set the system prompt]:prompt:' \
+    '--tmux=[open in tmux]:mode:(classic)' \
+    '--tools=[set available tools]:tools:' \
+    '--verbose[enable verbose output]' \
+    '1:command:->command' \
+    '*::argument:->argument'
+
+  case $state in
+    command)
+      _values 'Claude Code command' \
+        'agents[manage background agents]' \
+        'auth[manage authentication]' \
+        'auto-mode[inspect or reset auto mode]' \
+        'doctor[check the installation]' \
+        'gateway[run the enterprise gateway]' \
+        'import[import configuration]' \
+        'install[install Claude Code]' \
+        'mcp[manage MCP servers]' \
+        'plugin[manage plugins]' \
+        'plugins[manage plugins]' \
+        'project[manage project state]' \
+        'setup-token[create a long-lived authentication token]' \
+        'ultrareview[run a cloud code review]' \
+        'update[check for updates]' \
+        'upgrade[check for updates]'
+      ;;
+    argument)
+      case ${words[2]} in
+        agents)
+          _values 'agents command' 'list[list agents]' 'stop[stop an agent]' 'send[send an agent a message]'
+          ;;
+        auth)
+          _values 'authentication command' 'login[sign in]' 'logout[sign out]' 'status[show authentication status]'
+          ;;
+        mcp)
+          _values 'MCP command' 'add[add a server]' 'remove[remove a server]' 'list[list servers]' 'get[show a server]'
+          ;;
+        plugin|plugins)
+          _values 'plugin command' 'install[install a plugin]' 'uninstall[uninstall a plugin]' 'list[list plugins]' 'enable[enable a plugin]' 'disable[disable a plugin]'
+          ;;
+        *)
+          _files
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_claude "$@"

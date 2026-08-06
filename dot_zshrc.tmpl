@@ -44,7 +44,7 @@ DISABLE_MAGIC_FUNCTIONS="true"
 # Load custom functions
 # shellcheck disable=SC2206
 typeset -gU fpath FPATH
-fpath=("$HOME/.zfunc" $fpath)
+fpath=("$USER_DIR/zfunc" "$HOME/.zfunc" $fpath)
 
 # Keep compdump stable and skip compaudit for faster startup
 export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/compdump-${ZSH_VERSION}"
