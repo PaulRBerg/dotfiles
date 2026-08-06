@@ -199,10 +199,6 @@ work should either fix true 1Password desktop-app integration so `op` authentica
 session-token exports, or switch back to service-account mode with `OP_SERVICE_ACCOUNT_TOKEN` for noninteractive
 `chezmoi apply`.
 
-`dot_config/npm/private_npmrc.tmpl` deliberately uses npm's `${NPM_TOKEN}` environment interpolation instead of
-`onepasswordRead` so npm auth does not create an apply-time 1Password dependency. Set `NPM_TOKEN` only in shells that
-need private npm registry access.
-
 If `chezmoi apply` prompts for the account password, check the 1Password desktop-app CLI integration before changing the
 repo back to service-account mode.
 
@@ -215,8 +211,8 @@ and `web3.sh`.
 - Never commit raw secrets, tokens, passwords, private keys, recovery phrases, session tokens, or rendered secret-backed
   templates. This includes `OP_SESSION`, `OP_SERVICE_ACCOUNT_TOKEN`, SSH/GPG private keys, npm tokens, GitHub tokens,
   API keys, wallet keys, and mnemonics.
-- Store secret values in 1Password and reference them with `onepasswordRead`, runtime keychain reads, or environment
-  interpolation such as `${NPM_TOKEN}`. Only commit references, variable names, and documented setup commands.
+- Store secret values in 1Password and reference them with `onepasswordRead`, runtime keychain reads, or documented
+  environment interpolation. Only commit references, variable names, and documented setup commands.
 - Keep secret scans and debugging output redacted. Do not paste rendered template output, command traces, diffs, logs,
   or scanner findings that include the secret value itself.
 - If a secret may have been exposed, treat it as compromised: revoke or rotate it first, then remove it from the current
