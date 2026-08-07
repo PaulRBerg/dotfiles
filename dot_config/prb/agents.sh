@@ -94,7 +94,7 @@ function ccbump() {
 function ccta() {
   _require_gum || return 1
 
-  local prompt='$todo-archive'
+  local prompt='/todo-archive'
   [[ $# -gt 0 ]] && prompt+=" $*"
 
   _run_claude_skill "Claude is archiving TODOs..." "$prompt" \
