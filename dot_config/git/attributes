@@ -1,0 +1,4 @@
+# Route all merges through mergiraf, the syntax-aware merge driver registered
+# in gitconfig.tmpl. It falls back to git's default line-based merge for file
+# types it doesn't support (see `mergiraf languages`).
+* merge=mergiraf
