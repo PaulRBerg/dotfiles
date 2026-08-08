@@ -3,7 +3,7 @@
 add_newline = false
 command_timeout = 2000
 scan_timeout = 20
-format = "$directory$git_branch$git_status$character"
+format = "$directory$git_branch$git_status$hostname$jobs$status$character"
 right_format = "$cmd_duration"
 
 [directory]
@@ -18,3 +18,12 @@ right_format = "$cmd_duration"
   min_time = 1000
   format = "[$duration]($style)"
   style = "yellow"
+
+[status]
+  disabled = false
+  pipestatus = true
+
+[jobs]
+
+[hostname]
+  ssh_only = true

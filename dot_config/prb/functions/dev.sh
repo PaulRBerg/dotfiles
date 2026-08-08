@@ -247,3 +247,31 @@ function rgf() {
   rm -rf -- "$tmp"
   return "$ret"
 }
+
+# Re-run a command whenever the current directory's files change, clearing the
+# screen before each run.
+# Usage: wtch <command> [args...]
+function wtch() {
+  if ! command -v watchexec >/dev/null 2>&1; then
+    echo "watchexec is not installed." >&2
+    return 1
+  fi
+
+  watchexec --clear --restart -- "$@"
+}
+
+# Interactive jq path explorer: type a jq filter and preview its result on a
+# JSON file live; Enter prints the final filter to stdout.
+# Usage: jsonf <file.json>
+function jsonf() {
+  if [[ -z "$1" ]]; then
+    echo "Usage: jsonf <file.json>" >&2
+    return 1
+  fi
+
+  # Single-quote the path for the preview command's subshell, escaping any
+  # embedded single quotes.
+  local file_q="'${1//\'/\'\\\'\'}'"
+
+  echo '' | fzf --print-query --preview "jq -C {q} $file_q" --preview-window=down,90%
+}

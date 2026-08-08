@@ -30,7 +30,9 @@ export FOUNDRY_DISABLE_NIGHTLY_WARNING="true"
 export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git --exclude .DS_Store | sort'
 export FZF_CTRL_T_COMMAND='fd --type f --hidden --exclude .git --exclude .DS_Store | sort'
 export FZF_DEFAULT_COMMAND="$FZF_CTRL_T_COMMAND"
-export FZF_DEFAULT_OPTS='--no-sort'
+export FZF_DEFAULT_OPTS='--height=60% --layout=reverse --border'
+export FZF_CTRL_T_OPTS='--no-sort'
+export FZF_ALT_C_OPTS='--no-sort'
 
 # OpenSSL
 if [[ -n "${HOMEBREW_PREFIX:-}" && -d "$HOMEBREW_PREFIX/opt/openssl" ]]; then

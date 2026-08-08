@@ -20,9 +20,17 @@ alias map="xargs -n1"
 
 alias g="git"
 alias j="just"
-alias ls='eza $eza_params'
+alias ls='eza --group-directories-first --icons=auto'
+alias ll='eza -l --git --group-directories-first --icons=auto'
+alias lt='eza --tree --level=2 --icons=auto'
 command -v btm &>/dev/null && alias top='btm'
 command -v duf &>/dev/null && alias df='duf'
+
+# chezmoi
+alias cza="chezmoi apply"
+alias czd="chezmoi diff"
+alias cze="chezmoi edit --apply"
+alias czu="chezmoi update"
 
 ###############################################################################
 # NAVIGATION                                                                  #

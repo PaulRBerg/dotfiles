@@ -8,7 +8,12 @@ USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
 
 [[ -n "${TTY:-}" ]] && export GPG_TTY="$TTY" # https://stackoverflow.com/a/42265848/96656
 
-export MANPAGER="${MANPAGER:-less -X}" # Don't clear the screen after quitting a manual page.
+export MANPAGER="sh -c 'col -bx | bat -plman --paging=always'" # Render man pages with bat instead of less.
+export BAT_THEME="Visual Studio Dark+"                         # Matches delta's syntax-theme in gitconfig.
+export LESS="-RFXi --mouse"
+
+# vivid generates LS_COLORS from a theme; skip if not installed.
+command -v vivid >/dev/null 2>&1 && export LS_COLORS="$(vivid generate one-dark)"
 
 # Node
 export NODE_REPL_HISTORY="${NODE_REPL_HISTORY:-$HOME/.node_history}" # Enable persistent REPL history for `node`.
