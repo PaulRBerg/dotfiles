@@ -59,7 +59,6 @@ MACOS_FORMULAE=(
   tree
 
   # Development tools
-  claude-squad
   direnv
   gh
   git
