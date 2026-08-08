@@ -72,11 +72,14 @@ MACOS_FORMULAE=(
   # Image and media
   ffmpeg
   gs
+  img2pdf
   lynx
+  ocrmypdf
   pngquant
   poppler # provides pdftotext
   sfnt2woff
   sfnt2woff-zopfli
+  tesseract-lang
   woff2
   zopfli
 
