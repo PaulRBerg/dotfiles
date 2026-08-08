@@ -1,13 +1,13 @@
 [message]
-natural_repositories = [
-  "~/.agents",
-  "~/.claude",
-  "~/.codex",
-  "~/.local/share/chezmoi",
-  "~/projects/agent-skills",
-  "~/projects/evm-sweeper",
-  "~/projects/home-control",
-  "~/projects/prb-chats",
-  "~/projects/prb-finance",
-  "~/work/mailops",
-]
+  natural_repositories = [
+    "~/.agents",
+    "~/.claude",
+    "~/.codex",
+    "~/.local/share/chezmoi",
+    "~/projects/agent-skills",
+    "~/projects/evm-sweeper",
+    "~/projects/home-control",
+    "~/projects/prb-chats",
+    "~/projects/prb-finance",
+    "~/work/mailops",
+  ]

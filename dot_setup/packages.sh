@@ -77,6 +77,7 @@ MACOS_FORMULAE=(
   shellcheck
   shfmt
   sqlite-utils
+  taplo
   uv
   vim
 

@@ -200,6 +200,42 @@ install_tokei() {
   fi
 }
 
+install_taplo() {
+  log_info "Installing taplo..."
+
+  # Ubuntu LTS releases do not package taplo; no official snap exists either.
+  if ! command -v taplo &>/dev/null; then
+    local arch target download_url tmp_dir
+    case "$(dpkg --print-architecture)" in
+    amd64) target="x86_64" ;;
+    arm64) target="aarch64" ;;
+    *)
+      log_info "Unsupported architecture for taplo; skipping"
+      return 0
+      ;;
+    esac
+
+    download_url="$(
+      curl -fsSL "https://api.github.com/repos/tamasfe/taplo/releases/latest" |
+        jq -r --arg asset "taplo-linux-${target}.gz" '.assets[]? | select(.name == $asset) | .browser_download_url'
+    )"
+
+    if [[ -z "$download_url" ]]; then
+      log_info "No upstream taplo binary found for ${target}; skipping"
+      return 0
+    fi
+
+    tmp_dir="$(mktemp -d)"
+    curl -fsSL "$download_url" -o "${tmp_dir}/taplo.gz"
+    gunzip "${tmp_dir}/taplo.gz"
+    install -m 0755 "${tmp_dir}/taplo" /usr/local/bin/taplo
+    rm -rf "$tmp_dir"
+    log_success "taplo installed"
+  else
+    log_info "taplo already installed"
+  fi
+}
+
 install_vim_runtime() {
   log_info "Installing ultimate Vim configuration (amix/vimrc)..."
 
@@ -256,6 +292,7 @@ main() {
   install_golangci_lint
   install_pnpm
   install_tokei
+  install_taplo
   install_vim_runtime
   install_tailscale
   install_starship

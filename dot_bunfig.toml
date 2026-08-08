@@ -1,32 +1,32 @@
 [install]
-minimumReleaseAge = 604800
-# Packages exempt from the cooldown (our own published packages, the TypeScript
-# toolchain we bump often, the Effect-TS ecosystem used in sablier/new-ui, and
-# MCP servers we run via `bunx` pinned to `@latest`).
-# bun matches EXACT names only — no glob (oven-sh/bun#28967).
-minimumReleaseAgeExcludes = [
-  "@effect-atom/atom",
-  "@effect-atom/atom-react",
-  "@effect/cli",
-  "@effect/experimental",
-  "@effect/opentelemetry",
-  "@effect/platform",
-  "@effect/platform-node",
-  "@effect/rpc",
-  "@effect/vitest",
-  "@prb/effect-evm",
-  "@prb/effect-evm-safe",
-  "@prb/effect-next",
-  "@prb/effect-solana",
-  "@prb/effect-xstate",
-  "@prb/math",
-  "@sablier/devkit",
-  "@sablier/indexers",
-  "@sablier/price-data",
-  "@types/node",
-  "@typescript/native-preview",
-  "chrome-devtools-mcp",
-  "effect",
-  "sablier",
-  "typescript",
-]
+  minimumReleaseAge = 604800
+  # Packages exempt from the cooldown (our own published packages, the TypeScript
+  # toolchain we bump often, the Effect-TS ecosystem used in sablier/new-ui, and
+  # MCP servers we run via `bunx` pinned to `@latest`).
+  # bun matches EXACT names only — no glob (oven-sh/bun#28967).
+  minimumReleaseAgeExcludes = [
+    "@effect-atom/atom",
+    "@effect-atom/atom-react",
+    "@effect/cli",
+    "@effect/experimental",
+    "@effect/opentelemetry",
+    "@effect/platform",
+    "@effect/platform-node",
+    "@effect/rpc",
+    "@effect/vitest",
+    "@prb/effect-evm",
+    "@prb/effect-evm-safe",
+    "@prb/effect-next",
+    "@prb/effect-solana",
+    "@prb/effect-xstate",
+    "@prb/math",
+    "@sablier/devkit",
+    "@sablier/indexers",
+    "@sablier/price-data",
+    "@types/node",
+    "@typescript/native-preview",
+    "chrome-devtools-mcp",
+    "effect",
+    "sablier",
+    "typescript",
+  ]

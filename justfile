@@ -54,12 +54,13 @@ sync msg="":
 #                                    CHECKS                                    #
 # ---------------------------------------------------------------------------- #
 
-# Run all checks (prettier, plist, shellcheck, shfmt)
+# Run all checks (prettier, plist, shellcheck, shfmt, toml)
 [group("checks")]
 full-check:
     just prettier-check
     just plist-check
     just shell-check
+    just toml-format-check
 alias fc := full-check
 
 # Format files with project formatters
@@ -68,6 +69,7 @@ full-write:
     just prettier-write
     just plist-write
     just shell-write
+    just toml-format-write
 alias fw := full-write
 
 # Run local health checks for this chezmoi source tree
@@ -94,6 +96,7 @@ doctor:
         prettier
         shellcheck
         shfmt
+        taplo
         zsh
     )
     if [[ "$(uname -s)" == "Darwin" ]]; then
@@ -178,6 +181,10 @@ doctor:
     echo
     echo "== shell-check =="
     just shell-check || status=1
+
+    echo
+    echo "== toml-format =="
+    just toml-format-check || status=1
 
     exit "$status"
 alias d := doctor
@@ -303,3 +310,15 @@ alias sc := shell-check
 @shell-write:
     shfmt -w {{ GLOBS_SHELL }}
 alias sw := shell-write
+
+# Check TOML formatting
+[group("checks")]
+@toml-format-check:
+    taplo format --check
+alias tfc := toml-format-check
+
+# Format TOML files in place
+[group("checks")]
+@toml-format-write:
+    taplo format
+alias tfw := toml-format-write
