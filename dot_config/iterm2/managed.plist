@@ -15,8 +15,11 @@
 		<dict>
 			<key>ASCII Anti Aliased</key>
 			<true/>
+			<key>BM Growl</key>
+			<true/>
 			<key>Badge Text</key>
-			<string></string>
+			<string>\(user.prbRepoName)
+\(user.prbBranch)</string>
 			<key>Blinking Cursor</key>
 			<true/>
 			<key>Columns</key>
@@ -25,6 +28,8 @@
 			<integer>1</integer>
 			<key>Disable Window Resizing</key>
 			<integer>1</integer>
+			<key>Enable Triggers in Interactive Apps</key>
+			<true/>
 			<key>Flashing Bell</key>
 			<false/>
 			<key>Mouse Reporting</key>
@@ -44,7 +49,7 @@
 			<key>Rows</key>
 			<integer>25</integer>
 			<key>Scrollback Lines</key>
-			<integer>20000</integer>
+			<integer>100000</integer>
 			<key>Semantic History</key>
 			<dict>
 				<key>action</key>
@@ -55,11 +60,34 @@
 				<string></string>
 			</dict>
 			<key>Silence Bell</key>
-			<false/>
+			<true/>
 			<key>Terminal Type</key>
 			<string>xterm-256color</string>
 			<key>Title Components</key>
 			<integer>5</integer>
+			<key>Triggers</key>
+			<array>
+				<dict>
+					<key>action</key>
+					<string>HighlightTrigger</string>
+					<key>parameter</key>
+					<string>{#ffffff,#b00020}</string>
+					<key>partial</key>
+					<true/>
+					<key>regex</key>
+					<string>\b(ERROR|FAILED|panic:|Traceback)\b</string>
+				</dict>
+				<dict>
+					<key>action</key>
+					<string>HighlightTrigger</string>
+					<key>parameter</key>
+					<string>{#1b1b1b,#f5a623}</string>
+					<key>partial</key>
+					<true/>
+					<key>regex</key>
+					<string>\bWARN(ING)?\b</string>
+				</dict>
+			</array>
 			<key>Unlimited Scrollback</key>
 			<false/>
 			<key>Use Bold Font</key>
@@ -97,6 +125,8 @@
 		<key>AitermURL</key>
 		<string>https://api.openai.com/v1/responses</string>
 		<key>AllowClipboardAccess</key>
+		<true/>
+		<key>EnableAPIServer</key>
 		<true/>
 		<key>HapticFeedbackForEsc</key>
 		<false/>

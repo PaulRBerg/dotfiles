@@ -51,3 +51,8 @@ defaults delete com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile >
 defaults delete com.googlecode.iterm2 NoSyncNeverRemindPrefsChangesLostForFile_selection >/dev/null 2>&1 || true
 
 log_success "Merged managed iTerm2 settings into the normal macOS preferences domain"
+
+# iTerm2's window-restoration relies on the global "keep windows on quit" setting rather than
+# an iTerm2-specific preference, so pin it here alongside the rest of the iTerm2 setup.
+defaults write -g NSQuitAlwaysKeepsWindows -bool true
+log_success "Pinned NSQuitAlwaysKeepsWindows for session restoration"
