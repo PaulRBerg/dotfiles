@@ -27,16 +27,26 @@ MACOS_FORMULAE=(
   fnm
   fzf
   git-delta
+  glow
   gum
+  hurl
+  hyperfine
+  jless
   just
   killport
   lazygit
+  mprocs
   procs
   ripgrep
   starship
+  tealdeer
   television
   tokei
   ugrep
+  vivid
+  watchexec
+  xh
+  yazi
   zoxide
 
   # File and archive utilities
@@ -49,6 +59,7 @@ MACOS_FORMULAE=(
   tree
 
   # Development tools
+  claude-squad
   direnv
   gh
   git
@@ -59,6 +70,7 @@ MACOS_FORMULAE=(
   jq
   ls-lint
   lua
+  mergiraf
   neovim
   pnpm
   rlwrap
@@ -127,7 +139,9 @@ UBUNTU_APT_PACKAGES=(
   fd-find
   fzf
   git-delta
+  hyperfine
   ripgrep
+  tealdeer
   zoxide
 
   # File and archive utilities
