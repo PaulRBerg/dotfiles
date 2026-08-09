@@ -266,7 +266,9 @@
     line-numbers = true
     navigate = true
     # Use `less` as delta's pager, but silence the annoying terminal bell.
-    pager = less -R -F -X -q
+    # Unset the inherited $LESS first so shell-level tuning (e.g. --mouse) can't
+    # leak into git's pager despite these flags being pinned explicitly.
+    pager = env -u LESS less -R -F -X -q
     syntax-theme = Visual Studio Dark+
 
 [diff]
