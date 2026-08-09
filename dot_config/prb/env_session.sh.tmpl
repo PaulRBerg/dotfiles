@@ -10,7 +10,7 @@ USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
 
 export MANPAGER="sh -c 'col -bx | bat -plman --paging=always'" # Render man pages with bat instead of less.
 export BAT_THEME="Visual Studio Dark+"                         # Matches delta's syntax-theme in gitconfig.
-export LESS="-RFXi --mouse"
+export LESS="-RFXi"
 
 # vivid generates LS_COLORS from a theme; skip if not installed.
 command -v vivid >/dev/null 2>&1 && export LS_COLORS="$(vivid generate one-dark)"
