@@ -54,7 +54,6 @@ yarn-error.log
 # Python
 .mypy_cache/
 .pytest_cache/
-.python-version
 .ruff_cache/
 /env
 __pycache__/
