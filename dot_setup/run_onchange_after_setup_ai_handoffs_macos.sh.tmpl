@@ -21,7 +21,18 @@ if ! launchctl print "$domain" >/dev/null 2>&1; then
 fi
 
 launchctl bootout "$domain/$label" >/dev/null 2>&1 || true
-launchctl bootstrap "$domain" "$plist"
+for attempt in 1 2; do
+  if launchctl bootstrap "$domain" "$plist"; then
+    break
+  fi
+
+  if [[ "$attempt" -eq 2 ]]; then
+    echo "Failed to bootstrap $label after $attempt attempts" >&2
+    exit 1
+  fi
+
+  sleep 1
+done
 launchctl print "$domain/$label" >/dev/null
 
 echo "Loaded $label" >&2
