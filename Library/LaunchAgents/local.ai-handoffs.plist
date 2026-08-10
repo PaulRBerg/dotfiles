@@ -23,6 +23,6 @@
 	<key>ThrottleInterval</key>
 	<integer>30</integer>
 	<key>WorkingDirectory</key>
-	<string>/Users/prb/projects/ai-handoffs</string>
+	<string>/Users/prb/projects/agent-toolkit/apps/handoffs</string>
 </dict>
 </plist>
