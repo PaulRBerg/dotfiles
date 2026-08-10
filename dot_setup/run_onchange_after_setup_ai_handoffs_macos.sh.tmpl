@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Reload the AI handoffs viewer after chezmoi installs or changes its plist.
+# plist hash: {{ include "Library/LaunchAgents/local.ai-handoffs.plist" | sha256sum }}
+
+set -euo pipefail
+
+readonly label="local.ai-handoffs"
+readonly domain="gui/$(id -u)"
+readonly plist="$HOME/Library/LaunchAgents/$label.plist"
+
+if [[ ! -f "$plist" ]]; then
+  echo "AI handoffs plist not found: $plist" >&2
+  exit 1
+fi
+
+plutil -lint "$plist"
+
+if ! launchctl print "$domain" >/dev/null 2>&1; then
+  echo "GUI launchd domain unavailable; AI handoffs will load at the next login" >&2
+  exit 0
+fi
+
+launchctl bootout "$domain/$label" >/dev/null 2>&1 || true
+launchctl bootstrap "$domain" "$plist"
+launchctl print "$domain/$label" >/dev/null
+
+echo "Loaded $label" >&2
