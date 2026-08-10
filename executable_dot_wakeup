@@ -8,9 +8,17 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 # ------------------------------
 # SSH key
 # ------------------------------
-SSH_KEY="$HOME/.ssh/github/key.pem"
-if [[ -f "$SSH_KEY" ]] && ! /usr/bin/ssh-add -l 2>/dev/null | grep -q "$SSH_KEY"; then
-  /usr/bin/ssh-add --apple-use-keychain "$SSH_KEY" 2>/dev/null
+# Safety net behind the local.ssh-load-keychain LaunchAgent, for the case where
+# the agent lost the key while asleep. `ssh-add -l` prints fingerprints and
+# comments, never paths, so the guard has to match on the fingerprint. The
+# passphrase comes from the login keychain, so this never prompts.
+SSH_KEY_PUB="$HOME/.ssh/github/key.pub"
+if [[ -f "$SSH_KEY_PUB" ]]; then
+  ssh_fingerprint="$(/usr/bin/ssh-keygen -lf "$SSH_KEY_PUB" | awk '{print $2}')"
+  if ! /usr/bin/ssh-add -l 2>/dev/null | grep -qF "$ssh_fingerprint"; then
+    echo "Loading SSH key into the agent"
+    /usr/bin/ssh-add --apple-load-keychain 2>&1 || true
+  fi
 fi
 
 # ------------------------------

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>local.ssh-load-keychain</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>-c</string>
+		<string>set -u
+# Load the passphrase-protected GitHub key into the launchd ssh-agent at login,
+# reading the passphrase from the login keychain so nothing ever prompts. Homebrew
+# OpenSSH ignores UseKeychain, so ~/.ssh/config alone cannot do this.
+key_pub="$HOME/.ssh/github/key.pub"
+[ -f "$key_pub" ] || exit 0
+fingerprint="$(/usr/bin/ssh-keygen -lf "$key_pub" | awk '{print $2}')"
+# The keychain and the agent socket may not be ready the instant the session
+# starts, so retry rather than lose the key for the whole boot.
+for _ in 1 2 3 4 5; do
+  if /usr/bin/ssh-add -l 2&gt;/dev/null | grep -qF "$fingerprint"; then
+    exit 0
+  fi
+  /usr/bin/ssh-add --apple-load-keychain
+  sleep 5
+done
+echo "failed to load $key_pub into the agent" &gt;&amp;2
+exit 1</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/Users/prb/Library/Logs/ssh-load-keychain.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/prb/Library/Logs/ssh-load-keychain.log</string>
+</dict>
+</plist>

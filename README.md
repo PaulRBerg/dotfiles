@@ -29,7 +29,15 @@ chicken-and-egg failures.
    `chezmoi apply` renders templates with `onepasswordRead`.
 4. **GitHub SSH key**: only the public key is tracked (`dot_ssh/github/key.pub`). Restore the private key from 1Password
    to `~/.ssh/github/key.pem` and `chmod 600` it. Until then, GitHub access over SSH does not work — use HTTPS URLs as a
-   fallback.
+   fallback. Then store its passphrase in the login keychain once, so the `local.ssh-load-keychain` LaunchAgent can load
+   the key at every login without prompting:
+
+   ```sh
+   /usr/bin/ssh-add --apple-use-keychain ~/.ssh/github/key.pem
+   ```
+
+   Apple's `ssh-add` is required here: Homebrew OpenSSH has no `--apple-*` flags and ignores `UseKeychain` in
+   `~/.ssh/config`. Skip this and every reboot leaves the agent empty, which blocks non-interactive `git` over SSH.
 
 **Setup** — now bootstrap the dotfiles:
 
