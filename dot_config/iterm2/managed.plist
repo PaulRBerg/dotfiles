@@ -18,8 +18,7 @@
 			<key>BM Growl</key>
 			<true/>
 			<key>Badge Text</key>
-			<string>\(user.prbRepoName)
-\(user.prbBranch)</string>
+			<string>\(user.prbRepoName)</string>
 			<key>Blinking Cursor</key>
 			<true/>
 			<key>Columns</key>
