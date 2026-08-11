@@ -1,0 +1,21 @@
+# Global markdownlint defaults for VS Code/Cursor, whose user settings point
+# `markdownlint.configFile` at this file because `markdownlint.config` is deprecated.
+default: true
+MD002: false
+MD004: false
+MD007: false
+MD010: false
+MD014: false
+MD022: false
+MD024: false
+MD025: false
+MD026: false
+MD031: false
+MD032: false
+MD033: false
+MD034: false
+MD036: false
+MD037: false
+MD040: false
+MD041: false
+MD059: false
