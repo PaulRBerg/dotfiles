@@ -1,5 +1,5 @@
-# Global markdownlint defaults for VS Code/Cursor, whose user settings point
-# `markdownlint.configFile` at this file because `markdownlint.config` is deprecated.
+# Global markdownlint defaults discovered by the VS Code/Cursor extension in
+# Markdown files' parent directories, including this file's target: `$HOME`.
 default: true
 MD002: false
 MD004: false
