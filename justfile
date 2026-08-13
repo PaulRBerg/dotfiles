@@ -3,6 +3,8 @@ set allow-duplicate-recipes
 set shell := ["bash", "-euo", "pipefail", "-c"]
 set unstable
 
+export RUST_LOG := "warn"
+
 # ---------------------------------------------------------------------------- #
 #                                  CONSTANTS                                   #
 # ---------------------------------------------------------------------------- #
