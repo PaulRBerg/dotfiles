@@ -199,7 +199,7 @@
 
 {{- if eq .chezmoi.os "darwin" }}
 [commit]
-    # Sign commits with SSH keys via 1Password.
+    # Sign commits with the local SSH key.
     gpgsign = true
 {{- end }}
 
@@ -396,9 +396,6 @@
 {{- if eq .chezmoi.os "darwin" }}
 [gpg]
     format = ssh
-
-[gpg "ssh"]
-    program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
 
 [user]
     signingKey = ~/.ssh/github/key.pub

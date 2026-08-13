@@ -27,10 +27,11 @@ chicken-and-egg failures.
 3. **1Password app + CLI** (neither is in the brew manifest): `brew install --cask 1password 1password-cli`. Open the
    app, sign in, and enable **Settings → Developer → Integrate with 1Password CLI** (Touch ID). Required because
    `chezmoi apply` renders templates with `onepasswordRead`.
-4. **GitHub SSH key**: only the public key is tracked (`dot_ssh/github/key.pub`). Restore the private key from 1Password
-   to `~/.ssh/github/key.pem` and `chmod 600` it. Until then, GitHub access over SSH does not work — use HTTPS URLs as a
-   fallback. Then store its passphrase in the login keychain once, so the `local.ssh-load-keychain` LaunchAgent can load
-   the key at every login without prompting:
+4. **GitHub SSH key**: only the public key is tracked (`dot_ssh/github/key.pub`). Restore the passphrase-protected
+   private key from your secure backup to `~/.ssh/github/key.pem` and `chmod 600` it. Until then, GitHub access over SSH
+   does not work — use HTTPS URLs as a fallback. Store its passphrase in the macOS login keychain once, so the
+   `local.ssh-load-keychain` LaunchAgent can load the key at every login without prompting. Git uses this local key for
+   both GitHub authentication and SSH commit signing; neither operation invokes 1Password.
 
    ```sh
    /usr/bin/ssh-add --apple-use-keychain ~/.ssh/github/key.pem
