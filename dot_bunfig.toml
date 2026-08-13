@@ -2,7 +2,7 @@
   minimumReleaseAge = 604800
   # Packages exempt from the cooldown (our own published packages, the TypeScript
   # toolchain we bump often, the Effect-TS ecosystem used in sablier/new-ui, and
-  # MCP servers we run via `bunx` pinned to `@latest`).
+  # globally installed MCP servers we may bump immediately).
   # bun matches EXACT names only — no glob (oven-sh/bun#28967).
   minimumReleaseAgeExcludes = [
     "@effect-atom/atom",

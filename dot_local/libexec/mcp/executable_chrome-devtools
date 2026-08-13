@@ -7,12 +7,15 @@ set -eu
 # Chromium: that lets concurrent agents create extra windows or fresh profiles.
 port="${PRB_AGENT_CHROMIUM_PORT:-9222}"
 
-# Pin the upstream version so bunx starts straight from the local cache (no
-# registry round-trip on every session) and releases can't rename flags or
-# change tool behavior underneath in-flight agent sessions. Bump deliberately
-# after reading the changelog:
-# https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/CHANGELOG.md
-version="${PRB_CHROME_DEVTOOLS_MCP_VERSION:-1.6.0}"
+# Use the globally installed executable directly. Package runners such as bunx
+# share temporary install directories, so concurrent agent startups can race
+# while linking the same package and close the MCP transport before initialize.
+bun_install="${BUN_INSTALL:-${XDG_DATA_HOME:-$HOME/.local/share}/bun}"
+server="$bun_install/bin/chrome-devtools-mcp"
+if [[ ! -x "$server" ]]; then
+  print -u2 "chrome-devtools-mcp is not installed at $server; run ~/.setup/node.sh"
+  exit 127
+fi
 
 # Long browser sessions can retain large accessibility snapshots and exhaust
 # Node's default V8 heap, which closes the MCP transport while Chromium stays
@@ -29,7 +32,7 @@ find "$log_dir" -name 'server-*.log' -mtime +7 -delete 2>/dev/null || true
 # Screenshot flags only set response-side defaults (JPEG ~3-5x smaller than
 # PNG, downscaled to vision-model resolution); tools can still request PNG or
 # full size explicitly.
-exec bunx -y "chrome-devtools-mcp@$version" \
+exec "$server" \
   "--browser-url=http://127.0.0.1:$port" \
   --experimental-page-id-routing \
   --experimental-memory \
