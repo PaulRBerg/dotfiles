@@ -1,0 +1,2 @@
+[rpc_endpoints]
+  routemesh = "https://lb.routeme.sh/rpc/${ROUTEMESH_CHAIN_ID}/${ROUTEMESH_API_KEY}"
