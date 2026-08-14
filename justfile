@@ -56,13 +56,14 @@ sync msg="":
 #                                    CHECKS                                    #
 # ---------------------------------------------------------------------------- #
 
-# Run all checks (prettier, plist, shellcheck, shfmt, toml)
+# Run all checks (formatting, static analysis, and regression tests)
 [group("checks")]
 full-check:
     just prettier-check
     just plist-check
     just shell-check
     just toml-format-check
+    just test
 alias fc := full-check
 
 # Format files with project formatters
@@ -73,6 +74,13 @@ full-write:
     just shell-write
     just toml-format-write
 alias fw := full-write
+
+# Run regression tests
+[group("checks")]
+@test:
+    bats tests/*.bats
+    uv run python -m unittest discover -s tests -p 'test_*.py'
+alias t := test
 
 # Run local health checks for this chezmoi source tree
 [group("checks")]
