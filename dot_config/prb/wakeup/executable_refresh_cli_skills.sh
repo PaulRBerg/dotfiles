@@ -5,6 +5,25 @@ export PATH="$HOME/.local/bin:$HOME/.local/share/foundry/bin:/opt/homebrew/bin:/
 
 CHEZMOI_SOURCE_DIR="${CHEZMOI_SOURCE_DIR:-$HOME/.local/share/chezmoi}"
 AGENT_SKILLS_DIR="${AGENT_SKILLS_DIR:-$HOME/projects/agent-skills}"
+WAKEUP_CLAUDE_PID=""
+WAKEUP_REFRESH_TEMP_DIR=""
+
+function _wakeup_cleanup_isolated_refresh() {
+  if [[ -n "$WAKEUP_CLAUDE_PID" ]] && kill -0 "$WAKEUP_CLAUDE_PID" 2>/dev/null; then
+    kill "$WAKEUP_CLAUDE_PID" 2>/dev/null || true
+    if kill -0 "$WAKEUP_CLAUDE_PID" 2>/dev/null; then
+      kill -9 "$WAKEUP_CLAUDE_PID" 2>/dev/null || true
+    fi
+    wait "$WAKEUP_CLAUDE_PID" 2>/dev/null || true
+  fi
+  WAKEUP_CLAUDE_PID=""
+
+  if [[ -n "$WAKEUP_REFRESH_TEMP_DIR" && -d "$WAKEUP_REFRESH_TEMP_DIR" &&
+    "${WAKEUP_REFRESH_TEMP_DIR##*/}" == wakeup-agent-skills.* ]]; then
+    rm -rf -- "$WAKEUP_REFRESH_TEMP_DIR"
+  fi
+  WAKEUP_REFRESH_TEMP_DIR=""
+}
 
 function _wakeup_semver() {
   local raw="$1"
@@ -105,6 +124,7 @@ function _wakeup_print_claude_output() {
 function _wakeup_run_claude_in_agent_skills() {
   local label="$1"
   local prompt="$2"
+  local work_dir="$3"
   local timeout_seconds="${WAKEUP_CLAUDE_TIMEOUT_SECONDS:-900}"
   local plugin_dir="$CHEZMOI_SOURCE_DIR/.agents"
   local out err pid rc
@@ -119,15 +139,15 @@ function _wakeup_run_claude_in_agent_skills() {
     return 1
   fi
 
-  out="$(mktemp "${TMPDIR:-/tmp}/wakeup-claude-out.XXXXXX")" || return 1
-  err="$(mktemp "${TMPDIR:-/tmp}/wakeup-claude-err.XXXXXX")" || {
+  out="$(mktemp "${WAKEUP_REFRESH_TEMP_DIR:-${TMPDIR:-/tmp}}/wakeup-claude-out.XXXXXX")" || return 1
+  err="$(mktemp "${WAKEUP_REFRESH_TEMP_DIR:-${TMPDIR:-/tmp}}/wakeup-claude-err.XXXXXX")" || {
     rm -f "$out"
     return 1
   }
 
   echo "$label"
   (
-    cd "$AGENT_SKILLS_DIR" || exit 1
+    cd "$work_dir" || exit 1
     GIT_TERMINAL_PROMPT=0 claude \
       --no-session-persistence \
       --output-format json \
@@ -136,9 +156,11 @@ function _wakeup_run_claude_in_agent_skills() {
       --print "$prompt"
   ) >"$out" 2>"$err" &
   pid=$!
+  WAKEUP_CLAUDE_PID="$pid"
 
   _wakeup_wait_with_timeout "$pid" "$timeout_seconds" "$label"
   rc=$?
+  WAKEUP_CLAUDE_PID=""
 
   _wakeup_print_claude_output "$out"
 
@@ -153,23 +175,48 @@ function _wakeup_run_claude_in_agent_skills() {
   return "$rc"
 }
 
-function refresh_cli_backed_agent_skills() {
+function refresh_cli_backed_agent_skills() (
   local skill_dir skill_name binary version_file installed_raw installed recorded comparison
   local stale_args=()
   local stale_count=0
-  local prompt
+  local prompt skills_dir remote_url branch temp_dir clone_dir starting_oid remote_oid
+  local prepare_output transaction_id
 
-  if [[ ! -d "$AGENT_SKILLS_DIR/.git" ]]; then
+  if ! git -C "$AGENT_SKILLS_DIR" rev-parse --git-dir >/dev/null 2>&1; then
     echo "Skipping CLI-backed skill refresh (missing $AGENT_SKILLS_DIR)"
     return 0
   fi
-
-  if [[ -n "$(git -C "$AGENT_SKILLS_DIR" status --porcelain 2>/dev/null)" ]]; then
+  if [[ -n "${WAKEUP_REFRESH_CLI_SKILLS_DRY_RUN:-}" &&
+    -n "$(git -C "$AGENT_SKILLS_DIR" status --porcelain 2>/dev/null)" ]]; then
     echo "Skipping CLI-backed skill refresh (dirty worktree)"
     return 0
   fi
 
-  for skill_dir in "$AGENT_SKILLS_DIR"/skills/cli-*; do
+  skills_dir="$AGENT_SKILLS_DIR"
+  if [[ -z "${WAKEUP_REFRESH_CLI_SKILLS_DRY_RUN:-}" ]]; then
+    remote_url="$(git -C "$AGENT_SKILLS_DIR" remote get-url origin 2>/dev/null)"
+    branch="$(git -C "$AGENT_SKILLS_DIR" branch --show-current 2>/dev/null)"
+    if [[ -z "$remote_url" || -z "$branch" ]]; then
+      echo "Skipping CLI-backed skill refresh (origin or current branch unavailable)"
+      return 0
+    fi
+
+    temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/wakeup-agent-skills.XXXXXX")" || return 1
+    WAKEUP_REFRESH_TEMP_DIR="$temp_dir"
+    trap '_wakeup_cleanup_isolated_refresh' EXIT
+    trap 'exit 129' HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    clone_dir="$temp_dir/repo"
+    if ! GIT_TERMINAL_PROMPT=0 git clone --quiet --single-branch --branch "$branch" "$remote_url" "$clone_dir"; then
+      echo "CLI-backed skill refresh failed (could not clone origin/$branch)" >&2
+      return 1
+    fi
+    skills_dir="$clone_dir"
+    starting_oid="$(git -C "$clone_dir" rev-parse HEAD)" || return 1
+  fi
+
+  for skill_dir in "$skills_dir"/skills/cli-*; do
     if [[ ! -d "$skill_dir" ]]; then
       continue
     fi
@@ -235,19 +282,54 @@ checks from AGENTS.md, then stop without committing."
     return 0
   fi
 
-  if _wakeup_run_claude_in_agent_skills "Refreshing CLI-backed agent skills" "$prompt"; then
-    if [[ -n "$(git -C "$AGENT_SKILLS_DIR" status --porcelain 2>/dev/null)" ]]; then
-      # Worktree was clean before the refresh, so everything dirty now is the
-      # refresh's output. Stage it and commit exactly that index with --staged
-      # (deterministic; no reliance on a fresh session inferring what to stage).
-      git -C "$AGENT_SKILLS_DIR" add -A
-      _wakeup_run_claude_in_agent_skills "Committing CLI-backed skill refresh" "/commit --staged --push" || true
-    else
-      echo "No CLI-backed skill changes to commit"
-    fi
-  else
+  if ! _wakeup_run_claude_in_agent_skills "Refreshing CLI-backed agent skills" "$prompt" "$clone_dir"; then
     echo "CLI-backed skill refresh failed; skipping commit"
+    return 1
   fi
-}
+
+  if [[ "$(git -C "$clone_dir" rev-parse HEAD)" != "$starting_oid" ]]; then
+    echo "CLI-backed skill refresh changed Git history; refusing to push" >&2
+    return 1
+  fi
+
+  if [[ -z "$(git -C "$clone_dir" status --porcelain 2>/dev/null)" ]]; then
+    echo "No CLI-backed skill changes to commit"
+    return 0
+  fi
+
+  remote_oid="$(
+    GIT_TERMINAL_PROMPT=0 git -C "$clone_dir" ls-remote --exit-code origin "refs/heads/$branch" |
+      awk 'NR == 1 { print $1 }'
+  )" || {
+    echo "CLI-backed skill refresh failed (could not verify origin/$branch)" >&2
+    return 1
+  }
+  if [[ "$remote_oid" != "$starting_oid" ]]; then
+    echo "CLI-backed skill refresh aborted (origin/$branch advanced during refresh)" >&2
+    return 1
+  fi
+
+  if ! command -v ai-commit >/dev/null 2>&1; then
+    echo "CLI-backed skill refresh failed (ai-commit is unavailable)" >&2
+    return 1
+  fi
+
+  if ! prepare_output="$(
+    cd "$clone_dir" && ai-commit prepare --all --no-auto-baseline --porcelain
+  )"; then
+    echo "CLI-backed skill commit preparation failed" >&2
+    return 1
+  fi
+  transaction_id="$(awk -F '\t' '$1 == "PREPARED" { print $2; exit }' <<<"$prepare_output")"
+  if [[ -z "$transaction_id" ]]; then
+    echo "CLI-backed skill commit preparation returned no transaction" >&2
+    return 1
+  fi
+
+  if ! (cd "$clone_dir" && ai-commit commit "$transaction_id" -m "Refresh CLI-backed agent skills" --push); then
+    echo "CLI-backed skill commit or push failed" >&2
+    return 1
+  fi
+)
 
 refresh_cli_backed_agent_skills "$@"

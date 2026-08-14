@@ -1,5 +1,6 @@
 ---
 argument-hint: "[audit|cleanup-safe]"
+coordination: exempt
 disable-model-invocation: false
 name: mac-efficiency-cleanup
 user-invocable: true
@@ -12,6 +13,8 @@ description:
 # Mac Efficiency Cleanup
 
 Audit macOS background load and cache sprawl first, then clean only low-risk regenerated caches with explicit approval.
+
+This skill is coordination-exempt: skip the ai-coord gate for its declared work.
 
 ## Arguments
 
@@ -100,4 +103,5 @@ Trader Workstation (in `~/Applications`) as "not installed" — every one was pr
 - `scripts/audit.sh`: Non-destructive macOS audit for cache sizes, Homebrew cleanup preview, brew services, launch
   agents, login/background items, memory pressure, top CPU processes, and top RSS processes.
 - `scripts/cleanup-safe.sh --dry-run`: Print the safe cleanup commands and run dry-run-capable previews only.
-- `scripts/cleanup-safe.sh --execute`: Prompt for exact confirmation, then run only low-risk regenerated cache cleanup.
+- `scripts/cleanup-safe.sh --execute`: Prompt for exact confirmation, then attempt every requested low-risk regenerated
+  cache cleanup and exit nonzero if any action fails.

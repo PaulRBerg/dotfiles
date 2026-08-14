@@ -61,9 +61,11 @@ function _git_default_branch() {
 
 function _git_confirm() {
   local prompt="$1"
+  local reply
 
-  read -r "REPLY?$prompt [y/N] "
-  [[ "$REPLY" =~ ^[Yy]$ ]]
+  printf '%s [y/N] ' "$prompt" >&2
+  IFS= read -r reply
+  [[ "$reply" =~ ^[Yy]$ ]]
 }
 
 # Flatten current branch commits into a single commit.
@@ -228,19 +230,37 @@ function go_cherry_pick() {
 
 # Fuzzy branch switch with commit preview
 function gsf() {
-  git for-each-ref refs/heads/ --sort=-committerdate --format='%(refname:short)' |
-    fzf --height 40% --reverse \
-      --preview 'git log --oneline --graph --color=always -10 {}' |
-    xargs git switch
+  local branch
+
+  branch="$(
+    git for-each-ref refs/heads/ --sort=-committerdate --format='%(refname:short)' |
+      fzf --height 40% --reverse \
+        --preview 'git log --oneline --graph --color=always -10 {}'
+  )" || return 0
+  [[ -n "$branch" ]] || return 0
+
+  git switch -- "$branch"
 }
 
 # Fuzzy stash browser
 function gstf() {
-  git stash list |
-    fzf --height 40% --reverse \
-      --preview 'git stash show -p {1}' |
-    cut -d: -f1 |
-    xargs git stash pop
+  local selected stash_ref selected_oid stash_subject current_oid
+
+  selected="$(
+    git stash list --format='%gd%x09%H%x09%s' |
+      fzf --height 40% --reverse \
+        --preview 'git stash show -p {1}'
+  )" || return 0
+  [[ -n "$selected" ]] || return 0
+
+  IFS=$'\t' read -r stash_ref selected_oid stash_subject <<<"$selected"
+  if ! current_oid="$(git rev-parse --verify "${stash_ref}^{commit}" 2>/dev/null)" ||
+    [[ "$current_oid" != "$selected_oid" ]]; then
+    echo "❌ Stash list changed after selecting $stash_ref ($stash_subject); refusing to pop" >&2
+    return 1
+  fi
+
+  git stash pop "$stash_ref"
 }
 
 # Replace history with a fresh root commit pushed to GitHub main branch.

@@ -6,11 +6,71 @@
 
 # Replace a symlink with a copy of its target, then symlink the target back
 function deref() {
-  local link="$1"
-  local target=$(readlink "$link")
-  rsync -aL --remove-source-files "$target" "$link"
-  ln -s "$(cd "$(dirname "$link")" && pwd)/$(basename "$link")" "$target"
-  echo "📋 Dereferenced: \e[36m$link\e[0m ← $target"
+  local link="${1-}"
+  local link_dir link_abs raw_target target_path target_abs
+  local backup_dir backup_link
+
+  if [[ -z "$link" ]]; then
+    echo "❌ Symlink path not provided" >&2
+    return 1
+  fi
+  if [[ ! -L "$link" || ! -e "$link" ]]; then
+    echo "❌ Expected a non-dangling symlink: $link" >&2
+    return 1
+  fi
+
+  link_dir="$(cd "$(dirname "$link")" && pwd -P)" || return 1
+  link_abs="$link_dir/$(basename "$link")"
+  raw_target="$(readlink "$link_abs")" || return 1
+  if [[ "$raw_target" = /* ]]; then
+    target_path="$raw_target"
+  else
+    target_path="$link_dir/$raw_target"
+  fi
+  {{- if eq .chezmoi.os "darwin" }}
+  target_abs="$(grealpath -e "$target_path")" || return 1
+  {{- else if eq .chezmoi.os "linux" }}
+  target_abs="$(realpath -e "$target_path")" || return 1
+  {{- end }}
+  if [[ ! -e "$target_abs" ]]; then
+    echo "❌ Symlink target does not exist: $target_abs" >&2
+    return 1
+  fi
+  if [[ -d "$target_abs" && "$link_abs/" == "$target_abs/"* ]]; then
+    echo "❌ Cannot dereference a link contained by its target: $link_abs" >&2
+    return 1
+  fi
+
+  backup_dir="$(mktemp -d "$link_dir/.deref.XXXXXX")" || return 1
+  backup_link="$backup_dir/original-link"
+
+  if ! command mv "$link_abs" "$backup_link"; then
+    command rmdir "$backup_dir" 2>/dev/null || true
+    echo "❌ Failed to preserve the original symlink" >&2
+    return 1
+  fi
+  if ! command mv "$target_abs" "$link_abs"; then
+    command mv "$backup_link" "$link_abs" 2>/dev/null || true
+    command rmdir "$backup_dir" 2>/dev/null || true
+    echo "❌ Failed to move the symlink target; original link restored" >&2
+    return 1
+  fi
+
+  if ! command ln -s "$link_abs" "$target_abs"; then
+    if [[ ! -e "$target_abs" && ! -L "$target_abs" ]] &&
+      command mv "$link_abs" "$target_abs" &&
+      command mv "$backup_link" "$link_abs"; then
+      command rmdir "$backup_dir" 2>/dev/null || true
+      echo "❌ Failed to create the reverse symlink; original state restored" >&2
+    else
+      echo "❌ Failed to create the reverse symlink and fully roll back; original link is at $backup_link" >&2
+    fi
+    return 1
+  fi
+
+  command rm "$backup_link"
+  command rmdir "$backup_dir"
+  printf '📋 Dereferenced: \033[36m%s\033[0m ← %s\n' "$link_abs" "$target_abs"
 }
 
 function is_symlink() {

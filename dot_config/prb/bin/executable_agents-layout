@@ -37,6 +37,7 @@ if [[ ! -d "$target_dir" ]]; then
   exit 1
 fi
 target_dir="$(cd "$target_dir" && pwd)"
+printf -v target_dir_quoted '%q' "$target_dir"
 
 if ! command -v it2 >/dev/null 2>&1; then
   echo "agents-layout: 'it2' CLI not found on PATH (requires the iTerm2 Python API)" >&2
@@ -46,9 +47,9 @@ fi
 # `it2 session split`/`run` default to the active session, and a freshly created window or
 # pane becomes active, so no explicit session IDs are needed here.
 it2 window new >/dev/null
-it2 session run "cd '${target_dir}' && clear"
+it2 session run "cd -- $target_dir_quoted && clear"
 
 for ((i = 1; i < panes; i++)); do
   it2 session split --vertical >/dev/null
-  it2 session run "cd '${target_dir}' && clear"
+  it2 session run "cd -- $target_dir_quoted && clear"
 done

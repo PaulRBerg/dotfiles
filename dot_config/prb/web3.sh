@@ -32,6 +32,11 @@ function foundry_copy_abi() {
   fi
 
   local contract_name=$1
+  if [[ "$contract_name" == */* ]]; then
+    echo "Contract name must not contain a path separator" >&2
+    return 1
+  fi
+
   local out_dir="out"
   local json_path="${out_dir}/${contract_name}.sol/${contract_name}.json"
 
@@ -40,10 +45,18 @@ function foundry_copy_abi() {
     return 1
   fi
 
-  # Clipboard copy
-  jq -r '.abi' "$json_path" | pbcopy
+  local abi
+  if ! abi="$(jq -e '.abi | select(type == "array")' "$json_path")"; then
+    echo "Error: JSON file does not contain an ABI array: $json_path" >&2
+    return 1
+  fi
 
-  echo "ABI for $contract_name has been copied to clipboard"
+  if printf '%s\n' "$abi" | pbcopy; then
+    echo "ABI for $contract_name has been copied to clipboard"
+  else
+    echo "Error: Could not copy ABI to clipboard" >&2
+    return 1
+  fi
 }
 
 # Zip the ABIs of the given contracts into a single ZIP file
@@ -63,6 +76,12 @@ function foundry_zip_abis() {
   echo "Extracting ABIs for: $*"
 
   for contract_name in "$@"; do
+    if [[ "$contract_name" == */* ]]; then
+      echo "Warning: Contract name must not contain a path separator: $contract_name"
+      failed_contracts+=("$contract_name")
+      continue
+    fi
+
     local json_path="${out_dir}/${contract_name}.sol/${contract_name}.json"
 
     if [[ ! -f "$json_path" ]]; then
@@ -71,8 +90,11 @@ function foundry_zip_abis() {
       continue
     fi
 
-    # Extract ABI and save to temp directory
-    if jq -r '.abi' "$json_path" >"${temp_dir}/${contract_name}.json"; then
+    # Extract ABI before creating its archive entry, so an invalid artifact
+    # cannot leave an empty file that is mistaken for a successful extraction.
+    local abi
+    if abi="$(jq -e '.abi | select(type == "array")' "$json_path")" &&
+      printf '%s\n' "$abi" >"${temp_dir}/${contract_name}.json"; then
       echo "✓ Extracted ABI for $contract_name"
     else
       echo "✗ Failed to extract ABI for $contract_name"

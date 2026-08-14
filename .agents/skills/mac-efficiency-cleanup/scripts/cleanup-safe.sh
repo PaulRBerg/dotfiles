@@ -105,12 +105,27 @@ if [[ "$confirm" != "clean safe caches" ]]; then
   exit 1
 fi
 
+failures=0
+
 if command -v brew >/dev/null 2>&1; then
-  brew cleanup --prune="${HOMEBREW_CLEANUP_MAX_AGE_DAYS:-30}"
+  if ! brew cleanup --prune="${HOMEBREW_CLEANUP_MAX_AGE_DAYS:-30}"; then
+    failures=1
+  fi
 else
   echo "skip: brew not found"
 fi
 
-run_or_skip uv uv cache prune
-run_or_skip pnpm pnpm store prune
-run_or_skip go go clean -cache -testcache
+if ! run_or_skip uv uv cache prune; then
+  failures=1
+fi
+if ! run_or_skip pnpm pnpm store prune; then
+  failures=1
+fi
+if ! run_or_skip go go clean -cache -testcache; then
+  failures=1
+fi
+
+if ((failures)); then
+  echo "One or more safe cleanup actions failed." >&2
+  exit 1
+fi

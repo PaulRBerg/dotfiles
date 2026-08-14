@@ -19,7 +19,8 @@ fi
 
 readonly PYTHON_VERSION="3.14"
 readonly VENV="$HOME/.venvs/data-wrangler"
-readonly KERNEL_DIR="$HOME/Library/Jupyter/kernels/data-wrangler-py312"
+readonly KERNEL_DIR="$HOME/Library/Jupyter/kernels/data-wrangler-py314"
+readonly LEGACY_KERNEL_DIR="$HOME/Library/Jupyter/kernels/data-wrangler-py312"
 
 # (Re)build the venv when missing or not already on PYTHON_VERSION.
 needs_build=true
@@ -37,6 +38,7 @@ if [[ "$needs_build" == true ]]; then
 fi
 
 # Refresh the Jupyter kernelspec so it points at the venv interpreter.
+rm -rf "$LEGACY_KERNEL_DIR"
 mkdir -p "$KERNEL_DIR"
 cat >"$KERNEL_DIR/kernel.json" <<JSON
 {

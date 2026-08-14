@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Reload the AI handoffs viewer after chezmoi installs or changes its plist.
-# plist hash: {{ include "Library/LaunchAgents/local.ai-handoffs.plist" | sha256sum }}
+# plist hash: {{ include "Library/LaunchAgents/local.ai-handoffs.plist.tmpl" | sha256sum }}
 
 set -euo pipefail
 

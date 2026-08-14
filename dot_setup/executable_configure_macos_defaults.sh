@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 # ~/.setup/configure_macos_defaults.sh — based on https://mths.be/macos
 
+set -euo pipefail
+
 echo "🚀 Configuring macOS defaults..." >&2
 echo ""
 
 # Close any open System Settings panes, to prevent them from overriding
 # settings we're about to change
-osascript -e 'tell application "System Settings" to quit' 2>/dev/null ||
-  osascript -e 'tell application "System Preferences" to quit' 2>/dev/null
+if ! osascript -e 'tell application "System Settings" to quit' 2>/dev/null; then
+  # One of these app names is absent on every supported macOS release.
+  osascript -e 'tell application "System Preferences" to quit' 2>/dev/null || true
+fi
 
 # Ask for the administrator password upfront
 sudo -v
@@ -120,7 +124,7 @@ defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRightC
 defaults -currentHost write NSGlobalDomain com.apple.trackpad.trackpadCornerClickBehavior -int 1
 defaults -currentHost write NSGlobalDomain com.apple.trackpad.enableSecondaryClick -bool true
 
-# Disable "natural" (Lion-style) scrolling
+# Enable "natural" (Lion-style) scrolling
 defaults write NSGlobalDomain com.apple.swipescrolldirection -bool true
 
 # Increase sound quality for Bluetooth headphones/headsets
@@ -288,8 +292,9 @@ defaults write com.apple.finder WarnOnEmptyTrash -bool false
 # Enable AirDrop over Ethernet and on unsupported Macs running Lion
 defaults write com.apple.NetworkBrowser BrowseAllInterfaces -bool true
 
-# Show the ~/Library folder
-chflags nohidden ~/Library && xattr -d com.apple.FinderInfo ~/Library 2>/dev/null
+# Show the ~/Library folder. FinderInfo may be absent, which is harmless.
+chflags nohidden "$HOME/Library"
+xattr -d com.apple.FinderInfo "$HOME/Library" 2>/dev/null || true
 
 # Show the /Volumes folder
 sudo chflags nohidden /Volumes
@@ -351,7 +356,7 @@ defaults write com.apple.dock autohide -bool true
 # Make Dock icons of hidden applications translucent
 defaults write com.apple.dock showhidden -bool true
 
-# Don't show recent applications in Dock
+# Show recent applications in the Dock
 defaults write com.apple.dock show-recents -bool true
 
 ###############################################################################
@@ -483,7 +488,8 @@ defaults write com.apple.spotlight orderedItems -array \
   '{"enabled" = 0;"name" = "MENU_WEBSEARCH";}' \
   '{"enabled" = 0;"name" = "MENU_SPOTLIGHT_SUGGESTIONS";}'
 # Load new settings before rebuilding the index
-killall mds >/dev/null 2>&1
+# mds is absent when Spotlight is not running.
+killall mds >/dev/null 2>&1 || true
 # Make sure indexing is enabled for the main volume
 sudo mdutil -i on / >/dev/null
 # Rebuild the index from scratch
@@ -632,7 +638,8 @@ for app in "Activity Monitor" \
   "Spectacle" \
   "SystemUIServer" \
   "Terminal"; do
-  killall "${app}" &>/dev/null
+  # Apps that are not running do not need restarting.
+  killall "${app}" &>/dev/null || true
 done
 
 echo ""

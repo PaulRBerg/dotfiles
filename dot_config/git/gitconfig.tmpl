@@ -58,7 +58,7 @@
 
     # Remove branches that have already been merged with main.
     # a.k.a. 'delete merged'
-    dm = !"git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
+    dm = "!f() { current=$(git branch --show-current) || return; git show-ref --verify --quiet refs/heads/main || { echo 'Local main branch not found; aborting' >&2; return 1; }; for branch in $(git for-each-ref --merged=refs/heads/main --format='%(refname:short)' refs/heads); do case \"$branch\" in main|\"$current\") continue ;; esac; git branch -d -- \"$branch\" || return; done; }; f"
 
     # Go to the main branch, pull the latest changes, and delete the current branch.
     done = "!f() { BRANCH=$(git branch --show-current); git checkout main && git pull && git branch -D $BRANCH; }; f"
@@ -121,7 +121,7 @@
     r = rebase
 
     # Fuzzy recent branches (requires fzf).
-    rb = !git for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)' | fzf --height 40% --reverse | xargs git switch
+    rb = "!f() { branch=$(git for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)' | fzf --height 40% --reverse) || return 0; test -n \"$branch\" || return 0; git switch -- \"$branch\"; }; f"
 
     # Interactive rebase with the given number of latest commits.
     reb = "!f() { git rebase -i HEAD~$1; }; f"

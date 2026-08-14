@@ -15,8 +15,8 @@ set -- --project-from-cwd --enable-web-dashboard=false "$@"
 # passes --context=claude-code via ~/.claude.json, but that file is app-managed
 # state, so keep a durable fallback here.
 case " $* " in
-  *" --context"*) ;;
-  *) set -- "$@" --context=claude-code ;;
+*" --context "* | *" --context="*) ;;
+*) set -- "$@" --context=claude-code ;;
 esac
 
 exec "$HOME/.local/bin/serena" start-mcp-server "$@"

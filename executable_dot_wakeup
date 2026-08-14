@@ -2,8 +2,31 @@
 # Wakeup script for sleepwatcher
 # Runs when Mac wakes from sleep
 
-# Sleepwatcher runs with a minimal PATH; ensure Homebrew binaries are available
-export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+# Sleepwatcher runs with a minimal PATH; ensure user and Homebrew binaries are available
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+_wakeup_commit_and_push() {
+  local repo="$1"
+  local message="$2"
+  local prepare_output transaction_id
+  shift 2
+
+  if ! command -v ai-commit >/dev/null 2>&1; then
+    echo "Skipping commit and push for $repo (ai-commit is unavailable)"
+    return 1
+  fi
+  if ! prepare_output="$(cd "$repo" && ai-commit prepare --no-auto-baseline --porcelain "$@")"; then
+    echo "Skipping commit and push for $repo (preparation failed)"
+    return 1
+  fi
+  transaction_id="$(awk -F '\t' '$1 == "PREPARED" { print $2; exit }' <<<"$prepare_output")"
+  if [[ -z "$transaction_id" ]]; then
+    echo "Skipping commit and push for $repo (preparation returned no transaction)"
+    return 1
+  fi
+
+  (cd "$repo" && ai-commit commit "$transaction_id" -m "$message" --push)
+}
 
 # ------------------------------
 # SSH key
@@ -91,14 +114,20 @@ fi
 CODEX_DIR="$HOME/.codex"
 if [[ -d "$CODEX_DIR/.git" ]] && [[ -z "$(git -C "$CODEX_DIR" status --porcelain 2>/dev/null)" ]]; then
   echo "Building Codex AGENTS.md"
-  (cd "$CODEX_DIR" && just build 2>&1) || true
-  git -C "$CODEX_DIR" add -A
-  if [[ -n "$(git -C "$CODEX_DIR" status --porcelain 2>/dev/null)" ]]; then
-    echo "Committing Codex changes"
-    git -C "$CODEX_DIR" commit -m "Build AGENTS.md $(date -u +%Y-%m-%d@%H-%M-%S)" 2>&1 || true
+  if (cd "$CODEX_DIR" && just build 2>&1); then
+    if ! unexpected_codex_changes="$(git -C "$CODEX_DIR" status --porcelain -- . ':(top,exclude)AGENTS.md' 2>/dev/null)"; then
+      echo "Skipping Codex commit and push (could not inspect build output)"
+    elif [[ -n "$unexpected_codex_changes" ]]; then
+      echo "Skipping Codex commit and push (just build changed paths other than AGENTS.md)"
+    elif [[ -n "$(git -C "$CODEX_DIR" status --porcelain -- AGENTS.md 2>/dev/null)" ]]; then
+      echo "Committing and pushing Codex AGENTS.md"
+      _wakeup_commit_and_push "$CODEX_DIR" "Build AGENTS.md $(date -u +%Y-%m-%d@%H-%M-%S)" -- AGENTS.md || true
+    else
+      echo "Codex AGENTS.md is already current"
+    fi
+  else
+    echo "Skipping Codex commit and push (build failed)"
   fi
-  echo "Pushing Codex"
-  git -C "$CODEX_DIR" push origin 2>&1 || true
 fi
 
 # ------------------------------
@@ -173,12 +202,13 @@ fi
 # ------------------------------
 DICTIONARY_DIR="$HOME/work/dictionary"
 if [[ -d "$DICTIONARY_DIR/.git" ]]; then
-  cd "$DICTIONARY_DIR" || exit
-  git add -A
-  if [[ -n "$(git status --porcelain)" ]]; then
-    echo "Committing dictionary changes"
-    git commit -m "Update words $(date -u +%Y-%m-%d@%H-%M-%S)" 2>&1 || true
+  if [[ -n "$(git -C "$DICTIONARY_DIR" status --porcelain 2>/dev/null)" ]]; then
+    echo "Committing and pushing dictionary changes"
+    _wakeup_commit_and_push "$DICTIONARY_DIR" "Update words $(date -u +%Y-%m-%d@%H-%M-%S)" --all || true
+  elif command -v ai-commit >/dev/null 2>&1; then
+    echo "Pushing dictionary"
+    (cd "$DICTIONARY_DIR" && ai-commit push) || true
+  else
+    echo "Skipping dictionary push (ai-commit is unavailable)"
   fi
-  echo "Pushing dictionary"
-  git push origin 2>&1 || true
 fi

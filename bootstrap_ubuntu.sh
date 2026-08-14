@@ -12,6 +12,29 @@ readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$SCRIPT_DIR/dot_setup/lib/common.sh"
 
+if [[ $EUID -ne 0 ]]; then
+  log_error "This script must be run with sudo"
+  exit 1
+fi
+
+invoking_uid="$(id -u "${SUDO_USER:-}" 2>/dev/null || true)"
+if [[ -z "${SUDO_USER:-}" || "$SUDO_USER" == "root" || "$invoking_uid" == "0" || ! "$invoking_uid" =~ ^[0-9]+$ ]]; then
+  log_error "Run this script through sudo from a non-root user"
+  exit 1
+fi
+
+if ! invoking_home="$(getent passwd "$SUDO_USER" | awk -F: 'NR == 1 { print $6 }')"; then
+  log_error "Cannot look up the home directory for $SUDO_USER"
+  exit 1
+fi
+if [[ -z "$invoking_home" || ! -d "$invoking_home" ]]; then
+  log_error "Cannot determine a valid home directory for $SUDO_USER"
+  exit 1
+fi
+
+readonly INVOKING_USER="$SUDO_USER"
+readonly INVOKING_HOME="$(cd "$invoking_home" && pwd -P)"
+
 # ==============================================================================
 # Update and Upgrade System
 # ==============================================================================
@@ -46,7 +69,21 @@ install_omz_plugin() {
   local plugin_name="$2"
   local repo_url="$3"
 
-  su - "${SUDO_USER}" -c "git clone '${repo_url}' '${omz_dir}/custom/plugins/${plugin_name}' 2>/dev/null || true"
+  local plugin_dir="${omz_dir}/custom/plugins/${plugin_name}"
+
+  if [[ -d "$plugin_dir/.git" ]]; then
+    log_info "Oh My Zsh plugin already installed: ${plugin_name}"
+    return 0
+  fi
+  if [[ -e "$plugin_dir" ]]; then
+    log_error "Cannot install ${plugin_name}; ${plugin_dir} exists and is not a Git checkout"
+    return 1
+  fi
+
+  if ! sudo -H -u "$INVOKING_USER" git clone --depth=1 "$repo_url" "$plugin_dir"; then
+    log_error "Failed to clone Oh My Zsh plugin ${plugin_name} from ${repo_url}"
+    return 1
+  fi
 }
 
 install_zsh() {
@@ -60,20 +97,20 @@ install_zsh() {
 install_ohmyzsh() {
   log_info "Installing Oh My Zsh..."
 
-  if [[ -n "${SUDO_USER:-}" ]]; then
-    local user_home="/home/${SUDO_USER}"
+  if [[ -n "${INVOKING_USER:-}" ]]; then
+    local user_home="$INVOKING_HOME"
     # The applied .zshrc sources Oh My Zsh from ZSH=$XDG_DATA_HOME/oh-my-zsh
     # (set in env_core.sh), not the installer default ~/.oh-my-zsh.
     local omz_dir="${user_home}/.local/share/oh-my-zsh"
 
     if [[ ! -d "${omz_dir}" ]]; then
       # Install Oh My Zsh for the regular user (not root)
-      su - "${SUDO_USER}" -c "ZSH='${omz_dir}' sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\" '' --unattended"
+      sudo -H -u "$INVOKING_USER" env ZSH="$omz_dir" sh -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
 
       # Set Zsh as default shell for the user
-      chsh -s "$(command -v zsh)" "${SUDO_USER}"
+      chsh -s "$(command -v zsh)" "$INVOKING_USER"
 
-      log_success "Oh My Zsh installed for user ${SUDO_USER}"
+      log_success "Oh My Zsh installed for user ${INVOKING_USER}"
     else
       log_info "Oh My Zsh already installed"
     fi
@@ -133,12 +170,12 @@ init_chezmoi() {
   log_info "Initializing Chezmoi..."
 
   # Add GitHub to known_hosts to avoid SSH prompt
-  local user_home="/home/${SUDO_USER}"
+  local user_home="$INVOKING_HOME"
   mkdir -p "${user_home}/.ssh"
   ssh-keyscan github.com >>"${user_home}/.ssh/known_hosts" 2>/dev/null
-  chown -R "${SUDO_USER}:${SUDO_USER}" "${user_home}/.ssh"
+  chown -R "${INVOKING_USER}:${INVOKING_USER}" "${user_home}/.ssh"
 
-  sudo -u "$SUDO_USER" /snap/bin/chezmoi init git@github.com:PaulRBerg/dotfiles.git
+  sudo -H -u "$INVOKING_USER" /snap/bin/chezmoi init git@github.com:PaulRBerg/dotfiles.git
   log_success "Chezmoi initialized"
 }
 
@@ -153,20 +190,20 @@ clone_repo() {
   if [[ -d "$target_dir" ]]; then
     log_info "Already exists: $target_dir"
   else
-    mkdir -p "$(dirname "$target_dir")"
-    sudo -u "$SUDO_USER" git clone "$repo_url" "$target_dir"
+    sudo -H -u "$INVOKING_USER" mkdir -p "$(dirname "$target_dir")"
+    sudo -H -u "$INVOKING_USER" git clone "$repo_url" "$target_dir"
     log_success "Cloned $repo_url -> $target_dir"
   fi
 }
 
 setup_directories_and_repos() {
-  local user_home="/home/${SUDO_USER}"
+  local user_home="$INVOKING_HOME"
 
   log_info "Setting up directories and repositories..."
 
   # Create bare directories
   for dir in "$user_home/projects" "$user_home/sablier" "$user_home/work"; do
-    sudo -u "$SUDO_USER" mkdir -p "$dir"
+    sudo -H -u "$INVOKING_USER" mkdir -p "$dir"
   done
 
   # Clone dotfile repos into home directories

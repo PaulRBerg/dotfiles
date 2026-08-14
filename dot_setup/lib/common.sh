@@ -45,12 +45,11 @@ ensure_symlink() {
   local source="$2"
 
   if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$source" ]]; then
-    return 1
+    return 0
   fi
 
-  mkdir -p "$(dirname "$target")"
-  rm -f "$target"
-  ln -s "$source" "$target"
+  mkdir -p "$(dirname "$target")" || return 1
+  rm -f "$target" || return 1
+  ln -s "$source" "$target" || return 1
   printf "↪ %s → %s\n" "$target" "$source"
-  return 0
 }

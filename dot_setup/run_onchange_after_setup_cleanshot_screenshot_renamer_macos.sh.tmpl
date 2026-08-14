@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Reload the CleanShot screenshot renamer after chezmoi installs or changes its files.
 # worker hash: {{ include "dot_config/prb/bin/executable_cleanshot_screenshot_renamer_macos.sh" | sha256sum }}
-# plist hash: {{ include "Library/LaunchAgents/local.cleanshot-screenshot-renamer.plist" | sha256sum }}
+# plist hash: {{ include "Library/LaunchAgents/local.cleanshot-screenshot-renamer.plist.tmpl" | sha256sum }}
 
 set -euo pipefail
 

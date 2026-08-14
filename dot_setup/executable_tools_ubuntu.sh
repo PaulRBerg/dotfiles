@@ -2,6 +2,8 @@
 # Install command-line tools (Ubuntu equivalent of .brew)
 # shellcheck disable=SC2034
 
+set -euo pipefail
+
 readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

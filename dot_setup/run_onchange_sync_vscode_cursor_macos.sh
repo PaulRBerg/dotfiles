@@ -2,6 +2,8 @@
 # Sync Cursor configuration to VSCode (VSCode is source of truth).
 # shellcheck disable=SC2034
 
+set -euo pipefail
+
 readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
 # run_onchange_ scripts execute from a temp dir, so source from the installed path
@@ -25,7 +27,7 @@ if [[ $needs_setup == true ]]; then
   echo "🔗 Syncing Cursor → VSCode..." >&2
   echo ""
   for file in "${CONFIG_FILES[@]}"; do
-    ensure_symlink "$CURSOR_USER/$file" "$VSCODE_USER/$file" || true
+    ensure_symlink "$CURSOR_USER/$file" "$VSCODE_USER/$file"
   done
   echo ""
   echo "✓ Sync complete!" >&2

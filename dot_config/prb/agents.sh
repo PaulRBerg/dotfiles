@@ -11,16 +11,20 @@ CODEX_MODEL="gpt-5.6-sol"
 # nonessential network traffic (~3.5x faster one-shot skill runs). Keep
 # --setting-sources user: user settings are what make /commit et al. resolve.
 # --bare would be faster still but refuses OAuth/keychain auth (needs an API key).
-CLAUDE_LITE_ENV="CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
-CLAUDE_CODE_DISABLE_CLAUDE_MDS=1 \
-CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 \
-CLAUDE_CODE_DISABLE_AUTO_MEMORY=1"
-CLAUDE_LITE_FLAGS="--no-session-persistence \
---output-format json \
---permission-mode bypassPermissions \
---strict-mcp-config \
---setting-sources user \
---settings '{\"disableAllHooks\":true}'"
+CLAUDE_LITE_ENV=(
+  'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1'
+  'CLAUDE_CODE_DISABLE_CLAUDE_MDS=1'
+  'CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1'
+  'CLAUDE_CODE_DISABLE_AUTO_MEMORY=1'
+)
+CLAUDE_LITE_FLAGS=(
+  --no-session-persistence
+  --output-format json
+  --permission-mode bypassPermissions
+  --strict-mcp-config
+  --setting-sources user
+  --settings '{"disableAllHooks":true}'
+)
 
 ###############################################################################
 # ALIASES                                                                     #
@@ -135,9 +139,9 @@ function _run_claude_skill() {
   # ships `gtimeout` on macOS, `timeout` on Linux). Override with CCC_TIMEOUT.
   local timeout_cmd=""
   if command -v timeout &>/dev/null; then
-    timeout_cmd="timeout ${CCC_TIMEOUT:-300}"
+    timeout_cmd="timeout"
   elif command -v gtimeout &>/dev/null; then
-    timeout_cmd="gtimeout ${CCC_TIMEOUT:-300}"
+    timeout_cmd="gtimeout"
   fi
 
   # Redirect Claude's JSON to a file instead of capturing it through gum's
@@ -153,13 +157,13 @@ function _run_claude_skill() {
   out=$(mktemp) || return 1
   err=$(mktemp) || return 1
 
+  local -a claude_command=(env GIT_TERMINAL_PROMPT=0 "${CLAUDE_LITE_ENV[@]}")
+  [[ -n "$timeout_cmd" ]] && claude_command+=("$timeout_cmd" "${CCC_TIMEOUT:-300}")
+  claude_command+=(claude "${CLAUDE_LITE_FLAGS[@]}" "$@" --print "$prompt")
+
   gum spin --spinner dot --title "$title" -- \
-    sh -c "GIT_TERMINAL_PROMPT=0 ${CLAUDE_LITE_ENV} ${timeout_cmd} \
-      claude ${CLAUDE_LITE_FLAGS} $* \
-        --print \"\$1\" \
-        >\"\$2\" \
-        2>\"\$3\"" \
-    _ "$prompt" "$out" "$err"
+    sh -c 'out=$1; err=$2; shift 2; exec "$@" >"$out" 2>"$err"' \
+    _ "$out" "$err" "${claude_command[@]}"
   rc=$?
 
   if ((rc != 0)) || [[ ! -s "$out" ]]; then

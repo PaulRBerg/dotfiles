@@ -54,6 +54,7 @@ install_bun_globals() {
   export BUN_INSTALL="${BUN_INSTALL:-${XDG_DATA_HOME:-$HOME/.local/share}/bun}"
   export PATH="$BUN_INSTALL/bin:$PATH"
   local quiet="${BUN_GLOBALS_QUIET:-0}"
+  local failures=0
 
   # Bootstrap bun via the native installer if it is missing (no-op when
   # present, so repeated calls don't re-fetch it).
@@ -85,15 +86,20 @@ install_bun_globals() {
     else
       echo "❌ $package installation failed" >&2
       printf '%s\n' "$install_output" >&2
+      failures=1
     fi
     if [[ "$quiet" != "1" ]]; then
       echo "" >&2
     fi
   done
 
-  local untrusted_packages packages_to_trust=()
-  untrusted_packages="$(
-    { bun pm untrusted -g 2>/dev/null || true; } | awk '
+  local untrusted_output untrusted_packages packages_to_trust=()
+  if ! untrusted_output="$(bun pm untrusted -g 2>/dev/null)"; then
+    echo "❌ Failed to list untrusted Bun packages" >&2
+    failures=1
+    untrusted_packages=""
+  else
+    untrusted_packages="$(printf '%s\n' "$untrusted_output" | awk '
       /^\.\/node_modules\// {
         package_path = $1
         sub(/^.*\/node_modules\//, "", package_path)
@@ -105,8 +111,8 @@ install_bun_globals() {
           print parts[1]
         }
       }
-    ' | sort -u
-  )"
+    ' | sort -u)"
+  fi
 
   for package in "${BUN_TRUSTED_PACKAGES[@]}"; do
     if grep -Fxq -- "$package" <<<"$untrusted_packages"; then
@@ -115,20 +121,24 @@ install_bun_globals() {
   done
 
   if ((${#packages_to_trust[@]} > 0)); then
-    if [[ "$quiet" == "1" ]]; then
-      local trust_output
-      if ! trust_output="$(bun pm trust -g "${packages_to_trust[@]}" 2>&1)"; then
-        echo "❌ Failed to trust lifecycle scripts: ${packages_to_trust[*]}" >&2
-        printf '%s\n' "$trust_output" >&2
-      fi
-    else
+    local trust_output
+    if [[ "$quiet" != "1" ]]; then
       echo "🔏 Trusting lifecycle scripts: ${packages_to_trust[*]}" >&2
-      bun pm trust -g "${packages_to_trust[@]}"
+    fi
+    if ! trust_output="$(bun pm trust -g "${packages_to_trust[@]}" 2>&1)"; then
+      echo "❌ Failed to trust lifecycle scripts: ${packages_to_trust[*]}" >&2
+      printf '%s\n' "$trust_output" >&2
+      failures=1
     fi
   else
     if [[ "$quiet" != "1" ]]; then
       echo "✅ No configured lifecycle scripts need trusting" >&2
     fi
+  fi
+
+  if ((failures)); then
+    echo "❌ Some Bun global package actions failed" >&2
+    return 1
   fi
 
   if [[ "$quiet" != "1" ]]; then

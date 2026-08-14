@@ -14,3 +14,6 @@
 
 # Replaced by ~/.local/libexec/mcp/chrome-devtools.
 .local/bin/prb_chrome_devtools_mcp
+
+# Corrected source-state naming now manages ~/.vim_runtime/my_configs.vim.
+.vimruntime/my_configs.vim
