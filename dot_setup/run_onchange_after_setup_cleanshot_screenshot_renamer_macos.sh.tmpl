@@ -6,7 +6,8 @@
 set -euo pipefail
 
 readonly label="local.cleanshot-screenshot-renamer"
-readonly domain="gui/$(id -u)"
+domain="gui/$(id -u)"
+readonly domain
 readonly plist="$HOME/Library/LaunchAgents/$label.plist"
 readonly state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/cleanshot-screenshot-renamer"
 readonly enabled_at="$state_dir/enabled-at"

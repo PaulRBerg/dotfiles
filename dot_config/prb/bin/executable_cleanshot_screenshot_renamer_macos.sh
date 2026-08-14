@@ -160,14 +160,15 @@ rename_file() {
   stem="$PARSED_TIMESTAMP--$category--$title_slug"
   target="$directory/$stem.$PARSED_EXTENSION"
 
-  while [[ -e "$target" ]]; do
-    target="$directory/$stem--$suffix.$PARSED_EXTENSION"
-    suffix=$((suffix + 1))
-  done
+  while :; do
+    while [[ -e "$target" || -L "$target" ]]; do
+      target="$directory/$stem--$suffix.$PARSED_EXTENSION"
+      suffix=$((suffix + 1))
+    done
 
-  if ! mv "$source" "$target"; then
-    return 1
-  fi
+    mv -n "$source" "$target" || return 1
+    [[ ! -e "$source" ]] && break
+  done
 
   RENAMED_BASENAME="${target##*/}"
   log "renamed ${source##*/} to $RENAMED_BASENAME"

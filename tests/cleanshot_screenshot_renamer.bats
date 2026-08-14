@@ -96,7 +96,19 @@ cat >/dev/null
 printf '%s\t%s\n' "${2:-}" "${3:-}" >>"$MOCK_NOTIFICATION_LOG"
 EOF
 
-  chmod +x "$MOCK_BIN/codex" "$MOCK_BIN/date" "$MOCK_BIN/sleep" "$MOCK_BIN/stat" "$MOCK_BIN/osascript"
+  cat >"$MOCK_BIN/mv" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+source="${@: -2:1}"
+target="${@: -1}"
+if [[ "${MOCK_MV_RACE:-0}" == "1" && "$source" == *'/CleanShot '* && ! -e "$TEST_ROOT/mv-race-created" ]]; then
+  printf '%s\n' 'rival file' >"$target"
+  : >"$TEST_ROOT/mv-race-created"
+fi
+exec /bin/mv "$@"
+EOF
+
+  chmod +x "$MOCK_BIN/codex" "$MOCK_BIN/date" "$MOCK_BIN/sleep" "$MOCK_BIN/stat" "$MOCK_BIN/osascript" "$MOCK_BIN/mv"
 }
 
 write_result() {
@@ -187,6 +199,32 @@ run_renamer() {
   run_renamer
 
   [[ "$status" -eq 0 ]]
+  [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error--2.jpg" ]]
+}
+
+@test "does not overwrite a target created during the rename" {
+  export MOCK_MV_RACE=1
+  write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
+
+  run_renamer
+
+  [[ "$status" -eq 0 ]]
+  run cat "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg"
+  [[ "$status" -eq 0 ]]
+  [[ "$output" == 'rival file' ]]
+  [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error--2.jpg" ]]
+}
+
+@test "does not replace a dangling target symlink" {
+  target="$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg"
+  ln -s 'missing.jpg' "$target"
+  write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
+
+  run_renamer
+
+  [[ "$status" -eq 0 ]]
+  [[ -L "$target" ]]
+  [[ "$(readlink "$target")" == 'missing.jpg' ]]
   [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error--2.jpg" ]]
 }
 
