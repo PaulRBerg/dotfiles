@@ -75,7 +75,7 @@ observe_clipboard() {
   printf '%s\n' "$token"
 }
 
-copy_renamed_to_clipboard() {
+copy_file_to_clipboard() {
   local file="$1"
   local result
 
@@ -361,8 +361,9 @@ for file in "${sorted[@]}"; do
     log "skipped unstable screenshot: ${file##*/}"
     continue
   fi
+  copy_file_to_clipboard "$file"
   if process_file "$file"; then
-    copy_renamed_to_clipboard "$RENAMED_PATH"
+    copy_file_to_clipboard "$RENAMED_PATH"
   fi
   processed=$((processed + 1))
 done
