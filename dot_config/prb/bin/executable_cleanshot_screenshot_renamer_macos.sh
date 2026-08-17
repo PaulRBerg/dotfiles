@@ -177,7 +177,7 @@ For category, prefer one of: code, web, docs, design, communication, system, med
     : >"$result_file"
     if "$codex_bin" exec \
       --model 'gpt-5.6-luna' \
-      -c 'model_reasoning_effort="xhigh"' \
+      -c 'model_reasoning_effort="medium"' \
       --sandbox read-only \
       --ephemeral \
       --ignore-user-config \

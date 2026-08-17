@@ -199,7 +199,7 @@ run_renamer() {
   [[ ! -e "$MOCK_CODEX_COUNT" ]]
 }
 
-@test "renames with a fixed category and exact Luna xhigh arguments" {
+@test "renames with a fixed category and exact Luna medium arguments" {
   write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
 
   run_renamer
@@ -207,7 +207,7 @@ run_renamer() {
   [[ "$status" -eq 0 ]]
   [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" ]]
   grep -q -- '--model gpt-5.6-luna' "$MOCK_CODEX_LOG"
-  grep -q -- 'model_reasoning_effort=\\"xhigh\\"' "$MOCK_CODEX_LOG"
+  grep -q -- 'model_reasoning_effort=\\"medium\\"' "$MOCK_CODEX_LOG"
   grep -q -- '--sandbox read-only' "$MOCK_CODEX_LOG"
   grep -q -- '--ephemeral' "$MOCK_CODEX_LOG"
   grep -q -- '--ignore-user-config' "$MOCK_CODEX_LOG"
