@@ -13,11 +13,14 @@ setup() {
   export MOCK_CODEX_RESULT="$TEST_ROOT/codex-result.json"
   export MOCK_CODEX_LOG="$TEST_ROOT/codex-args.log"
   export MOCK_CODEX_COUNT="$TEST_ROOT/codex-count"
+  export MOCK_CLIPBOARD_LOG="$TEST_ROOT/clipboard.tsv"
+  export MOCK_CLIPBOARD_TOKEN_FILE="$TEST_ROOT/clipboard-token"
   export MOCK_NOTIFICATION_LOG="$TEST_ROOT/notifications.tsv"
   export MOCK_BIRTH_EPOCH=1001
   export MOCK_NOW_EPOCH=1000
   export PATH="$MOCK_BIN:/opt/homebrew/bin:/usr/bin:/bin"
   export RENAMER="$BATS_TEST_DIRNAME/../dot_config/prb/bin/executable_cleanshot_screenshot_renamer_macos.sh"
+  export CLEANSHOT_RENAMER_CLIPBOARD_HELPER="$MOCK_BIN/cleanshot_clipboard_macos.sh"
 
   mkdir -p "$CLEANSHOT_SCREENSHOT_DIR" "$CLEANSHOT_RENAMER_STATE_DIR" "$MOCK_BIN"
   printf '%s\n' '1000' >"$CLEANSHOT_RENAMER_STATE_DIR/enabled-at"
@@ -108,7 +111,48 @@ fi
 exec /bin/mv "$@"
 EOF
 
-  chmod +x "$MOCK_BIN/codex" "$MOCK_BIN/date" "$MOCK_BIN/sleep" "$MOCK_BIN/stat" "$MOCK_BIN/osascript" "$MOCK_BIN/mv"
+  cat >"$MOCK_BIN/cleanshot_clipboard_macos.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+command="$1"
+printf '%s' "$command" >>"$MOCK_CLIPBOARD_LOG"
+shift
+for argument in "$@"; do
+  printf '\t%s' "$argument" >>"$MOCK_CLIPBOARD_LOG"
+done
+printf '\n' >>"$MOCK_CLIPBOARD_LOG"
+
+case "$command" in
+observe)
+  [[ "${MOCK_CLIPBOARD_OBSERVE_FAILURE:-0}" != "1" ]] || exit 1
+  token="${MOCK_CLIPBOARD_INITIAL_TOKEN:-40}"
+  printf '%s\n' "$token" >"$MOCK_CLIPBOARD_TOKEN_FILE"
+  printf '%s\n' "$token"
+  ;;
+copy-if-current)
+  [[ "${MOCK_CLIPBOARD_COPY_FAILURE:-0}" != "1" ]] || exit 1
+  expected="$1"
+  current="$(<"$MOCK_CLIPBOARD_TOKEN_FILE")"
+  if [[ "${MOCK_CLIPBOARD_CHANGED:-0}" == "1" || "$expected" != "$current" ]]; then
+    printf '%s\n' 'changed'
+    exit 0
+  fi
+  current=$((current + 1))
+  printf '%s\n' "$current" >"$MOCK_CLIPBOARD_TOKEN_FILE"
+  printf 'copied %s\n' "$current"
+  ;;
+*) exit 2 ;;
+esac
+EOF
+
+  chmod +x \
+    "$MOCK_BIN/codex" \
+    "$MOCK_BIN/date" \
+    "$MOCK_BIN/sleep" \
+    "$MOCK_BIN/stat" \
+    "$MOCK_BIN/osascript" \
+    "$MOCK_BIN/mv" \
+    "$MOCK_BIN/cleanshot_clipboard_macos.sh"
 }
 
 write_result() {
@@ -170,6 +214,8 @@ run_renamer() {
   grep -q -- '--ignore-rules' "$MOCK_CODEX_LOG"
   grep -q -- '--image' "$MOCK_CODEX_LOG"
   grep -q -- '--output-schema' "$MOCK_CODEX_LOG"
+  grep -Fq $'observe' "$MOCK_CLIPBOARD_LOG"
+  grep -Fq $'copy-if-current\t40\t'"$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" "$MOCK_CLIPBOARD_LOG"
 }
 
 @test "accepts a short custom category" {
@@ -200,6 +246,7 @@ run_renamer() {
 
   [[ "$status" -eq 0 ]]
   [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error--2.jpg" ]]
+  grep -Fq -- '--code--oauth-callback-error--2.jpg' "$MOCK_CLIPBOARD_LOG"
 }
 
 @test "does not overwrite a target created during the rename" {
@@ -250,6 +297,43 @@ run_renamer() {
   [[ "$(<"$MOCK_CODEX_COUNT")" -eq 3 ]]
   [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--other--unclassified.jpg" ]]
   grep -q 'CleanShot screenshot unclassified' "$MOCK_NOTIFICATION_LOG"
+  grep -Fq -- '--other--unclassified.jpg' "$MOCK_CLIPBOARD_LOG"
+}
+
+@test "preserves clipboard content copied while Luna is naming" {
+  export MOCK_CLIPBOARD_CHANGED=1
+  write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
+
+  run_renamer
+
+  [[ "$status" -eq 0 ]]
+  [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" ]]
+  [[ "$(<"$MOCK_CLIPBOARD_TOKEN_FILE")" -eq 40 ]]
+  [[ "$output" == *'clipboard changed; skipped copying'* ]]
+  [[ ! -e "$MOCK_NOTIFICATION_LOG" ]]
+}
+
+@test "keeps a successful rename when clipboard copying fails" {
+  export MOCK_CLIPBOARD_COPY_FAILURE=1
+  write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
+
+  run_renamer
+
+  [[ "$status" -eq 0 ]]
+  [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" ]]
+  grep -q 'CleanShot screenshot clipboard failed' "$MOCK_NOTIFICATION_LOG"
+}
+
+@test "keeps naming when the clipboard cannot be observed" {
+  export MOCK_CLIPBOARD_OBSERVE_FAILURE=1
+  write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
+
+  run_renamer
+
+  [[ "$status" -eq 0 ]]
+  [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" ]]
+  [[ "$(grep -c '^copy-if-current' "$MOCK_CLIPBOARD_LOG" || true)" -eq 0 ]]
+  grep -q 'CleanShot screenshot clipboard unavailable' "$MOCK_NOTIFICATION_LOG"
 }
 
 @test "leaves an unstable screenshot for a later event" {
@@ -275,4 +359,8 @@ run_renamer() {
   [[ "$(<"$MOCK_CODEX_COUNT")" -eq 2 ]]
   first_image="$(head -n 1 "$MOCK_CODEX_LOG")"
   [[ "$first_image" == *'13.58.40.jpg'* ]]
+  first_copy="$(sed -n '2p' "$MOCK_CLIPBOARD_LOG")"
+  second_copy="$(sed -n '3p' "$MOCK_CLIPBOARD_LOG")"
+  [[ "$first_copy" == $'copy-if-current\t40\t'*'13-58-40--code--oauth-callback-error.jpg' ]]
+  [[ "$second_copy" == $'copy-if-current\t41\t'*'13-58-41--code--oauth-callback-error.jpg' ]]
 }

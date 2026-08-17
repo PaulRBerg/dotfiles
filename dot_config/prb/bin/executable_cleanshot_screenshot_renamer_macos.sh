@@ -5,6 +5,7 @@ set -euo pipefail
 readonly SCREENSHOT_DIR="${CLEANSHOT_SCREENSHOT_DIR:-$HOME/Desktop/Screenshots}"
 readonly STATE_DIR="${CLEANSHOT_RENAMER_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/cleanshot-screenshot-renamer}"
 readonly SETTLE_SECONDS="${CLEANSHOT_RENAMER_SETTLE_SECONDS:-7}"
+readonly CLIPBOARD_HELPER="${CLEANSHOT_RENAMER_CLIPBOARD_HELPER:-${BASH_SOURCE[0]%/*}/cleanshot_clipboard_macos.sh}"
 readonly ENABLED_AT_FILE="$STATE_DIR/enabled-at"
 readonly MAX_FILES_PER_RUN=20
 readonly MAX_CODEX_ATTEMPTS=3
@@ -53,6 +54,61 @@ require_commands() {
   if ((${#missing[@]} > 0)); then
     fail "missing required commands: ${missing[*]}"
   fi
+}
+
+observe_clipboard() {
+  local token
+
+  if [[ ! -x "$CLIPBOARD_HELPER" ]]; then
+    log "clipboard helper unavailable: $CLIPBOARD_HELPER"
+    return 1
+  fi
+  if ! token="$("$CLIPBOARD_HELPER" observe)"; then
+    log "could not observe the clipboard"
+    return 1
+  fi
+  if [[ ! "$token" =~ ^[0-9]+$ ]]; then
+    log "clipboard helper returned an invalid token"
+    return 1
+  fi
+
+  printf '%s\n' "$token"
+}
+
+copy_renamed_to_clipboard() {
+  local file="$1"
+  local result
+
+  ((clipboard_enabled == 1)) || return 0
+
+  if ! result="$("$CLIPBOARD_HELPER" copy-if-current "$clipboard_token" "$file")"; then
+    clipboard_enabled=0
+    log "clipboard copy failed for ${file##*/}"
+    notify "CleanShot screenshot clipboard failed" "Saved ${file##*/}, but could not copy it to the clipboard."
+    return 0
+  fi
+
+  case "$result" in
+  changed)
+    clipboard_enabled=0
+    log "clipboard changed; skipped copying ${file##*/}"
+    ;;
+  copied\ *)
+    clipboard_token="${result#copied }"
+    if [[ ! "$clipboard_token" =~ ^[0-9]+$ ]]; then
+      clipboard_enabled=0
+      log "clipboard helper returned an invalid copy token"
+      notify "CleanShot screenshot clipboard failed" "Saved ${file##*/}, but could not track the clipboard update."
+      return 0
+    fi
+    log "copied $file to the clipboard"
+    ;;
+  *)
+    clipboard_enabled=0
+    log "clipboard helper returned an invalid result"
+    notify "CleanShot screenshot clipboard failed" "Saved ${file##*/}, but could not confirm the clipboard update."
+    ;;
+  esac
 }
 
 parse_original_name() {
@@ -171,6 +227,7 @@ rename_file() {
   done
 
   RENAMED_BASENAME="${target##*/}"
+  RENAMED_PATH="$target"
   log "renamed ${source##*/} to $RENAMED_BASENAME"
 }
 
@@ -249,6 +306,13 @@ if ((${#eligible[@]} == 0)); then
 fi
 
 require_commands
+clipboard_enabled=0
+clipboard_token=""
+if clipboard_token="$(observe_clipboard)"; then
+  clipboard_enabled=1
+else
+  notify "CleanShot screenshot clipboard unavailable" "Screenshot naming will continue, but automatic clipboard copy is unavailable."
+fi
 sleep "$SETTLE_SECONDS"
 
 run_tmp="$(mktemp -d "$STATE_DIR/.tmp.XXXXXX")"
@@ -297,6 +361,8 @@ for file in "${sorted[@]}"; do
     log "skipped unstable screenshot: ${file##*/}"
     continue
   fi
-  process_file "$file" || true
+  if process_file "$file"; then
+    copy_renamed_to_clipboard "$RENAMED_PATH"
+  fi
   processed=$((processed + 1))
 done

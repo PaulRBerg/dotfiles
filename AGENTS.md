@@ -101,7 +101,9 @@ Layout:
 
 The CleanShot screenshot renamer watches `~/Desktop/Screenshots` and names new captures with Codex. Its private cutoff
 and logs live under `${XDG_STATE_HOME:-$HOME/.local/state}/cleanshot-screenshot-renamer`; removing the cutoff opts the
-next worker run into reinitializing from that moment rather than processing the existing archive.
+next worker run into reinitializing from that moment rather than processing the existing archive. CleanShot's immediate
+**Copy to clipboard** after-capture action must remain disabled. After naming a screenshot, the worker copies its final
+image and file reference only if the clipboard has not changed since the worker observed it.
 
 ## Cross-Platform Patterns
 
