@@ -27,6 +27,7 @@
     "@typescript/native-preview",
     "chrome-devtools-mcp",
     "effect",
+    "react-grab",
     "sablier",
     "typescript",
   ]
