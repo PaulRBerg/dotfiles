@@ -91,11 +91,11 @@ function run(argv) {
     return "changed";
   }
 
-  pasteboard.clearContents;
+  const ownedChangeCount = Number(ObjC.unwrap(pasteboard.clearContents));
   if (!pasteboard.writeObjects($.NSArray.arrayWithObject(item))) {
     throw new Error("could not write screenshot to pasteboard");
   }
 
-  return `copied ${changeCount(pasteboard)}`;
+  return `copied ${ownedChangeCount}`;
 }
 JXA

@@ -82,6 +82,8 @@ JXA
     and (.types | index("public.png")) != null
     and (.types | index("public.tiff")) != null
   ' <<<"$metadata" >/dev/null
+  copied_token="${output#copied }"
+  [[ "$(bash "$HELPER" observe)" == "$copied_token" ]]
 }
 
 @test "copies JPEG data with its native pasteboard type" {
