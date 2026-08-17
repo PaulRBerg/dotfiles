@@ -4,7 +4,7 @@ set -euo pipefail
 
 readonly SCREENSHOT_DIR="${CLEANSHOT_SCREENSHOT_DIR:-$HOME/Desktop/Screenshots}"
 readonly STATE_DIR="${CLEANSHOT_RENAMER_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/cleanshot-screenshot-renamer}"
-readonly SETTLE_SECONDS="${CLEANSHOT_RENAMER_SETTLE_SECONDS:-7}"
+readonly SETTLE_SECONDS="${CLEANSHOT_RENAMER_SETTLE_SECONDS:-2}"
 readonly CLIPBOARD_HELPER="${CLEANSHOT_RENAMER_CLIPBOARD_HELPER:-${BASH_SOURCE[0]%/*}/cleanshot_clipboard_macos.sh}"
 readonly ENABLED_AT_FILE="$STATE_DIR/enabled-at"
 readonly MAX_FILES_PER_RUN=20
