@@ -81,6 +81,12 @@ file="$3"
 case "$format" in
 '%B') printf '%s\n' "$MOCK_BIRTH_EPOCH" ;;
 '%z:%m')
+  if [[ "${MOCK_CLIPBOARD_BUMP_DURING_STABILITY:-0}" == "1" && ! -e "$TEST_ROOT/stability-clipboard-bump" ]]; then
+    token=40
+    [[ ! -f "$MOCK_CLIPBOARD_TOKEN_FILE" ]] || token="$(<"$MOCK_CLIPBOARD_TOKEN_FILE")"
+    printf '%s\n' "$((token + 10))" >"$MOCK_CLIPBOARD_TOKEN_FILE"
+    : >"$TEST_ROOT/stability-clipboard-bump"
+  fi
   if [[ "${MOCK_UNSTABLE:-0}" == "1" ]]; then
     counter_file="$TEST_ROOT/stat-count"
     count=0
@@ -130,6 +136,7 @@ case "$command" in
 observe)
   [[ "${MOCK_CLIPBOARD_OBSERVE_FAILURE:-0}" != "1" ]] || exit 1
   token="${MOCK_CLIPBOARD_INITIAL_TOKEN:-40}"
+  [[ ! -f "$MOCK_CLIPBOARD_TOKEN_FILE" ]] || token="$(<"$MOCK_CLIPBOARD_TOKEN_FILE")"
   printf '%s\n' "$token" >"$MOCK_CLIPBOARD_TOKEN_FILE"
   printf '%s\n' "$token"
   ;;
@@ -331,6 +338,19 @@ run_renamer() {
   [[ "$output" == *'clipboard changed; skipped copying 2026-08-14_13-58-40--code--oauth-callback-error.jpg'* ]]
   [[ "$(<"$MOCK_CLIPBOARD_TOKEN_FILE")" -eq 50 ]]
   [[ ! -e "$MOCK_NOTIFICATION_LOG" ]]
+}
+
+@test "copies the final file after the pasteboard changes while the capture stabilizes" {
+  export MOCK_CLIPBOARD_BUMP_DURING_STABILITY=1
+  write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
+
+  run_renamer
+
+  [[ "$status" -eq 0 ]]
+  [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" ]]
+  grep -Fq $'copy-if-current\t50\t'"$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" "$MOCK_CLIPBOARD_LOG"
+  [[ "$(<"$MOCK_CLIPBOARD_TOKEN_FILE")" -eq 51 ]]
+  [[ "$output" == *'copied '*'/2026-08-14_13-58-40--code--oauth-callback-error.jpg to the clipboard'* ]]
 }
 
 @test "keeps a successful rename when clipboard copying fails" {

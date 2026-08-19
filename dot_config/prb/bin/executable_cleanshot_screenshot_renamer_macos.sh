@@ -307,12 +307,8 @@ fi
 
 require_commands
 clipboard_enabled=0
+clipboard_observed=0
 clipboard_token=""
-if clipboard_token="$(observe_clipboard)"; then
-  clipboard_enabled=1
-else
-  notify "CleanShot screenshot clipboard unavailable" "Screenshot naming will continue, but automatic clipboard copy is unavailable."
-fi
 sleep "$SETTLE_SECONDS"
 
 run_tmp="$(mktemp -d "$STATE_DIR/.tmp.XXXXXX")"
@@ -360,6 +356,14 @@ for file in "${sorted[@]}"; do
   if ! is_stable "$file"; then
     log "skipped unstable screenshot: ${file##*/}"
     continue
+  fi
+  if ((clipboard_observed == 0)); then
+    clipboard_observed=1
+    if clipboard_token="$(observe_clipboard)"; then
+      clipboard_enabled=1
+    else
+      notify "CleanShot screenshot clipboard unavailable" "Screenshot naming will continue, but automatic clipboard copy is unavailable."
+    fi
   fi
   if process_file "$file"; then
     copy_file_to_clipboard "$RENAMED_PATH"
