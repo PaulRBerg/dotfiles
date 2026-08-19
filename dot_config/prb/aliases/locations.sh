@@ -4,6 +4,7 @@
 # PERSONAL                                                                    #
 ###############################################################################
 alias cd_nvim="cd ~/.config/nvim"
+alias agt="cd ~/projects/agent-toolkit"
 alias dot='cd "$(chezmoi source-path)"'
 alias dotfiles="dot"
 alias effect="cd ~/.effect"
