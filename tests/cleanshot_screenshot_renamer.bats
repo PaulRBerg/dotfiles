@@ -219,8 +219,8 @@ run_renamer() {
   grep -q -- '--image' "$MOCK_CODEX_LOG"
   grep -q -- '--output-schema' "$MOCK_CODEX_LOG"
   grep -Fq $'observe' "$MOCK_CLIPBOARD_LOG"
-  grep -Fq $'copy-if-current\t40\t'"$CLEANSHOT_SCREENSHOT_DIR/CleanShot 2026-08-14 at 13.58.40.jpg" "$MOCK_CLIPBOARD_LOG"
-  grep -Fq $'copy-if-current\t41\t'"$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" "$MOCK_CLIPBOARD_LOG"
+  ! grep -Fq -- 'CleanShot 2026-08-14 at 13.58.40.jpg' "$MOCK_CLIPBOARD_LOG"
+  grep -Fq $'copy-if-current\t40\t'"$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" "$MOCK_CLIPBOARD_LOG"
 }
 
 @test "accepts a short custom category" {
@@ -305,7 +305,7 @@ run_renamer() {
   grep -Fq -- '--other--unclassified.jpg' "$MOCK_CLIPBOARD_LOG"
 }
 
-@test "preserves clipboard content copied before the immediate copy" {
+@test "preserves clipboard content copied before the final copy" {
   export MOCK_CLIPBOARD_CHANGED=1
   write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
 
@@ -314,12 +314,12 @@ run_renamer() {
   [[ "$status" -eq 0 ]]
   [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" ]]
   [[ "$(<"$MOCK_CLIPBOARD_TOKEN_FILE")" -eq 40 ]]
-  [[ "$output" == *'clipboard changed; skipped copying CleanShot 2026-08-14 at 13.58.40.jpg'* ]]
+  [[ "$output" == *'clipboard changed; skipped copying 2026-08-14_13-58-40--code--oauth-callback-error.jpg'* ]]
   [[ "$(grep -c '^copy-if-current' "$MOCK_CLIPBOARD_LOG")" -eq 1 ]]
   [[ ! -e "$MOCK_NOTIFICATION_LOG" ]]
 }
 
-@test "copies immediately and preserves clipboard content copied while Luna is naming" {
+@test "preserves clipboard content copied while Luna is naming" {
   export MOCK_CLIPBOARD_BUMP_DURING_NAMING=1
   write_screenshot 'CleanShot 2026-08-14 at 13.58.40.jpg'
 
@@ -327,9 +327,9 @@ run_renamer() {
 
   [[ "$status" -eq 0 ]]
   [[ -f "$CLEANSHOT_SCREENSHOT_DIR/2026-08-14_13-58-40--code--oauth-callback-error.jpg" ]]
-  grep -Fq $'copy-if-current\t40\t'"$CLEANSHOT_SCREENSHOT_DIR/CleanShot 2026-08-14 at 13.58.40.jpg" "$MOCK_CLIPBOARD_LOG"
+  ! grep -Fq -- 'CleanShot 2026-08-14 at 13.58.40.jpg' "$MOCK_CLIPBOARD_LOG"
   [[ "$output" == *'clipboard changed; skipped copying 2026-08-14_13-58-40--code--oauth-callback-error.jpg'* ]]
-  [[ "$(<"$MOCK_CLIPBOARD_TOKEN_FILE")" -eq 51 ]]
+  [[ "$(<"$MOCK_CLIPBOARD_TOKEN_FILE")" -eq 50 ]]
   [[ ! -e "$MOCK_NOTIFICATION_LOG" ]]
 }
 
@@ -379,12 +379,8 @@ run_renamer() {
   [[ "$(<"$MOCK_CODEX_COUNT")" -eq 2 ]]
   first_image="$(head -n 1 "$MOCK_CODEX_LOG")"
   [[ "$first_image" == *'13.58.40.jpg'* ]]
-  first_immediate="$(sed -n '2p' "$MOCK_CLIPBOARD_LOG")"
-  first_copy="$(sed -n '3p' "$MOCK_CLIPBOARD_LOG")"
-  second_immediate="$(sed -n '4p' "$MOCK_CLIPBOARD_LOG")"
-  second_copy="$(sed -n '5p' "$MOCK_CLIPBOARD_LOG")"
-  [[ "$first_immediate" == $'copy-if-current\t40\t'*'CleanShot 2026-08-14 at 13.58.40.jpg' ]]
-  [[ "$first_copy" == $'copy-if-current\t41\t'*'13-58-40--code--oauth-callback-error.jpg' ]]
-  [[ "$second_immediate" == $'copy-if-current\t42\t'*'CleanShot 2026-08-14 at 13.58.41.jpg' ]]
-  [[ "$second_copy" == $'copy-if-current\t43\t'*'13-58-41--code--oauth-callback-error.jpg' ]]
+  first_copy="$(sed -n '2p' "$MOCK_CLIPBOARD_LOG")"
+  second_copy="$(sed -n '3p' "$MOCK_CLIPBOARD_LOG")"
+  [[ "$first_copy" == $'copy-if-current\t40\t'*'13-58-40--code--oauth-callback-error.jpg' ]]
+  [[ "$second_copy" == $'copy-if-current\t41\t'*'13-58-41--code--oauth-callback-error.jpg' ]]
 }

@@ -361,7 +361,6 @@ for file in "${sorted[@]}"; do
     log "skipped unstable screenshot: ${file##*/}"
     continue
   fi
-  copy_file_to_clipboard "$file"
   if process_file "$file"; then
     copy_file_to_clipboard "$RENAMED_PATH"
   fi
