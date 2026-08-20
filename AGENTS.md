@@ -76,7 +76,7 @@ Layout:
 | `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`              |
 | `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                          |
 | `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`               |
-| `Library/LaunchAgents/`                 | macOS user agents, including automatic CleanShot screenshot naming |
+| `Library/LaunchAgents/`                 | macOS user agents                                                  |
 | `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                                 |
 | `dot_config/iterm2/`                    | Selected iTerm2 settings overlay (macOS; merged into global prefs) |
 | `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)              |
@@ -98,13 +98,6 @@ Layout:
 
 `~/.config/prb/load_env.sh` remains a compatibility wrapper for manual sourcing; the boot path uses `env_core.sh` before
 `path.sh`.
-
-The CleanShot screenshot renamer watches `~/Desktop/Screenshots` and names new captures with Codex. Its private cutoff
-and logs live under `${XDG_STATE_HOME:-$HOME/.local/state}/cleanshot-screenshot-renamer`; removing the cutoff opts the
-next worker run into reinitializing from that moment rather than processing the existing archive. CleanShot's immediate
-**Copy to clipboard** after-capture action must remain disabled. The worker copies a new capture to the clipboard as its
-final name after renaming, but only if the clipboard has not changed since the worker observed it, so newer clipboard
-content always wins.
 
 ## Cross-Platform Patterns
 

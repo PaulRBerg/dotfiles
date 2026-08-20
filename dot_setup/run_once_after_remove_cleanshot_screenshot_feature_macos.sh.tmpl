@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Remove the retired CleanShot screenshot-renamer integration.
+
+set -euo pipefail
+
+readonly label="local.cleanshot-screenshot-renamer"
+readonly domain="gui/$(id -u)"
+readonly launch_agent="$HOME/Library/LaunchAgents/$label.plist"
+readonly bin_dir="$HOME/.config/prb/bin"
+
+if launchctl print "$domain" >/dev/null 2>&1; then
+  launchctl bootout "$domain/$label" >/dev/null 2>&1 || true
+fi
+
+rm -f \
+  "$launch_agent" \
+  "$bin_dir/cleanshot_clipboard_macos.sh" \
+  "$bin_dir/cleanshot_screenshot_renamer_macos.sh"
+
+echo "Removed $label" >&2
