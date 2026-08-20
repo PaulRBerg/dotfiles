@@ -46,6 +46,7 @@ function ywd() {
     if [[ "$selection" == /* ]]; then
       target="$selection"
     else
+      selection="${selection#./}"
       target="$target/$selection"
     fi
   fi
