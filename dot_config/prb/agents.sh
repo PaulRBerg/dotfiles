@@ -21,6 +21,7 @@ CLAUDE_LITE_FLAGS=(
   --no-session-persistence
   --output-format json
   --permission-mode bypassPermissions
+  --allow-dangerously-skip-permissions
   --strict-mcp-config
   --setting-sources user
   --settings '{"disableAllHooks":true}'
