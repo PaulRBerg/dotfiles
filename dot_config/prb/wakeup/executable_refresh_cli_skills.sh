@@ -152,6 +152,7 @@ function _wakeup_run_claude_in_agent_skills() {
       --no-session-persistence \
       --output-format json \
       --permission-mode bypassPermissions \
+      --allow-dangerously-skip-permissions \
       --plugin-dir "$plugin_dir" \
       --print "$prompt"
   ) >"$out" 2>"$err" &
