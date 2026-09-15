@@ -28,11 +28,12 @@ notify() {
     return 0
   fi
 
-  if ! "$osascript_bin" - "$title" "$message" >/dev/null <<'APPLESCRIPT'; then
+  if ! "$osascript_bin" - "$title" "$message" >/dev/null <<'APPLESCRIPT'
 on run argv
   display notification (item 2 of argv) with title (item 1 of argv)
 end run
 APPLESCRIPT
+  then
     log "notification failed: $title"
   fi
 }
