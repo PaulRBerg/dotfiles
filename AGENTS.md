@@ -23,7 +23,7 @@ Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 | `just`                | —     | List recipes                                          |
 | `just apply`          | `a`   | `op signin`, then `chezmoi apply`                     |
 | `just sync [msg]`     | —     | Commit, push, then signin + apply                     |
-| `just full-check`     | `fc`  | Run `prettier-check` then `shell-check`               |
+| `just full-check`     | `fc`  | Run all formatting, static, and regression checks     |
 | `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`          |
 | `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`          |
 | `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts |
@@ -53,7 +53,7 @@ an `apply --source-path` — it fails with `not managed`.
 
 ### Validation (before committing)
 
-- `just full-check` — Prettier + ShellCheck + shfmt
+- `just full-check` — Prettier, plist validation, ShellCheck, shfmt, TOML formatting, and regression tests
 - `gitleaks git --redact --no-banner --no-color` — scan current files and Git history for secrets
 - `op signin --account "${OP_ACCOUNT:-my.1password.com}"`, then `chezmoi apply --dry-run --verbose` (or `chezmoi diff`)
   — confirm a clean apply
@@ -245,7 +245,7 @@ and `web3.sh`.
 
 - Default branch: `main`. `just sync` commits and pushes directly to `main` (personal repo; no PR flow), then runs
   `chezmoi apply`.
-- Run `just full-check` before committing and fix any Prettier / ShellCheck / shfmt findings.
+- Run `just full-check` before committing and fix any reported findings.
 - Once a coherent unit of work passes `just full-check`, run `just sync` proactively — don't ask first, and don't stop
   at "here's the command to run". Pass an explicit message (`just sync "<msg>"`) unless you want the recipe's `ccc`
   helper to generate one.
