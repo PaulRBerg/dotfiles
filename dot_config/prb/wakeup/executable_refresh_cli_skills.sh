@@ -126,6 +126,10 @@ function _wakeup_run_claude_in_agent_skills() {
   local prompt="$2"
   local work_dir="$3"
   local timeout_seconds="${WAKEUP_CLAUDE_TIMEOUT_SECONDS:-900}"
+  # Unset by default, so this run keeps using the configured default model.
+  # Set it to a cheaper model (e.g. a Haiku id) to cut the cost of a refresh
+  # that mostly reads changelogs and rewrites docs.
+  local model="${WAKEUP_CLAUDE_MODEL:-}"
   local plugin_dir="$CHEZMOI_SOURCE_DIR/.agents"
   local out err pid rc
 
@@ -145,14 +149,28 @@ function _wakeup_run_claude_in_agent_skills() {
     return 1
   }
 
+  local -a model_args=()
+  if [[ -n "$model" ]]; then
+    model_args=(--model "$model")
+  fi
+
   echo "$label"
   (
     cd "$work_dir" || exit 1
-    GIT_TERMINAL_PROMPT=0 claude \
+    # A cold headless session pays for its whole boot context before doing any
+    # work, and this one runs unattended on every wake. The same three switches
+    # CLAUDE_LITE_ENV uses in agents.sh trim that boot; CLAUDE_CODE_DISABLE_CLAUDE_MDS
+    # is deliberately left out, since the prompt below relies on AGENTS.md.
+    GIT_TERMINAL_PROMPT=0 \
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
+      CLAUDE_CODE_DISABLE_BUNDLED_SKILLS=1 \
+      CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 \
+      claude \
       --no-session-persistence \
       --output-format json \
       --permission-mode bypassPermissions \
       --allow-dangerously-skip-permissions \
+      "${model_args[@]}" \
       --plugin-dir "$plugin_dir" \
       --print "$prompt"
   ) >"$out" 2>"$err" &
