@@ -1,7 +1,5 @@
-# bun reads its global config from $XDG_CONFIG_HOME/.bunfig.toml whenever that
-# variable is set - dot_zshenv always sets it - and never falls back to
-# ~/.bunfig.toml in that case. Living at the home path left minimumReleaseAge
-# inert: bun took every release regardless of age while the file looked correct.
+# Bun reads $XDG_CONFIG_HOME/.bunfig.toml when XDG_CONFIG_HOME is set.
+# ~/.bunfig.toml links here for processes without XDG_CONFIG_HOME.
 
 [install]
   minimumReleaseAge = 604800
