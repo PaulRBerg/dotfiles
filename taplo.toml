@@ -1,4 +1,4 @@
-exclude = [".tmp/**"]
+exclude = [".tmp/**", "**/symlink_*.toml"]
 include = ["**/*.toml"]
 
 [formatting]
