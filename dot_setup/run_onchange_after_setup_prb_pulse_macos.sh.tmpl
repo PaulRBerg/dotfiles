@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Reload the Pulse dev server after chezmoi installs or changes its plist.
+# plist hash: {{ include "Library/LaunchAgents/local.prb-pulse.plist.tmpl" | sha256sum }}
+
+set -euo pipefail
+
+readonly label="local.prb-pulse"
+readonly domain="gui/$(id -u)"
+readonly plist="$HOME/Library/LaunchAgents/$label.plist"
+
+if [[ ! -f "$plist" ]]; then
+  echo "Pulse plist not found: $plist" >&2
+  exit 1
+fi
+
+plutil -lint "$plist"
+
+if ! launchctl print "$domain" >/dev/null 2>&1; then
+  echo "GUI launchd domain unavailable; Pulse will load at the next login" >&2
+  exit 0
+fi
+
+launchctl bootout "$domain/$label" >/dev/null 2>&1 || true
+for attempt in 1 2; do
+  if launchctl bootstrap "$domain" "$plist"; then
+    break
+  fi
+
+  if [[ "$attempt" -eq 2 ]]; then
+    echo "Failed to bootstrap $label after $attempt attempts" >&2
+    exit 1
+  fi
+
+  sleep 1
+done
+launchctl print "$domain/$label" >/dev/null
+
+echo "Loaded $label" >&2
