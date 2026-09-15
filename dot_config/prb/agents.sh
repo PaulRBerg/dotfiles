@@ -31,7 +31,7 @@ CLAUDE_LITE_FLAGS=(
 # ALIASES                                                                     #
 ###############################################################################
 
-alias c="codex"
+alias c="codex --profile cli"
 alias c_s="codex -m gpt-5.6-sol"
 alias c_t="codex -m gpt-5.6-terra"
 alias c_l="codex -m gpt-5.6-luna"
