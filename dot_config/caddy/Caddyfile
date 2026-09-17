@@ -1,0 +1,26 @@
+# Local HTTPS reverse proxy: named *.localhost domains for always-on local apps.
+# Browsers and macOS resolve *.localhost to loopback, so no DNS or /etc/hosts changes are needed.
+# Caddy issues certificates from its local CA; trust it once with `caddy trust`.
+# Runs as the chezmoi-managed local.caddy LaunchAgent; log: ~/Library/Logs/caddy.log.
+{
+	# The launchd-run Caddy has no TTY for the sudo keychain install, so trust is a manual one-time step.
+	skip_install_trust
+}
+
+# Pulse: private personal balance-sheet instrument panel (Vite dev server with HMR).
+# Source: ~/projects/prb-finance/apps/pulse, served by the local.prb-pulse LaunchAgent.
+pulse.localhost {
+	reverse_proxy 127.0.0.1:6173
+}
+
+# AI Handoffs: local, read-only viewer for agent task handoffs (Bun).
+# Source: ~/projects/agent-toolkit/apps/handoffs, served by the local.ai-handoffs LaunchAgent.
+handoffs.localhost {
+	reverse_proxy 127.0.0.1:7777
+}
+
+# Coordination dashboard: live view of ai-coord state; proxies the ai-coord API on 127.0.0.1:4477 (Bun).
+# Source: ~/projects/agent-toolkit/apps/coord-dashboard, served by the local.ai-coord-dashboard LaunchAgent.
+coord.localhost {
+	reverse_proxy 127.0.0.1:4173
+}

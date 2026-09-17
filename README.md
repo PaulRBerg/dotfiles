@@ -90,6 +90,8 @@ chicken-and-egg failures.
    - Agent configs: `git clone git@github.com:PaulRBerg/dot-claude.git ~/.claude` and
      `git clone git@github.com:PaulRBerg/dot-agents.git ~/.agents`
    - Shell history sync: `atuin login`
+   - Local HTTPS domains: run `caddy trust` once (sudo prompt) so browsers accept Caddy's local CA, then open
+     `https://pulse.localhost`, `https://handoffs.localhost`, and `https://coord.localhost`.
 
 7. Verify everything: `chezmoi cd && just doctor` — checks required commands, PATH health, a dry-run apply, rendered
    templates, and lint.

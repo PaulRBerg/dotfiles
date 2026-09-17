@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Validate the Caddyfile and (re)load the Caddy reverse proxy after chezmoi changes its plist or config.
+# plist hash: {{ include "Library/LaunchAgents/local.caddy.plist.tmpl" | sha256sum }}
+# Caddyfile hash: {{ include "dot_config/caddy/Caddyfile" | sha256sum }}
+
+set -euo pipefail
+
+readonly label="local.caddy"
+readonly domain="gui/$(id -u)"
+readonly plist="$HOME/Library/LaunchAgents/$label.plist"
+readonly caddyfile="$HOME/.config/caddy/Caddyfile"
+
+if ! command -v caddy >/dev/null 2>&1; then
+  echo "caddy not installed; run ~/.setup/tools_macos.sh, then re-apply to start $label" >&2
+  exit 0
+fi
+
+if [[ ! -f "$plist" ]]; then
+  echo "Caddy plist not found: $plist" >&2
+  exit 1
+fi
+
+plutil -lint "$plist"
+caddy validate --config "$caddyfile"
+
+if ! launchctl print "$domain" >/dev/null 2>&1; then
+  echo "GUI launchd domain unavailable; Caddy will load at the next login" >&2
+  exit 0
+fi
+
+launchctl bootout "$domain/$label" >/dev/null 2>&1 || true
+for attempt in 1 2; do
+  if launchctl bootstrap "$domain" "$plist"; then
+    break
+  fi
+
+  if [[ "$attempt" -eq 2 ]]; then
+    echo "Failed to bootstrap $label after $attempt attempts" >&2
+    exit 1
+  fi
+
+  sleep 1
+done
+launchctl print "$domain/$label" >/dev/null
+
+echo "Loaded $label" >&2
+
+if ! security find-certificate -c "Caddy Local Authority" /Library/Keychains/System.keychain >/dev/null 2>&1; then
+  echo "Run 'caddy trust' once to trust the local CA (sudo prompt); until then browsers reject https://*.localhost" >&2
+fi

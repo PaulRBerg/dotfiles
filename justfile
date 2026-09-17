@@ -110,6 +110,7 @@ doctor:
         zsh
     )
     if [[ "$(uname -s)" == "Darwin" ]]; then
+        required+=(caddy)
         required+=(difft)
         required+=(plutil)
     else

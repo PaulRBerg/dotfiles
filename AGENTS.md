@@ -70,22 +70,23 @@ chezmoi source-state naming (source name → target):
 
 Layout:
 
-| Path                                    | Purpose                                                            |
-| --------------------------------------- | ------------------------------------------------------------------ |
-| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                                  |
-| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`              |
-| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                          |
-| `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`               |
-| `Library/LaunchAgents/`                 | macOS user agents                                                  |
-| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                                 |
-| `dot_config/iterm2/`                    | Selected iTerm2 settings overlay (macOS; merged into global prefs) |
-| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)              |
-| `dot_setup/packages.sh`                 | Shared package manifest — source of truth                          |
-| `dot_setup/lib/common.sh`               | Shared setup helpers                                               |
-| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)             |
-| `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                                     |
-| `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi)             |
-| `justfile`                              | Task runner                                                        |
+| Path                                    | Purpose                                                                |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                                      |
+| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`                  |
+| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                              |
+| `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`                   |
+| `Library/LaunchAgents/`                 | macOS user agents                                                      |
+| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                                     |
+| `dot_config/caddy/`                     | Caddyfile for named `*.localhost` HTTPS domains (macOS; `local.caddy`) |
+| `dot_config/iterm2/`                    | Selected iTerm2 settings overlay (macOS; merged into global prefs)     |
+| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)                  |
+| `dot_setup/packages.sh`                 | Shared package manifest — source of truth                              |
+| `dot_setup/lib/common.sh`               | Shared setup helpers                                                   |
+| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)                 |
+| `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                                         |
+| `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi)                 |
+| `justfile`                              | Task runner                                                            |
 
 ### Shell Startup Order
 
@@ -134,6 +135,21 @@ Keep installers thin and platform-specific; source `packages.sh` rather than dup
 
 Portable `pbcopy`/`pbpaste` shims live in `dot_config/prb/bin/` (on `PATH`). Shell functions and git aliases call them
 directly, so clipboard workflows work on macOS and Linux without per-OS aliases.
+
+### Local HTTPS domains (macOS only)
+
+Caddy runs as the `local.caddy` LaunchAgent (`Library/LaunchAgents/local.caddy.plist.tmpl`) and reverse-proxies named
+`*.localhost` domains to the always-on local apps: `https://pulse.localhost` (6173), `https://handoffs.localhost`
+(7777), `https://coord.localhost` (4173). Browsers and macOS resolve `*.localhost` to loopback, so no DNS or
+`/etc/hosts` changes are involved.
+
+- To add a site, add a block to `dot_config/caddy/Caddyfile` with a comment naming the app and its source directory,
+  then apply. The hook `dot_setup/run_onchange_after_setup_caddy_macos.sh.tmpl` validates the Caddyfile and restarts the
+  agent whenever the Caddyfile or plist changes. A scoped apply only runs the hook when it is named too:
+  `chezmoi apply --source-path dot_config/caddy/Caddyfile dot_setup/run_onchange_after_setup_caddy_macos.sh.tmpl`.
+- Certificates come from Caddy's local CA. Trust it once with `caddy trust` (sudo prompt); the Caddyfile sets
+  `skip_install_trust` because the launchd process cannot prompt. The hook prints a reminder while the CA is untrusted.
+- Log: `~/Library/Logs/caddy.log`. Restart: `launchctl kickstart -k gui/$(id -u)/local.caddy`.
 
 ### iTerm2 settings (macOS only)
 

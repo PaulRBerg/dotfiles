@@ -59,6 +59,7 @@ MACOS_FORMULAE=(
   tree
 
   # Development tools
+  caddy # local HTTPS reverse proxy for *.localhost (local.caddy LaunchAgent)
   direnv
   gh
   git
