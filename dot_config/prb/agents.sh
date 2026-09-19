@@ -158,7 +158,7 @@ function _run_claude_skill() {
 
   if ((rc != 0)) || ! jq -er 'select(.is_error != true) | .result | select(type == "string" and length > 0)' "$out"; then
     echo "❌ claude skill failed (exit ${rc}; 124 = timed out)" >&2
-    [[ -s "$out" ]] && jq -r '.result // empty, .errors[]?' "$out" >&2
+    jq -r '.result // empty, .errors[]?' "$out" >&2 2>/dev/null || true
     [[ -s "$err" ]] && sed 's/^/   /' "$err" >&2
     rm -f "$out" "$err"
     return 1

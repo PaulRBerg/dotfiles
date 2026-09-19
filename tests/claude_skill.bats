@@ -1,4 +1,6 @@
 #!/usr/bin/env bats
+# Child scripts expand variables; -f keeps Zsh startup from replacing test stubs.
+# shellcheck disable=SC2016
 
 bats_require_minimum_version 1.5.0
 
@@ -18,7 +20,7 @@ fake_claude() {
   fake_claude 'printf '\''%s\n'\'' '\''{"result":"Committed and pushed."}'\'''
 
   for shell in bash zsh; do
-    run --separate-stderr "$shell" -c 'source "$1"; _run_claude_skill "Working..." "/commit --all --push"' _ \
+    run --separate-stderr "$shell" -efc 'source "$1"; _run_claude_skill "Working..." "/commit --all --push"' _ \
       "$REPO_ROOT/dot_config/prb/agents.sh"
 
     [[ "$status" -eq 0 ]]
@@ -34,7 +36,7 @@ fake_claude() {
     'printf '\''%s\n'\'' '\''{"result":"Complete."}'\'''
 
   for shell in bash zsh; do
-    run --separate-stderr "$shell" -c 'source "$1"; printf "caller input\n" | _run_claude_skill "Working..." "/commit"' _ \
+    run --separate-stderr "$shell" -efc 'source "$1"; printf "caller input\n" | _run_claude_skill "Working..." "/commit"' _ \
       "$REPO_ROOT/dot_config/prb/agents.sh"
 
     [[ "$status" -eq 0 ]]
@@ -49,7 +51,7 @@ fake_claude() {
     'exit 7'
 
   for shell in bash zsh; do
-    run --separate-stderr "$shell" -c 'source "$1"; _run_claude_skill "Working..." "/commit"' _ \
+    run --separate-stderr "$shell" -efc 'source "$1"; _run_claude_skill "Working..." "/commit"' _ \
       "$REPO_ROOT/dot_config/prb/agents.sh"
 
     [[ "$status" -ne 0 ]]
@@ -65,7 +67,7 @@ fake_claude() {
 
   for shell in bash zsh; do
     for response in '' 'not json' '{}' '{"result":""}' '{"is_error":true,"result":"Failed."}'; do
-      run --separate-stderr env CLAUDE_RESPONSE="$response" "$shell" -c \
+      run --separate-stderr env CLAUDE_RESPONSE="$response" "$shell" -efc \
         'source "$1"; _run_claude_skill "Working..." "/commit"' _ "$REPO_ROOT/dot_config/prb/agents.sh"
 
       [[ "$status" -ne 0 ]]
@@ -81,7 +83,7 @@ fake_claude() {
   fake_claude 'exec sleep 5'
 
   for shell in bash zsh; do
-    run --separate-stderr env CCC_TIMEOUT=0.1 "$shell" -c \
+    run --separate-stderr env CCC_TIMEOUT=0.1 "$shell" -efc \
       'source "$1"; _run_claude_skill "Working..." "/commit"' _ "$REPO_ROOT/dot_config/prb/agents.sh"
 
     [[ "$status" -ne 0 ]]
