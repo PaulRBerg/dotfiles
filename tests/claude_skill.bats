@@ -78,6 +78,35 @@ fake_claude() {
   done
 }
 
+@test "ccta invokes the deterministic archive helper with the resolved repository root" {
+  local fixture_home="$BATS_TEST_TMPDIR/home"
+  local fixture_repo="$BATS_TEST_TMPDIR/repo"
+  local helper="$fixture_home/.agents/skills/todo-archive/scripts/archive_todo.py"
+  mkdir -p "$(dirname "$helper")" "$fixture_repo/nested"
+  touch "$helper"
+  git init -q "$fixture_repo"
+  fixture_repo=$(cd "$fixture_repo" && pwd -P)
+  fake_claude 'echo "claude must not run" >&2; exit 99'
+  printf '%s\n' '#!/usr/bin/env bash' 'printf "<%s>\n" "$@"' >"$BATS_TEST_TMPDIR/bin/uv"
+  chmod +x "$BATS_TEST_TMPDIR/bin/uv"
+
+  for shell in bash zsh; do
+    run --separate-stderr env HOME="$fixture_home" "$shell" -efc \
+      'source "$1"; ccta "$2" --date 2026-09-19 --hint "Regression tasks"' _ \
+      "$REPO_ROOT/dot_config/prb/agents.sh" "$fixture_repo/nested"
+
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == *"<$helper>"* ]]
+    [[ "$output" == *"<--root>"* ]]
+    [[ "$output" == *"<$fixture_repo>"* ]]
+    [[ "$output" == *"<--date>"* ]]
+    [[ "$output" == *"<2026-09-19>"* ]]
+    [[ "$output" == *"<--hint>"* ]]
+    [[ "$output" == *"<Regression tasks>"* ]]
+    [[ -z "$stderr" ]]
+  done
+}
+
 @test "headless skills report timeout failures" {
   command -v timeout >/dev/null || command -v gtimeout >/dev/null || skip 'coreutils timeout is not installed'
   fake_claude 'exec sleep 5'

@@ -94,15 +94,34 @@ function ccbump() {
   _run_claude_skill "Claude is bumping release..." "/release-bumper $*"
 }
 
-# Claude Code todo archive
+# TODO archive
 function ccta() {
-  local prompt='/todo-archive'
-  [[ $# -gt 0 ]] && prompt+=" $*"
+  local input_path="$PWD"
+  if [[ $# -gt 0 && "$1" != -* ]]; then
+    input_path="$1"
+    shift
+  fi
 
-  _run_claude_skill "Claude is archiving TODOs..." "$prompt" \
-    --effort medium \
-    --model sonnet \
-    --tools Bash,Read
+  local start_dir
+  if [[ -d "$input_path" ]]; then
+    start_dir=$(cd "$input_path" && pwd -P) || return 1
+  elif [[ -f "$input_path" ]]; then
+    start_dir=$(cd "$(dirname "$input_path")" && pwd -P) || return 1
+  else
+    echo "❌ path not found: $input_path" >&2
+    return 1
+  fi
+
+  local repo_root
+  repo_root=$(git -C "$start_dir" rev-parse --show-toplevel 2>/dev/null) || repo_root="$start_dir"
+
+  local archive_script="${HOME}/.agents/skills/todo-archive/scripts/archive_todo.py"
+  if [[ ! -f "$archive_script" ]]; then
+    echo "❌ todo-archive helper not found: $archive_script" >&2
+    return 1
+  fi
+
+  uv run python "$archive_script" --root "$repo_root" "$@"
 }
 
 ###############################################################################
