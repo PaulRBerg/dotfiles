@@ -52,7 +52,6 @@ alias edit_codex="code ~/.codex"
 
 # Claude Code commit
 function ccc() {
-  _require_gum || return 1
   _require_ai_commit || return 1
 
   if ! git rev-parse --git-dir &>/dev/null; then
@@ -92,14 +91,11 @@ function ccsp() {
 
 # Claude Code bump release
 function ccbump() {
-  _require_gum || return 1
   _run_claude_skill "Claude is bumping release..." "/release-bumper $*"
 }
 
 # Claude Code todo archive
 function ccta() {
-  _require_gum || return 1
-
   local prompt='/todo-archive'
   [[ $# -gt 0 ]] && prompt+=" $*"
 
@@ -113,15 +109,6 @@ function ccta() {
 # PRIVATE                                                                     #
 ###############################################################################
 
-# Helper to ensure gum is installed (used for spinners)
-function _require_gum() {
-  if ! command -v gum &>/dev/null; then
-    echo "❌ Error: gum is required for this command"
-    echo "Install: brew install gum (macOS) or sudo apt install gum (Ubuntu)"
-    return 1
-  fi
-}
-
 # Helper to ensure ai-commit is installed (used by Claude's /commit skill).
 function _require_ai_commit() {
   if ! command -v ai-commit &>/dev/null; then
@@ -131,7 +118,7 @@ function _require_ai_commit() {
   fi
 }
 
-# _run_claude_skill <spinner-title> <prompt> [extra claude flags...]
+# _run_claude_skill <status-message> <prompt> [extra claude flags...]
 # Runs a headless Claude skill in lite mode (see CLAUDE_LITE_ENV/CLAUDE_LITE_FLAGS).
 function _run_claude_skill() {
   local title="$1" prompt="$2"
@@ -146,35 +133,36 @@ function _run_claude_skill() {
     timeout_cmd="gtimeout"
   fi
 
-  # Redirect Claude's JSON to a file instead of capturing it through gum's
-  # pipe. Claude spawns background workers (prefetch/keychain reads) that can
-  # inherit the capture pipe and hold it open after the run already landed,
-  # wedging `$(...)`/gum forever. Writing to a file breaks that fd inheritance.
+  # Capture output in files so background workers cannot hold a capture pipe
+  # open after Claude exits. Close stdin: the complete prompt is in argv.
   # The skills this runs invoke helper scripts; this wrapper is noninteractive,
   # so Claude needs bypass mode instead of a permission prompt it cannot
   # surface. GIT_TERMINAL_PROMPT=0 turns a hidden credential prompt (e.g.
-  # cccp/--push) into a fast failure instead of an invisible hang behind the
-  # spinner.
+  # cccp/--push) into a fast failure instead of an invisible hang.
   local out err rc
   out=$(mktemp) || return 1
-  err=$(mktemp) || return 1
+  err=$(mktemp) || {
+    rm -f "$out"
+    return 1
+  }
 
   local -a claude_command=(env GIT_TERMINAL_PROMPT=0 "${CLAUDE_LITE_ENV[@]}")
   [[ -n "$timeout_cmd" ]] && claude_command+=("$timeout_cmd" "${CCC_TIMEOUT:-300}")
   claude_command+=(claude "${CLAUDE_LITE_FLAGS[@]}" "$@" --print "$prompt")
 
-  gum spin --spinner dot --title "$title" -- \
-    sh -c 'out=$1; err=$2; shift 2; exec "$@" >"$out" 2>"$err"' \
-    _ "$out" "$err" "${claude_command[@]}"
-  rc=$?
+  # Gum 2's spinner queries modes 2026/2027 with its input reader disabled,
+  # leaking terminal replies into the shell. A plain status line needs no TTY.
+  printf '%s\n' "$title" >&2
+  rc=0
+  "${claude_command[@]}" </dev/null >"$out" 2>"$err" || rc=$?
 
-  if ((rc != 0)) || [[ ! -s "$out" ]]; then
+  if ((rc != 0)) || ! jq -er 'select(.is_error != true) | .result | select(type == "string" and length > 0)' "$out"; then
     echo "❌ claude skill failed (exit ${rc}; 124 = timed out)" >&2
+    [[ -s "$out" ]] && jq -r '.result // empty, .errors[]?' "$out" >&2
     [[ -s "$err" ]] && sed 's/^/   /' "$err" >&2
     rm -f "$out" "$err"
     return 1
   fi
 
-  jq -r '.result' "$out"
   rm -f "$out" "$err"
 }
