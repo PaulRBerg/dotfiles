@@ -1,4 +1,4 @@
-# Local HTTPS reverse proxy: named *.localhost domains for always-on local apps.
+# Local HTTPS reverse proxy: named *.localhost domains for local apps.
 # Browsers and macOS resolve *.localhost to loopback, so no DNS or /etc/hosts changes are needed.
 # Caddy issues certificates from its local CA; trust it once with `caddy trust`.
 # Runs as the chezmoi-managed local.caddy LaunchAgent; log: ~/Library/Logs/caddy.log.
@@ -11,6 +11,12 @@
 # Source: ~/projects/prb-finance/apps/pulse, served by the local.prb-pulse LaunchAgent.
 pulse.localhost {
 	reverse_proxy 127.0.0.1:6173
+}
+
+# House budget planner (Vite dev/preview server with persistence API).
+# Source: ~/projects/our-house/budget; start manually with `just dev`.
+budget.localhost {
+	reverse_proxy 127.0.0.1:8437
 }
 
 # AI Handoffs: local, read-only viewer for agent task handoffs (Bun).

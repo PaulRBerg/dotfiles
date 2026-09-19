@@ -139,9 +139,10 @@ directly, so clipboard workflows work on macOS and Linux without per-OS aliases.
 ### Local HTTPS domains (macOS only)
 
 Caddy runs as the `local.caddy` LaunchAgent (`Library/LaunchAgents/local.caddy.plist.tmpl`) and reverse-proxies named
-`*.localhost` domains to the always-on local apps: `https://pulse.localhost` (6173), `https://handoffs.localhost`
-(7777), `https://coord.localhost` (4173). Browsers and macOS resolve `*.localhost` to loopback, so no DNS or
-`/etc/hosts` changes are involved.
+`*.localhost` domains to local apps: `https://pulse.localhost` (6173), `https://budget.localhost` (8437),
+`https://handoffs.localhost` (7777), and `https://coord.localhost` (4173). Start the budget app from
+`~/projects/our-house/budget` with `just dev`; the other apps are always-on services. Browsers and macOS resolve
+`*.localhost` to loopback, so no DNS or `/etc/hosts` changes are involved.
 
 - To add a site, add a block to `dot_config/caddy/Caddyfile` with a comment naming the app and its source directory,
   then apply. The hook `dot_setup/run_onchange_after_setup_caddy_macos.sh.tmpl` validates the Caddyfile and restarts the
