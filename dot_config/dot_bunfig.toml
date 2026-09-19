@@ -17,6 +17,7 @@
     "@effect/platform-node",
     "@effect/rpc",
     "@effect/vitest",
+    "@prb/devkit",
     "@prb/effect-evm",
     "@prb/effect-evm-safe",
     "@prb/effect-next",
