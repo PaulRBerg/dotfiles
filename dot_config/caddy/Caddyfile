@@ -14,7 +14,7 @@ pulse.localhost {
 }
 
 # House budget planner (Vite dev/preview server with persistence API).
-# Source: ~/projects/our-house/budget; start manually with `just dev`.
+# Source: ~/projects/our-house/budget, served by the local.our-house-budget LaunchAgent.
 budget.localhost {
 	reverse_proxy 127.0.0.1:8437
 }
