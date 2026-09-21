@@ -281,4 +281,4 @@ and `web3.sh`.
 - After committing and pushing without `just sync`, apply per the scoped-apply rule in the chezmoi section under
   Commands above.
 - No CI — validation is local only.
-- `CLAUDE.md` is a symlink to `AGENTS.md`; both paths resolve to this file. Edit `AGENTS.md` directly.
+- Claude Code reads `AGENTS.md` directly; do not add a `CLAUDE.md`.
