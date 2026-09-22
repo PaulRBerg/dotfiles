@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Reload the Caddy TLS watchdog after chezmoi installs or changes its files.
+# watchdog hash: {{ include "dot_setup/executable_caddy_tls_watchdog_macos.sh.tmpl" | sha256sum }}
+# plist hash: {{ include "Library/LaunchAgents/local.caddy-tls-watchdog.plist.tmpl" | sha256sum }}
+
+set -euo pipefail
+
+readonly label="local.caddy-tls-watchdog"
+readonly domain="gui/$(id -u)"
+readonly plist="$HOME/Library/LaunchAgents/$label.plist"
+
+if [[ ! -f "$plist" ]]; then
+  echo "Caddy TLS watchdog plist not found: $plist" >&2
+  exit 1
+fi
+
+plutil -lint "$plist"
+
+if ! launchctl print "$domain" >/dev/null 2>&1; then
+  echo "GUI launchd domain unavailable; Caddy TLS watchdog will load at the next login" >&2
+  exit 0
+fi
+
+launchctl bootout "$domain/$label" >/dev/null 2>&1 || true
+launchctl bootstrap "$domain" "$plist"
+launchctl print "$domain/$label" >/dev/null
+
+echo "Loaded $label" >&2

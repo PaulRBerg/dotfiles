@@ -150,6 +150,12 @@ Browsers and macOS resolve `*.localhost` to loopback, so no DNS or `/etc/hosts` 
   `chezmoi apply --source-path dot_config/caddy/Caddyfile dot_setup/run_onchange_after_setup_caddy_macos.sh.tmpl`.
 - Certificates come from Caddy's local CA. Trust it once with `caddy trust` (sudo prompt); the Caddyfile sets
   `skip_install_trust` because the launchd process cannot prompt. The hook prints a reminder while the CA is untrusted.
+- `local.caddy-tls-watchdog` runs at load and hourly. It reasserts local-CA trust, verifies the budget API through normal
+  TLS, restarts Caddy on failure, and restarts the budget agent only if Caddy recovery is insufficient. Its source files
+  are `Library/LaunchAgents/local.caddy-tls-watchdog.plist.tmpl` and
+  `dot_setup/executable_caddy_tls_watchdog_macos.sh.tmpl`; apply them with
+  `dot_setup/run_onchange_after_setup_caddy_tls_watchdog_macos.sh.tmpl`. Log:
+  `~/Library/Logs/caddy-tls-watchdog.log`.
 - Log: `~/Library/Logs/caddy.log`. Restart: `launchctl kickstart -k gui/$(id -u)/local.caddy`.
 
 ### iTerm2 settings (macOS only)

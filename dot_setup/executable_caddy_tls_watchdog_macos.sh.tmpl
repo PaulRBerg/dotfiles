@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Verify the local Caddy certificate path and recover its proxy target when needed.
+
+set -euo pipefail
+
+readonly caddy_bin="/opt/homebrew/bin/caddy"
+readonly caddyfile="$HOME/.config/caddy/Caddyfile"
+readonly caddy_label="local.caddy"
+readonly budget_label="local.our-house-budget"
+readonly domain="gui/$(/usr/bin/id -u)"
+readonly health_url="https://budget.localhost/api/budget"
+
+log() {
+  printf '%s %s\n' "$(/bin/date -u '+%Y-%m-%dT%H:%M:%SZ')" "$*" >&2
+}
+
+health_check() {
+  /usr/bin/curl --fail --silent --show-error --max-time 10 "$health_url" >/dev/null
+}
+
+wait_for_health() {
+  for _ in {1..10}; do
+    if health_check; then
+      return 0
+    fi
+    /bin/sleep 1
+  done
+
+  return 1
+}
+
+if [[ ! -x "$caddy_bin" || ! -f "$caddyfile" ]]; then
+  log "Caddy executable or configuration is unavailable; skipping TLS watchdog"
+  exit 0
+fi
+
+if ! /bin/launchctl print "$domain" >/dev/null 2>&1; then
+  log "GUI launchd domain is unavailable; skipping TLS watchdog"
+  exit 0
+fi
+
+# Caddy renews leaf certificates itself. Reasserting trust here repairs a replaced
+# local CA before the strict request reaches the application.
+if ! "$caddy_bin" trust --config "$caddyfile" >/dev/null 2>&1; then
+  log "could not reassert Caddy local-CA trust"
+fi
+
+if health_check; then
+  exit 0
+fi
+
+log "strict budget HTTPS health check failed; restarting $caddy_label"
+/bin/launchctl kickstart -k "$domain/$caddy_label"
+
+if wait_for_health; then
+  exit 0
+fi
+
+log "budget stayed unavailable after Caddy recovery; restarting $budget_label"
+/bin/launchctl kickstart -k "$domain/$budget_label"
+
+if wait_for_health; then
+  exit 0
+fi
+
+log "budget HTTPS health check remains unavailable after recovery"
+exit 1

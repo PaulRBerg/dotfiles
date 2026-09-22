@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>local.caddy-tls-watchdog</string>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>{{ .chezmoi.homeDir }}/.setup/caddy_tls_watchdog_macos.sh</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>{{ .chezmoi.homeDir }}/Library/Logs/caddy-tls-watchdog.log</string>
+	<key>StandardOutPath</key>
+	<string>{{ .chezmoi.homeDir }}/Library/Logs/caddy-tls-watchdog.log</string>
+	<key>StartInterval</key>
+	<integer>3600</integer>
+	<key>ThrottleInterval</key>
+	<integer>30</integer>
+</dict>
+</plist>
