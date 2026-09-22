@@ -32,9 +32,9 @@ CLAUDE_LITE_FLAGS=(
 ###############################################################################
 
 alias c="codex --profile cli"
-alias c_s="codex -m gpt-5.6-sol"
-alias c_t="codex -m gpt-5.6-terra"
-alias c_l="codex -m gpt-5.6-luna"
+alias c_s="codex -m gpt-6-sol"
+alias c_t="codex -m gpt-6-terra"
+alias c_l="codex -m gpt-6-luna"
 alias cda="cd ~/.agents"
 alias cd_agents="cd ~/.agents"
 alias cd_claude="cd ~/.claude"
