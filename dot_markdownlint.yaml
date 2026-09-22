@@ -1,6 +1,8 @@
 # Global markdownlint defaults discovered by the VS Code/Cursor extension in
 # Markdown files' parent directories, including this file's target: `$HOME`.
 default: true
+ignores:
+  - .ai/**
 MD002: false
 MD004: false
 MD007: false
