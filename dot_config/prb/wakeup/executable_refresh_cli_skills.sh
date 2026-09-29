@@ -199,7 +199,7 @@ function refresh_cli_backed_agent_skills() (
   local stale_args=()
   local stale_count=0
   local prompt skills_dir remote_url branch temp_dir clone_dir starting_oid remote_oid
-  local prepare_output transaction_id
+  local prepare_output transaction_id skill_filters
 
   if ! git -C "$AGENT_SKILLS_DIR" rev-parse --git-dir >/dev/null 2>&1; then
     echo "Skipping CLI-backed skill refresh (missing $AGENT_SKILLS_DIR)"
@@ -347,6 +347,18 @@ checks from AGENTS.md, then stop without committing."
 
   if ! (cd "$clone_dir" && ai-commit commit "$transaction_id" -m "Refresh CLI-backed agent skills" --push); then
     echo "CLI-backed skill commit or push failed" >&2
+    return 1
+  fi
+
+  # The clone now sits at the pushed head, which the publish guards require, so installing
+  # from it never depends on the shared primary checkout.
+  skill_filters="$(printf -- '--skill %s ' "${stale_args[@]%%=*}")"
+  prompt="The CLI-backed skill refresh is committed and pushed. Publish it by reading and following
+.agents/internal-skills/publish-skills.md with \`just publish-skills ${skill_filters% }\`: commit and push the
+global paths it reports in each target repository, then run \`ai-coord done\`. Do not edit catalog sources."
+
+  if ! _wakeup_run_claude_in_agent_skills "Publishing refreshed CLI-backed agent skills" "$prompt" "$clone_dir"; then
+    echo "CLI-backed skill refresh was pushed but not published; run \`just publish-skills ${skill_filters% }\` in $AGENT_SKILLS_DIR" >&2
     return 1
   fi
 )

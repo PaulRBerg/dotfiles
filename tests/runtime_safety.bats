@@ -52,6 +52,13 @@ install_fake_refresh_tools() {
   write_executable "$BATS_TEST_TMPDIR/bin/claude" \
     '#!/usr/bin/env bash' \
     'printf "%s\n" "$PWD" >>"$CLAUDE_CWD_LOG"' \
+    'if [[ "${!#}" != /refresh-cli-skill* ]]; then' \
+    '  [[ "${!#}" == *"just publish-skills --skill cli-fake\`"* ]] || exit 3' \
+    '  [[ "$(git rev-parse HEAD)" == "$(git --git-dir="$AGENT_SKILLS_REMOTE" rev-parse refs/heads/main)" ]] || exit 4' \
+    '  printf "publish\n" >>"$CLAUDE_CALL_LOG"' \
+    "  printf '%s\\n' '{\"result\":\"ok\"}'" \
+    '  exit 0' \
+    'fi' \
     'printf "refresh\n" >>"$CLAUDE_CALL_LOG"' \
     'printf "2.0.0\n" >skills/cli-fake/references/version.txt' \
     'if [[ -n "${ADVANCE_REMOTE_DURING_REFRESH:-}" ]]; then' \
@@ -259,7 +266,7 @@ install_fake_refresh_tools() {
   [[ "$status" -eq 0 ]]
 }
 
-@test "CLI skill refresh commits from a temporary clone and never touches the primary worktree" {
+@test "CLI skill refresh commits and publishes from a temporary clone and never touches the primary worktree" {
   setup_agent_skills_remote
   install_fake_refresh_tools
   mkdir -p "$BATS_TEST_TMPDIR/clones" "$BATS_TEST_TMPDIR/home"
@@ -285,7 +292,7 @@ install_fake_refresh_tools() {
   [[ "$(git -C "$AGENT_SKILLS_PRIMARY" status --short)" == "$primary_before" ]]
   [[ "$(<"$AGENT_SKILLS_PRIMARY/skills/cli-fake/references/version.txt")" == 1.0.0 ]]
   [[ "$(git --git-dir="$AGENT_SKILLS_REMOTE" show main:skills/cli-fake/references/version.txt)" == 2.0.0 ]]
-  [[ "$(<"$BATS_TEST_TMPDIR/claude-calls")" == refresh ]]
+  [[ "$(<"$BATS_TEST_TMPDIR/claude-calls")" == $'refresh\npublish' ]]
   run rg -Fx "$AGENT_SKILLS_PRIMARY" "$BATS_TEST_TMPDIR/claude-cwd"
   [[ "$status" -eq 1 ]]
   [[ -z "$(find "$BATS_TEST_TMPDIR/clones" -mindepth 1 -print -quit)" ]]
