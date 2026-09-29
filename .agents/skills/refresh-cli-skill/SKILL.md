@@ -10,7 +10,7 @@ description:
 
 # Refresh CLI Skill
 
-Refresh one or more `skills/cli-*` entries in `~/projects/agent-skills` after the installed CLI version is newer than
+Refresh one or more `skills/cli-*` entries in an `agent-skills` checkout after the installed CLI version is newer than
 the version recorded in `references/version.txt`.
 
 ## Arguments
@@ -21,7 +21,9 @@ the version recorded in `references/version.txt`.
 
 ## Workflow
 
-1. Work from `~/projects/agent-skills`.
+1. Work from the `agent-skills` checkout in the current directory: the wakeup automation starts you in an isolated clone
+   and must never touch the shared `~/projects/agent-skills` worktree. When invoked outside a checkout, use
+   `~/projects/agent-skills`.
 2. Confirm the worktree is clean before editing. If it is dirty, stop and report the dirty paths.
 3. For each requested skill:
    - Confirm `skills/<cli-skill>/SKILL.md` exists.
@@ -31,8 +33,9 @@ the version recorded in `references/version.txt`.
    - Update only stale or missing facts in the skill docs. Keep edits terse and preserve local safety rules.
    - Write `skills/<cli-skill>/references/version.txt` with exactly the requested semver and one trailing newline.
 4. Do not edit unrelated skills, generated lockfiles, installed copies under `~/.agents`, or global Claude/Codex config.
-5. Run `just mdformat-write`, `just mdformat-check`, and `just skill-invocation-check`.
-6. Leave the commit to the caller. Do not run `/commit` from inside this skill.
+5. Run `just prettier-write <changed Markdown files>`, then `just prettier-check <changed files>` and
+   `just skill-check`.
+6. Leave the commit and publication to the caller. Do not run `/commit` or `just publish-skills` from inside this skill.
 
 ## Version Metadata
 
