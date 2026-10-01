@@ -21,8 +21,11 @@ budget.localhost {
 
 # AI Handoffs: local, read-only viewer for agent task handoffs (Bun).
 # Source: ~/projects/agent-skills/toolkit/apps/handoffs, served by the local.ai-handoffs LaunchAgent.
+# The viewer accepts only loopback Host headers (DNS-rebinding guard), so forward the upstream address.
 handoffs.localhost {
-	reverse_proxy 127.0.0.1:7777
+	reverse_proxy 127.0.0.1:7777 {
+		header_up Host {upstream_hostport}
+	}
 }
 
 # Coordination dashboard: live view of ai-coord state; proxies the ai-coord API on 127.0.0.1:4477 (Bun).
