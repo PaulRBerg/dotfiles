@@ -26,6 +26,7 @@ minimumReleaseAgeExclude:
   - "@effect/platform-node"
   - "@effect/rpc"
   - "@effect/vitest"
+  - "@prb/crypto-registry"
   - "@prb/effect-evm"
   - "@prb/effect-evm-safe"
   - "@prb/effect-next"
