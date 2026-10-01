@@ -14,7 +14,9 @@ verifyDepsBeforeRun: false
 # servers we run via `pnpm dlx`/`bunx` pinned to `@latest` (the cooldown would
 # otherwise stall every fresh release). `effect`/`sablier`/`typescript` are
 # unscoped, so a `@scope/*` glob wouldn't cover them — entries are explicit to
-# match the exact set and mirror bun (which cannot glob at all).
+# match the exact set and mirror bun (which cannot glob at all). Keep this list
+# identical to minimumReleaseAgeExcludes in ~/.config/.bunfig.toml;
+# tests/release_age_excludes.bats enforces it.
 minimumReleaseAge: 10080 # 7 days
 minimumReleaseAgeExclude:
   - "@effect-atom/atom"
@@ -27,9 +29,11 @@ minimumReleaseAgeExclude:
   - "@effect/rpc"
   - "@effect/vitest"
   - "@prb/crypto-registry"
+  - "@prb/devkit"
   - "@prb/effect-evm"
   - "@prb/effect-evm-safe"
   - "@prb/effect-next"
+  - "@prb/effect-solana"
   - "@prb/effect-xstate"
   - "@prb/math"
   - "@sablier/devkit"

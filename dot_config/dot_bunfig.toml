@@ -7,6 +7,8 @@
   # toolchain we bump often, the Effect-TS ecosystem used in sablier/new-ui, and
   # globally installed MCP servers we may bump immediately).
   # bun matches EXACT names only — no glob (oven-sh/bun#28967).
+  # Keep identical to minimumReleaseAgeExclude in ~/.config/pnpm/config.yaml;
+  # tests/release_age_excludes.bats enforces it.
   minimumReleaseAgeExcludes = [
     "@effect-atom/atom",
     "@effect-atom/atom-react",
