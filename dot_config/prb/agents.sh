@@ -5,7 +5,7 @@
 # CONSTANTS                                                                   #
 ###############################################################################
 
-CODEX_MODEL="gpt-6-astra"
+CODEX_MODEL="gpt-6.1-sol"
 
 # Lite headless Claude: skip hooks, CLAUDE.md, bundled skills, auto-memory, and
 # nonessential network traffic (~3.5x faster one-shot skill runs). Keep
@@ -31,8 +31,9 @@ CLAUDE_LITE_FLAGS=(
 # ALIASES                                                                     #
 ###############################################################################
 
-alias c="codex --profile cli"
-alias c_s="codex -m gpt-6-sol"
+alias c="codex --profile cli -m $CODEX_MODEL"
+alias c_a="codex -m gpt-6-astra"
+alias c_s="codex -m gpt-6.1-sol"
 alias c_t="codex -m gpt-6-terra"
 alias c_l="codex -m gpt-6-luna"
 alias cda="cd ~/.agents"
