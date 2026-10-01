@@ -20,13 +20,13 @@ budget.localhost {
 }
 
 # AI Handoffs: local, read-only viewer for agent task handoffs (Bun).
-# Source: ~/projects/agent-toolkit/apps/handoffs, served by the local.ai-handoffs LaunchAgent.
+# Source: ~/projects/agent-skills/toolkit/apps/handoffs, served by the local.ai-handoffs LaunchAgent.
 handoffs.localhost {
 	reverse_proxy 127.0.0.1:7777
 }
 
 # Coordination dashboard: live view of ai-coord state; proxies the ai-coord API on 127.0.0.1:4477 (Bun).
-# Source: ~/projects/agent-toolkit/apps/coord-dashboard, served by the local.ai-coord-dashboard LaunchAgent.
+# Source: ~/projects/agent-skills/toolkit/apps/coord-dashboard, served by the local.ai-coord-dashboard LaunchAgent.
 # The dashboard and API accept only loopback Host headers (DNS-rebinding guard), so forward the upstream address.
 coord.localhost {
 	reverse_proxy 127.0.0.1:4173 {

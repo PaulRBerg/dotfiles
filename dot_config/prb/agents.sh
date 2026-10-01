@@ -133,7 +133,7 @@ function ccta() {
 function _require_ai_commit() {
   if ! command -v ai-commit &>/dev/null; then
     echo "❌ Error: ai-commit is required for this command" >&2
-    echo 'Install: cargo install --git https://github.com/PaulRBerg/agent-toolkit ai-commit --locked --root "$HOME/.local"' >&2
+    echo 'Install: cargo install --git https://github.com/PaulRBerg/agent-skills ai-commit --locked --root "$HOME/.local"' >&2
     return 1
   fi
 }
