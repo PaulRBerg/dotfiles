@@ -15,5 +15,9 @@
 # Replaced by ~/.local/libexec/mcp/chrome-devtools.sh.
 .local/bin/prb_chrome_devtools_mcp
 
+# MCP clients now invoke the .sh launchers directly.
+.local/libexec/mcp/chrome-devtools
+.local/libexec/mcp/serena
+
 # Corrected source-state naming now manages ~/.vim_runtime/my_configs.vim.
 .vimruntime/my_configs.vim
