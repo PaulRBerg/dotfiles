@@ -15,4 +15,3 @@ for p in "${ports[@]}"; do
     killport "$p"
   fi
 done
-

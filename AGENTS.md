@@ -247,6 +247,9 @@ and `web3.sh`.
   under `bash -euo pipefail`.
 - **Markdown/YAML**: Prettier (`.prettierrc.yml`: `printWidth: 120`, `proseWrap: always`). Wrap prose at 120 columns.
 - **Templates**: chezmoi Go template syntax; gate OS-specific blocks with `{{ if eq .chezmoi.os ... }}`.
+- Standalone shell scripts use `.sh` (or `.sh.tmpl` for chezmoi templates). Preserve required extensionless entry points
+  with chezmoi `symlink_*` files. Shell startup files and Zsh completion definitions retain their conventional names;
+  non-shell scripts retain their language extensions.
 - Order package lists alphabetically.
 
 ## Conventions

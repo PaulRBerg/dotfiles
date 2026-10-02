@@ -12,7 +12,7 @@
 .config/chezmoi/chezmoi-service.toml
 .config/prb/bin/chezmoi-service
 
-# Replaced by ~/.local/libexec/mcp/chrome-devtools.
+# Replaced by ~/.local/libexec/mcp/chrome-devtools.sh.
 .local/bin/prb_chrome_devtools_mcp
 
 # Corrected source-state naming now manages ~/.vim_runtime/my_configs.vim.

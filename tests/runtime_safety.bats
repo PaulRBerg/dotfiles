@@ -105,7 +105,7 @@ install_fake_refresh_tools() {
 
   cd "$BATS_TEST_TMPDIR"
   run env PATH="$BATS_TEST_TMPDIR/bin:$PATH" IT2_PWD_LOG="$pwd_log" TERM=xterm \
-    bash "$REPO_ROOT/dot_config/prb/bin/executable_agents-layout" -n 1 "$target"
+    bash "$REPO_ROOT/dot_config/prb/bin/executable_agents-layout.sh" -n 1 "$target"
 
   [[ "$status" -eq 0 ]]
   [[ "$(<"$pwd_log")" == "$target" ]]
@@ -245,7 +245,7 @@ install_fake_refresh_tools() {
     /# Build Codex AGENTS.md/ { include = 1; next }
     /# Update package managers/ { include = 0 }
     include { print }
-  ' "$REPO_ROOT/executable_dot_wakeup" >"$block"
+  ' "$REPO_ROOT/executable_dot_wakeup.sh" >"$block"
 
   run env HOME="$home" PATH="$BATS_TEST_TMPDIR/bin:$PATH" bash "$block"
 
