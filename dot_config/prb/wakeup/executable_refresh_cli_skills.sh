@@ -242,6 +242,9 @@ function refresh_cli_backed_agent_skills() (
 
     skill_name="${skill_dir##*/}"
     binary="${skill_name#cli-}"
+    if [[ "$skill_name" == cli-coingecko ]]; then
+      binary=cg
+    fi
     version_file="$skill_dir/references/version.txt"
 
     if ! command -v "$binary" >/dev/null 2>&1; then

@@ -27,7 +27,8 @@ the version recorded in `references/version.txt`.
 2. Confirm the worktree is clean before editing. If it is dirty, stop and report the dirty paths.
 3. For each requested skill:
    - Confirm `skills/<cli-skill>/SKILL.md` exists.
-   - Map `cli-<name>` to binary `<name>` and confirm `<name> --version` still reports the requested version.
+   - Map `cli-<name>` to binary `<name>` (`cli-coingecko` maps to `cg`) and confirm `<name> --version` still reports the
+     requested version.
    - Read the current skill docs and references that mention versioned features, command flags, or upstream links.
    - Consult official upstream release notes, manuals, changelogs, or CLI docs for the requested version.
    - Update only stale or missing facts in the skill docs. Keep edits terse and preserve local safety rules.
