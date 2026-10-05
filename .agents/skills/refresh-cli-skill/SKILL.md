@@ -15,7 +15,7 @@ the version recorded in `references/version.txt`.
 
 ## Arguments
 
-- Accept arguments as `<cli-skill>=<version>`, for example `cli-gh=2.94.0`.
+- Accept arguments as `<cli-skill>=<version>`, for example `cli-just=1.43.0`.
 - Treat each version as an already-normalized semver with no leading `v`.
 - Stop if no valid skill/version pairs are provided.
 
