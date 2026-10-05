@@ -4,12 +4,12 @@ name: chezmoi-add-tool
 description: Add a new dependency to the macOS tool installation manifest
 ---
 
-Add the tool "$1" to the macOS package manifest. This repository supports macOS only; the historical Ubuntu setup is
-preserved on `archive/ubuntu-2026-10-05`.
+Add the tool "$1" to the macOS package manifest. This repository supports macOS only. The historical Ubuntu setup
+remains on `archive/ubuntu-2026-10-05`.
 
 **Instructions:**
 
-1. **Read the manifest and installer** to understand their structure and categorization: `dot_setup/packages.sh` and
+1. **Read the manifest and installer** to understand their structure and categories: `dot_setup/packages.sh` and
    `dot_setup/executable_tools_macos.sh` (paths relative to the repository root).
 
 2. **Determine the appropriate category** for the tool:
@@ -21,7 +21,7 @@ preserved on `archive/ubuntu-2026-10-05`.
    - Other utilities
 
 3. **Add the tool alphabetically** within its category in `MACOS_FORMULAE` or `MACOS_CASKS` in `dot_setup/packages.sh`.
-   Keep the installer thin; do not duplicate package lists there.
+   Keep the installer thin. Do not duplicate package lists there.
 
 4. **Handle special cases**:
    - If the tool requires a Homebrew tap, add it to `MACOS_TAPS` in the manifest.

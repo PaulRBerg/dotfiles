@@ -12,7 +12,8 @@ description:
 
 # Mac Efficiency Cleanup
 
-Audit macOS background load and cache sprawl first, then clean only low-risk regenerated caches with explicit approval.
+First, audit macOS background load and cache sprawl. Then, with explicit approval, clean only low-risk regenerated
+caches.
 
 This skill is coordination-exempt: skip the ai-coord gate for its declared work.
 
@@ -27,38 +28,47 @@ This skill is coordination-exempt: skip the ai-coord gate for its declared work.
 - Treat Helium as the default browser. Do not clear Helium cache by default because it may slow browsing.
 - Do not delete caches or app data that may contain login state, browsing/session context, model downloads, project
   indexes, local databases, simulator devices, wallets, chat history, or unsynced user data.
-- Shell history (atuin) records only CLI invocations: GUI apps never appear in it, so absence from history is not
+- Shell history (atuin) records only CLI invocations. GUI apps never appear in it. Thus, absence from history gives no
   evidence that an app is uninstalled. Verify install state (see "Verifying an app is actually uninstalled") before
   recommending removal of any app's `~/Library` data.
-- Treat credential-, key-, or content-bearing data as review-only even when the owning app is gone — Keybase keys,
-  GitHub Desktop/CLI tokens, browser profiles with saved passwords, notes apps, and wallet stores. Rotate any secret
-  embedded in a config (e.g. a deploy key in `~/.<tool>.json`) before deleting it.
+- Even when the owning app is gone, treat credential-, key-, or content-bearing data as review-only. This includes
+  Keybase keys, GitHub Desktop/CLI tokens, browser profiles with saved passwords, notes apps, and wallet stores. Rotate
+  any secret embedded in a config (e.g. a deploy key in `~/.<tool>.json`) before deleting it.
 - Prefer dry-run, preview, Trash, or vendor cleanup commands over raw `rm -rf`.
-- Keep secret-safe output: report sizes, paths, process names, service names, and counts; do not print environment
+- Keep output safe for secrets. Report sizes, paths, process names, service names, and counts. Do not print environment
   variables, tokens, rendered secret-backed templates, browser data, wallet data, or raw application databases.
 
 ## Verifying an app is actually uninstalled
 
-Before flagging any `~/Library` data (Application Support, Containers, Group Containers, Caches, Saved Application
-State) for removal, prove the owning app is gone. A single signal is not enough, and false "not installed" verdicts lead
-to deleting live app data.
+Before marking any `~/Library` data for removal, prove the owning app is gone. This includes Application Support,
+Containers, Group Containers, Caches, and Saved Application State. A single signal is not enough. False "not installed"
+verdicts lead to deletion of live app data.
 
-- Check every app location, not just `/Applications`: also `~/Applications` (user-scoped apps), vendor subfolders such
-  as `/Applications/Adobe/Adobe Acrobat DC`, Safari extension bundles under `/Applications/Safari/*.app` (e.g. AdBlock,
-  PayPal Honey), `/System/Applications`, and `/Applications/Setapp`.
-- Authoritative lookup by name: `mdfind -name "<AppName>" | grep -i '\.app/\?$'`, then cross-check the data dir's bundle
-  id (`com.vendor.App`) against the result.
-- `mdfind` predicate gotcha: comparison modifiers must be lowercase — `kMDItemDisplayName == '*X*'cd`. An uppercase `C`
-  silently voids the filter and returns every indexed app, so an identical "match" for every name you test is the
-  failure signature. Sanity-check that different names return different results.
-- `brew list --cask` absence alone is insufficient — apps are frequently installed outside Homebrew (direct download,
-  Mac App Store).
-- Calibrate "unused" against the history window: read `min`/`max(timestamp)` from atuin first; "0 hits" means "not in
+- Check every app location, not just `/Applications`. Also check `~/Applications` (user-scoped apps), vendor subfolders
+  such as `/Applications/Adobe/Adobe Acrobat DC`, Safari extension bundles under `/Applications/Safari/*.app` (e.g.
+  AdBlock, PayPal Honey), `/System/Applications`, and `/Applications/Setapp`.
+- For an authoritative lookup by name, use `mdfind -name "<AppName>" | grep -i '\.app/\?$'`. Then cross-check the data
+  directory's bundle id (`com.vendor.App`) against the result.
+- `mdfind` predicate warning: comparison modifiers must be lowercase, as in `kMDItemDisplayName == '*X*'cd`. An
+  uppercase `C` silently voids the filter and returns every indexed app, so an identical "match" for every name you test
+  is the failure signature. Sanity-check that different names return different results.
+- Absence from `brew list --cask` alone is insufficient. Apps are frequently installed outside Homebrew (direct
+  download, Mac App Store).
+- Calibrate "unused" against the history window. First, read `min`/`max(timestamp)` from atuin. "0 hits" means "not in
   the recorded window," not "never used."
 
-Cautionary example: in one audit a naive `/Applications`-plus-history check falsely reported Warp, WarpPreview,
-MyCrypto, Topaz Photo AI, Adobe Acrobat/Creative Cloud, AdBlock and PayPal Honey (Safari extensions), Tor Browser, and
-Trader Workstation (in `~/Applications`) as "not installed" — every one was present. Verify before recommending removal.
+Cautionary example: in one audit, a naive `/Applications`-plus-history check gave a false "not installed" result for
+these apps. Every one was present:
+
+- Warp and WarpPreview.
+- MyCrypto.
+- Topaz Photo AI.
+- Adobe Acrobat/Creative Cloud.
+- AdBlock and PayPal Honey (Safari extensions).
+- Tor Browser.
+- Trader Workstation (in `~/Applications`).
+
+Verify before recommending removal.
 
 ## Cleanup Policy
 
@@ -68,7 +78,7 @@ Trader Workstation (in `~/Applications`) as "not installed" — every one was pr
   and app support folders.
 - Never automatic: Helium browsing cache, browser profiles, Google Drive data, wallet/crypto app data, editor workspace
   storage, Cursor/VSCode history, 1Password data, chat/app histories, and model stores.
-- Use `mac-cleanup-go` only in preview-first mode. Any selected deletion must be confirmed manually.
+- Use `mac-cleanup-go` only in preview-first mode. Any selected deletion requires manual confirmation.
 
 ## Workflow
 
@@ -78,10 +88,10 @@ Trader Workstation (in `~/Applications`) as "not installed" — every one was pr
    .agents/skills/mac-efficiency-cleanup/scripts/audit.sh
    ```
 
-2. Summarize measured pressure before recommending changes: cache roots, Homebrew cleanup preview, memory pressure, top
+2. Before recommending changes, summarize measured pressure: cache roots, Homebrew cleanup preview, memory pressure, top
    CPU/RSS processes, `brew services`, `sfltool dumpbtm`, and LaunchAgent/LaunchDaemon registrations.
-3. Decide on-demand vs always-on only from audit evidence for Docker, Nix, WARP, Zoom, Google Drive, BetterTouchTool
-   helper, Karabiner, Atuin, SleepWatcher, and CleanMyMac helpers.
+3. For Docker, Nix, WARP, Zoom, Google Drive, BetterTouchTool helper, Karabiner, Atuin, SleepWatcher, and CleanMyMac
+   helpers, decide on-demand vs always-on only from audit evidence.
 4. Keep Raycast, 1Password, AlDente, Atuin, SleepWatcher, BetterTouchTool, and WARP unless a measured issue justifies
    changing them.
 5. Remove only stale helper registrations or tools the audit proves unused. Prefer disabling through the vendor app,
@@ -103,5 +113,5 @@ Trader Workstation (in `~/Applications`) as "not installed" — every one was pr
 - `scripts/audit.sh`: Non-destructive macOS audit for cache sizes, Homebrew cleanup preview, brew services, launch
   agents, login/background items, memory pressure, top CPU processes, and top RSS processes.
 - `scripts/cleanup-safe.sh --dry-run`: Print the safe cleanup commands and run dry-run-capable previews only.
-- `scripts/cleanup-safe.sh --execute`: Prompt for exact confirmation, then attempt every requested low-risk regenerated
+- `scripts/cleanup-safe.sh --execute`: Prompt for exact confirmation. Then attempt every requested low-risk regenerated
   cache cleanup and exit nonzero if any action fails.

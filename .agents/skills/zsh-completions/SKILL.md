@@ -1,7 +1,7 @@
 ---
+argument-hint: <tool-name>
 name: zsh-completions
 description: Add custom zsh completions for a tool.
-argument-hint: <tool-name>
 ---
 
 Add or update completions for the tool "$1".
@@ -37,7 +37,7 @@ Steps:
    mv _${1} "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/${1}/_${1}"
    ```
 
-   Add `${1}` to the `plugins=(...)` list in your `.zshrc` if you use Option B.
+   If you use Option B, add `${1}` to the `plugins=(...)` list in your `.zshrc`.
 
 3. Reload completions.
 
@@ -48,5 +48,9 @@ Steps:
 
 Notes:
 
-- Completion files must be named `_${tool}` to be discovered.
+- For Zsh to discover completion files, you must name them `_${tool}`.
 - If the tool has no generator, write `_tool` manually using zsh completion functions.
+
+## Completion
+
+Completion means you placed the requested tool's completion file in the selected directory and reloaded Zsh completions.
