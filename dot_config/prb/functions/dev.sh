@@ -120,34 +120,50 @@ function upgrade_go_globals() {
 # profiles (Chromium-family profiles unpack extensions under Extensions/).
 # Usage: clean_node_modules [root...]
 function clean_node_modules() {
-  local roots=() root dirs dir found=()
+  local roots=() root dirs dir found=() tilde='~' tab=$'\t'
   for root in "${@:-$HOME}"; do
     # find matches -path against the root's spelling, so make roots absolute.
     root=$(cd -- "$root" && pwd) || return 1
     roots+=("$root")
   done
 
-  dirs=$(find "${roots[@]}" \
+  local shown=("${roots[@]/#"$HOME"/$tilde}")
+  # gum spin passes the child's stderr through, so silence find's permission
+  # errors inside sh; `|| true` drops the nonzero status they cause.
+  dirs=$(gum spin --show-stdout --title "Scanning ${shown[*]} for node_modules..." -- \
+    sh -c 'find "$@" 2>/dev/null || true' sh "${roots[@]}" \
     \( -path "$HOME/.*" -o -path "$HOME/Library" -o -path /opt/homebrew -o -path /usr -o -name '*.app' -o -name Extensions \) -prune \
-    -o -type d -name node_modules -print -prune 2>/dev/null)
+    -o -type d -name node_modules -print -prune) || return 1
 
   while IFS= read -r dir; do
     [[ -n "$dir" ]] && found+=("$dir")
   done <<<"$dirs"
 
-  if ((${#found[@]} == 0)); then
+  local count=${#found[@]}
+  if ((count == 0)); then
     echo "No node_modules folders found."
     return 0
   fi
 
-  du -shc -- "${found[@]}"
+  local sizes total
+  sizes=$(gum spin --show-stdout --title "Measuring $count node_modules folders..." -- du -shc -- "${found[@]}") || return 1
+  total=$(tail -n 1 <<<"$sizes" | cut -f 1)
+  # Show paths under $HOME as ~/...
+  printf '%s\n' "${sizes//"$tab$HOME"/$tab$tilde}"
 
-  local reply
-  printf 'Delete these %d node_modules folders? [y/N] ' "${#found[@]}"
-  read -r reply
-  [[ "$reply" == [yY] ]] || return 0
+  gum confirm "Delete these $count node_modules folders ($total)?" || return 0
 
-  rm -rf -- "${found[@]}"
+  local i=0 failed=0
+  for dir in "${found[@]}"; do
+    ((++i))
+    gum spin --title "Deleting [$i/$count] ${dir/#"$HOME"/$tilde}" -- rm -rf -- "$dir" || ((++failed))
+  done
+
+  if ((failed > 0)); then
+    echo "Deleted $((count - failed))/$count node_modules folders; $failed failed." >&2
+    return 1
+  fi
+  echo "Deleted $count node_modules folders, freeing $total."
 }
 
 # Copy Chromium browser profile while excluding files specific to one browser or system
