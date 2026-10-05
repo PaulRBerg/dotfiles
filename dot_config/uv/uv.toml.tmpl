@@ -9,5 +9,7 @@ python-preference = "only-managed"
 # ago, in every resolver (`uv tool upgrade`, `uvx`, `uv lock`, `uv pip`).
 # Override per invocation when a fresh release is needed now:
 #   uv tool upgrade <pkg> --exclude-newer "0 days"
-# Exempt individual packages with `exclude-newer-package = { <name> = "0 days" }`.
 exclude-newer = "7 days"
+# Exempt packages that need no cooldown. ruff comes from Astral, the vendor whose
+# `uv self update` runs without one, and releases weekly.
+exclude-newer-package = { ruff = "0 days" }
