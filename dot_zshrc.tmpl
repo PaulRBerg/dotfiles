@@ -45,9 +45,9 @@ SAVEHIST=50000
 DISABLE_MAGIC_FUNCTIONS="true"
 
 # Load custom functions
-# shellcheck disable=SC2206
+# shellcheck disable=SC2034 # zsh ties fpath and FPATH.
 typeset -gU fpath FPATH
-fpath=("$USER_DIR/zfunc" "$HOME/.zfunc" $fpath)
+fpath=("$USER_DIR/zfunc" "$HOME/.zfunc" "${fpath[@]}")
 
 # Keep compdump stable and skip compaudit for faster startup
 export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/compdump-${ZSH_VERSION}"
@@ -110,6 +110,7 @@ zstyle ":fzf-tab:complete:git-checkout:argument-rest:*" fzf-preview "git log --o
 zstyle ":fzf-tab:complete:git-switch:argument-rest:*" fzf-preview "git log --oneline --graph --color=always -20 \$word --"
 
 # Don't auto-set the terminal title (defaults to user@hostname:cwd); let the terminal manage it
+# shellcheck disable=SC2034 # Read by Oh My Zsh.
 DISABLE_AUTO_TITLE="true"
 
 # Clear any stale window title on return to the prompt. Some tools set it via OSC 0
@@ -142,12 +143,10 @@ if command -v zoxide &>/dev/null; then
   eval "$(zoxide init zsh)"
 fi
 
-{{- if eq .chezmoi.os "darwin" }}
 # Atuin - enhanced shell history with sync (must be after oh-my-zsh)
 if command -v atuin &>/dev/null; then
   eval "$(atuin init zsh)"
 fi
-{{- end }}
 
 # Television widgets: Ctrl-X Ctrl-F file, Ctrl-X Ctrl-D directory,
 # Ctrl-X Ctrl-R repo, Ctrl-X Ctrl-B branch, Ctrl-X Ctrl-J just recipe.
@@ -174,9 +173,7 @@ bindkey '^Z' undo
 [[ -s "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun" ]] && source "${BUN_INSTALL:-$HOME/.local/share/bun}/_bun"
 
 # Google Cloud SDK completions
-{{- if eq .chezmoi.os "darwin" }}
 [[ -s "$HOME/.local/share/google-cloud-sdk/completion.zsh.inc" ]] && source "$HOME/.local/share/google-cloud-sdk/completion.zsh.inc"
-{{- end }}
 
 # Starship prompt (must be last)
 if command -v starship &>/dev/null; then
@@ -207,7 +204,7 @@ if command -v starship &>/dev/null; then
     else
       zle .accept-line
     fi
-    return ret
+    return "$ret"
   }
   zle -N zle-line-init
 fi

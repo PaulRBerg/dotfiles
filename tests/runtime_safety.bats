@@ -15,14 +15,8 @@ write_executable() {
   chmod +x "$destination"
 }
 
-render_symlinks_for_macos() {
-  awk '
-    BEGIN { include = 1 }
-    /{{- if eq \.chezmoi\.os "darwin" }}/ { include = 1; next }
-    /{{- else if eq \.chezmoi\.os "linux" }}/ { include = 0; next }
-    /{{- end }}/ { include = 1; next }
-    include { print }
-  ' "$REPO_ROOT/dot_config/prb/functions/symlinks.sh.tmpl" >"$BATS_TEST_TMPDIR/symlinks.sh"
+copy_symlinks_functions() {
+  cp "$REPO_ROOT/dot_config/prb/functions/symlinks.sh.tmpl" "$BATS_TEST_TMPDIR/symlinks.sh"
 }
 
 setup_agent_skills_remote() {
@@ -113,7 +107,7 @@ install_fake_refresh_tools() {
 }
 
 @test "deref moves a relative file target and creates the reverse symlink" {
-  render_symlinks_for_macos
+  copy_symlinks_functions
   mkdir -p "$BATS_TEST_TMPDIR/links" "$BATS_TEST_TMPDIR/data"
   printf 'payload\n' >"$BATS_TEST_TMPDIR/data/target.txt"
   ln -s ../data/target.txt "$BATS_TEST_TMPDIR/links/item"
@@ -128,7 +122,7 @@ install_fake_refresh_tools() {
 }
 
 @test "deref supports directory targets" {
-  render_symlinks_for_macos
+  copy_symlinks_functions
   mkdir -p "$BATS_TEST_TMPDIR/links" "$BATS_TEST_TMPDIR/data/target"
   printf 'payload\n' >"$BATS_TEST_TMPDIR/data/target/file"
   ln -s ../data/target "$BATS_TEST_TMPDIR/links/item"
@@ -142,7 +136,7 @@ install_fake_refresh_tools() {
 }
 
 @test "deref restores the original state when reverse-link creation fails" {
-  render_symlinks_for_macos
+  copy_symlinks_functions
   mkdir -p "$BATS_TEST_TMPDIR/links" "$BATS_TEST_TMPDIR/data"
   printf 'payload\n' >"$BATS_TEST_TMPDIR/data/target.txt"
   ln -s ../data/target.txt "$BATS_TEST_TMPDIR/links/item"

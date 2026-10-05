@@ -1,12 +1,11 @@
+{{- if ne .chezmoi.os "darwin" -}}
+{{- fail "This branch supports macOS only; use archive/ubuntu-2026-10-05 for Ubuntu." -}}
+{{- end -}}
 # Rendered by `chezmoi init` from .chezmoi.toml.tmpl.
 # Edit the template in the chezmoi source dir, not ~/.config/chezmoi/chezmoi.toml.
 
 [data.chezmoi]
-{{- if eq .chezmoi.os "darwin" }}
   hostname = "personal"
-{{- else }}
-  hostname = "aws"
-{{- end }}
 
 [onepassword]
   mode = "account"

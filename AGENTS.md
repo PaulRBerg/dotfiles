@@ -1,6 +1,9 @@
 # Development Instructions
 
-Guidelines for AI agents and developers working on this dotfiles repository.
+Guidelines for AI agents and developers working on this macOS-only dotfiles repository.
+
+Ubuntu support is frozen on `archive/ubuntu-2026-10-05`. Maintain only macOS on `main`; do not add Linux alternatives or
+require cross-platform validation. Both chezmoi init and apply reject non-macOS hosts.
 
 ## Stack
 
@@ -12,7 +15,7 @@ Guidelines for AI agents and developers working on this dotfiles repository.
 - **Prettier** — formats Markdown/YAML. **ShellCheck** + **shfmt** lint and format shell.
 - **Gitleaks** — scans the current tree and Git history for committed secrets.
 - **1Password CLI** (`op`) — secret injection in templates via `onepasswordRead`.
-- **Homebrew** (macOS) / **APT + Snap** (Ubuntu) — package provisioning.
+- **Homebrew** — package provisioning.
 
 ## Commands
 
@@ -48,8 +51,6 @@ an `apply --source-path` — it fails with `not managed`.
 ### Provisioning
 
 - macOS: `~/.setup/tools_macos.sh` (Homebrew)
-- Ubuntu: `~/.setup/tools_ubuntu.sh` (APT/Snap); also installs `shellcheck` and `shfmt` for local validation
-- Fresh Ubuntu: run `./bootstrap_ubuntu.sh` once from the source dir — installs snapd + chezmoi, then runs init + apply
 
 ### Validation (before committing)
 
@@ -75,7 +76,7 @@ Layout:
 | `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                                      |
 | `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`                  |
 | `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                              |
-| `dot_config/prb/bin/`                   | Portable shims (`pbcopy`/`pbpaste`), added to `PATH`                   |
+| `dot_config/prb/bin/`                   | Shell utilities, added to `PATH`                                       |
 | `Library/LaunchAgents/`                 | macOS user agents                                                      |
 | `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                                     |
 | `dot_config/caddy/`                     | Caddyfile for named `*.localhost` HTTPS domains (macOS; `local.caddy`) |
@@ -84,57 +85,34 @@ Layout:
 | `dot_setup/packages.sh`                 | Shared package manifest — source of truth                              |
 | `dot_setup/lib/common.sh`               | Shared setup helpers                                                   |
 | `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)                 |
-| `.chezmoiignore.tmpl`                   | Per-OS exclusions during apply                                         |
-| `bootstrap_ubuntu.sh`                   | Fresh-Ubuntu bootstrap (repo root; ignored by chezmoi)                 |
+| `.chezmoiignore.tmpl`                   | Development-file exclusions and macOS guard                            |
 | `justfile`                              | Task runner                                                            |
 
 ### Shell Startup Order
 
 1. `~/.zshenv` — set XDG base dirs; prepend `~/.local/bin`.
 2. `~/.config/prb/env_core.sh` — path-critical env (sourced first in `.zshrc`).
-3. `~/.config/prb/path.sh` — build `PATH` (adds `~/.config/prb/bin`, `~/.setup`, and per-OS paths).
+3. `~/.config/prb/path.sh` — build `PATH` (adds `~/.config/prb/bin`, `~/.setup`, and macOS paths).
 4. Tracked modules, in order: `agents.sh`, `aliases.sh`, `web3.sh`, `functions.sh`, `gh.sh`, `env_session.sh`,
    `shims.sh`.
-5. Oh My Zsh, then tool init: zoxide, fnm, atuin (macOS), fzf, Starship (last).
+5. Oh My Zsh, then tool init: zoxide, fnm, atuin, fzf, Starship (last).
 
 `~/.config/prb/load_env.sh` remains a compatibility wrapper for manual sourcing; the boot path uses `env_core.sh` before
 `path.sh`.
 
-## Cross-Platform Patterns
-
-Maintain compatibility between macOS and Linux: changes should work after `chezmoi init` and a subsequent
-`chezmoi apply` on both platforms. Test on both when possible.
-
-### chezmoi templates
-
-Gate platform-specific code with template conditionals:
-
-```sh
-{{- if eq .chezmoi.os "darwin" }}
-# macOS-specific code
-pbcopy
-{{- else if eq .chezmoi.os "linux" }}
-# Linux-specific code
-xclip -selection clipboard
-{{- end }}
-```
+## macOS Patterns
 
 ### Tool installation
 
-- [`dot_setup/packages.sh`](dot_setup/packages.sh) — shared manifest, **source of truth**.
-- [`dot_setup/executable_tools_macos.sh`](dot_setup/executable_tools_macos.sh) — Homebrew packages.
-- [`dot_setup/executable_tools_ubuntu.sh`](dot_setup/executable_tools_ubuntu.sh) — APT/Snap packages.
+- [`dot_setup/packages.sh`](dot_setup/packages.sh) — package manifest, **source of truth**.
+- [`dot_setup/executable_tools_macos.sh`](dot_setup/executable_tools_macos.sh) — Homebrew installer.
 
-Keep installers thin and platform-specific; source `packages.sh` rather than duplicating lists. When adding tools:
-
-1. Add to the right category (alphabetically) in `packages.sh` first.
-2. Ensure equivalent packages in both installers if cross-platform.
-3. Note package-name differences (e.g. `bat` on macOS vs `batcat` on Ubuntu).
+Keep the installer thin; source `packages.sh` rather than duplicating lists. Add tools alphabetically to the appropriate
+category in `MACOS_FORMULAE`, `MACOS_CASKS`, or `MACOS_TAPS`.
 
 ### Clipboard
 
-Portable `pbcopy`/`pbpaste` shims live in `dot_config/prb/bin/` (on `PATH`). Shell functions and git aliases call them
-directly, so clipboard workflows work on macOS and Linux without per-OS aliases.
+Shell functions and Git aliases use the native macOS `pbcopy` and `pbpaste` commands.
 
 ### Local HTTPS domains (macOS only)
 
@@ -246,8 +224,7 @@ If `chezmoi apply` prompts for the account password, check the 1Password desktop
 repo back to service-account mode.
 
 Review secret-backed and machine-specific templates before applying on a new machine:
-`dot_config/prb/load_env_macos.sh.tmpl`, `load_env_linux.sh.tmpl`, `aliases/locations.sh`, `path_macos.sh`, `agents.sh`,
-and `web3.sh`.
+`dot_config/prb/load_env_macos.sh.tmpl`, `aliases/locations.sh`, `path_macos.sh`, `agents.sh`, and `web3.sh`.
 
 ## Secrets
 
@@ -266,7 +243,7 @@ and `web3.sh`.
 - **Shell**: `shfmt` + ShellCheck (`.shellcheckrc`). Run `just shell-write` then `just shell-check`. Recipes execute
   under `bash -euo pipefail`.
 - **Markdown/YAML**: Prettier (`.prettierrc.yml`: `printWidth: 120`, `proseWrap: always`). Wrap prose at 120 columns.
-- **Templates**: chezmoi Go template syntax; gate OS-specific blocks with `{{ if eq .chezmoi.os ... }}`.
+- **Templates**: use chezmoi Go template syntax for machine data and secrets; macOS code needs no per-OS branch.
 - Standalone shell scripts use `.sh` (or `.sh.tmpl` for chezmoi templates). Preserve required extensionless entry points
   with chezmoi `symlink_*` files. Shell startup files and Zsh completion definitions retain their conventional names;
   non-shell scripts retain their language extensions.

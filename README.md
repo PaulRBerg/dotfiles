@@ -1,10 +1,14 @@
 # Dotfiles
 
 [![Managed with chezmoi](https://img.shields.io/badge/managed%20with-chezmoi-18a303)](https://chezmoi.io)
-![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Linux-555)
+![Platform](https://img.shields.io/badge/platform-macOS-555)
 
-Cross-platform dotfiles managed with [chezmoi](https://chezmoi.io). One tracked source tree provisions a consistent Zsh
-environment — aliases, functions, helper utilities, secret-backed env templates, and tooling — across macOS and Linux.
+macOS dotfiles managed with [chezmoi](https://chezmoi.io): Zsh, aliases, functions, helper utilities, secret-backed env
+templates, and tooling.
+
+The last dual macOS/Ubuntu setup is preserved on
+[`archive/ubuntu-2026-10-05`](https://github.com/PaulRBerg/dotfiles/tree/archive/ubuntu-2026-10-05). Ubuntu provisioning
+and its setup instructions live on that frozen branch; `main` supports macOS only.
 
 ## Links
 
@@ -95,21 +99,6 @@ chicken-and-egg failures.
 
 7. Verify everything: `chezmoi cd && just doctor` — checks required commands, PATH health, a dry-run apply, rendered
    templates, and lint.
-
-### Ubuntu
-
-1. Install `git`, restore the GitHub SSH key to `~/.ssh/github/key.pem` (the bootstrap clones over SSH), and clone the
-   repo.
-2. Run the bootstrap once from the clone — it installs snapd, Zsh, Oh My Zsh, and chezmoi, runs `chezmoi init`, and
-   clones the standard project directories:
-
-   ```sh
-   sudo ./bootstrap_ubuntu.sh
-   ```
-
-3. Apply (no 1Password dependency on Linux): `chezmoi apply`
-4. Install the CLI toolset: `sudo ~/.setup/tools_ubuntu.sh`
-5. Log out and back in so Zsh becomes the login shell.
 
 ## Contributing
 

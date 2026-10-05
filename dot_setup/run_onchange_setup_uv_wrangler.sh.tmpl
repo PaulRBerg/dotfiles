@@ -3,7 +3,6 @@
 # macOS only. Idempotent: rebuilds only when the venv is missing or on the
 # wrong interpreter; the kernelspec is refreshed on every content change.
 # shellcheck disable=SC2034
-{{- if eq .chezmoi.os "darwin" }}
 
 set -euo pipefail
 
@@ -60,6 +59,3 @@ cat >"$KERNEL_DIR/kernel.json" <<JSON
 JSON
 
 log_success "Data Wrangler kernel registered"
-{{- else }}
-exit 0
-{{- end }}

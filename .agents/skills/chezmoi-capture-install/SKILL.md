@@ -6,14 +6,14 @@ user-invocable: true
 description:
   Capture global dotfile changes made by a CLI installer into the chezmoi source, then commit. Use after an installer
   (curl pipe to sh, npm -g, brew, etc.) edits shell rc files or PATH. Pass the install command as the argument; the
-  skill runs it, diffs what changed, ports only the portable edits into the chezmoi source templates, confirms anything
+  skill runs it, diffs what changed, ports only the durable edits into the chezmoi source templates, confirms anything
   ambiguous, then commits.
 ---
 
 # chezmoi-capture-install
 
 Run a CLI installer, figure out what it changed in the global dotfiles, fold the durable parts into the chezmoi source
-(portably), and commit. The argument `$ARGUMENTS` is the full install command, e.g.
+for macOS, and commit. The argument `$ARGUMENTS` is the full install command, e.g.
 `curl -fsSL https://pi.dev/install.sh | sh`.
 
 Operate from the chezmoi source directory (`chezmoi cd`). chezmoi manages the target dotfiles, so its own
@@ -54,13 +54,14 @@ appended (PATH line, `source` line, etc.). Treat that output as the first clue, 
 
 Port intent, not literal lines. Repo-specific rules:
 
-- **PATH additions** → add a portable entry to [`dot_config/prb/path.sh.tmpl`](dot_config/prb/path.sh.tmpl) using the
-  existing `add_path "$HOME/.tool/bin"` idiom (Cross-Machine section, or an OS section if platform-specific). Do **not**
-  copy raw `export PATH=...` lines, and never bake in an absolute `/Users/<user>` path or a version-pinned directory
-  (e.g. an fnm `node-versions/vX.Y.Z` bin) — those break on another machine or after a version bump.
+- **PATH additions** → add a home-relative entry to [`dot_config/prb/path.sh.tmpl`](dot_config/prb/path.sh.tmpl) using
+  the existing `add_path "$HOME/.tool/bin"` idiom (Cross-Machine section, or `path_macos.sh` for Homebrew and macOS
+  tools). Do **not** copy raw `export PATH=...` lines, and never bake in an absolute `/Users/<user>` path or a
+  version-pinned directory (e.g. an fnm `node-versions/vX.Y.Z` bin) — those break on another machine or after a version
+  bump.
 - **Other rc edits** (shell init, `source` lines, completions) → port into the matching source template. Resolve it with
-  `chezmoi source-path <target>` (e.g. `~/.zshrc` → `dot_zshrc.tmpl`). Gate OS-specifics with
-  `{{ if eq .chezmoi.os "darwin" }} … {{ end }}`.
+  `chezmoi source-path <target>` (e.g. `~/.zshrc` → `dot_zshrc.tmpl`). The repository supports macOS only; no OS guard
+  is needed.
 - **New config files worth tracking** → `chezmoi add <file>` (ask first — see step 5).
 - **Redundant or fragile edits** → drop them. If the tool is already reachable (already on PATH via an existing block,
   or exposed by a version manager like fnm/asdf without an rc edit), the installer's line is noise. Discard it with
@@ -71,8 +72,8 @@ Port intent, not literal lines. Repo-specific rules:
 ### 5. Confirm when anything is ambiguous
 
 Stop and ask the user before changing source if any of these hold: the edit conflicts with existing config, it carries a
-secret, it is platform-specific and you are unsure which OS guard applies, it pins a version or absolute path, the right
-target template is unclear, or you cannot tell whether a new file should be tracked. Otherwise proceed.
+secret, it pins a version or absolute path, the right target template is unclear, or you cannot tell whether a new file
+should be tracked. Otherwise proceed.
 
 ### 6. Validate
 

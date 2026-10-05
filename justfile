@@ -92,8 +92,10 @@ doctor:
     echo "== required commands =="
     missing=0
     required=(
+        caddy
         chezmoi
         delta
+        difft
         direnv
         fd
         fnm
@@ -104,19 +106,13 @@ doctor:
         just
         nlx
         nvim
+        plutil
         prettier
         shellcheck
         shfmt
         taplo
         zsh
     )
-    if [[ "$(uname -s)" == "Darwin" ]]; then
-        required+=(caddy)
-        required+=(difft)
-        required+=(plutil)
-    else
-        required+=(plistutil)
-    fi
     for cmd in "${required[@]}"; do
         if command -v "$cmd" >/dev/null 2>&1; then
             printf 'ok  %s\n' "$cmd"
@@ -125,13 +121,6 @@ doctor:
             missing=1
         fi
     done
-    if [[ "$(uname -s)" != "Darwin" ]]; then
-        if command -v difft >/dev/null 2>&1; then
-            printf 'ok  %s\n' difft
-        else
-            printf 'optional  %s (not in standard Ubuntu apt)\n' difft
-        fi
-    fi
     if ((missing != 0)); then
         exit 1
     fi
@@ -239,13 +228,8 @@ _plist:
         ;;
     esac
 
-    formatter=""
-    if command -v plutil >/dev/null 2>&1; then
-        formatter=plutil
-    elif command -v plistutil >/dev/null 2>&1; then
-        formatter=plistutil
-    else
-        echo "missing plist formatter: install Xcode Command Line Tools (plutil) or libplist-utils (plistutil)" >&2
+    if ! command -v plutil >/dev/null 2>&1; then
+        echo "missing plist formatter: install Xcode Command Line Tools (plutil)" >&2
         exit 1
     fi
 
@@ -254,31 +238,17 @@ _plist:
     tmpdir=$(mktemp -d)
     trap 'rm -rf "$tmpdir"' EXIT
 
-    format_plist() {
-        local file="$1"
-        local output="$2"
-
-        case "$formatter" in
-        plutil)
-            plutil -convert xml1 -o "$output" "$file"
-            ;;
-        plistutil)
-            plistutil -i "$file" -f xml -o "$output"
-            ;;
-        esac
-    }
-
     while IFS= read -r -d '' file; do
         found=1
         case "$mode" in
         check)
-            if [[ "$formatter" == "plutil" ]] && ! plutil -lint "$file" >/dev/null; then
+            if ! plutil -lint "$file" >/dev/null; then
                 status=1
                 continue
             fi
 
             tmp=$(mktemp "$tmpdir/plist.XXXXXX")
-            if ! format_plist "$file" "$tmp"; then
+            if ! plutil -convert xml1 -o "$tmp" "$file"; then
                 status=1
                 continue
             fi
@@ -288,19 +258,7 @@ _plist:
             fi
             ;;
         write)
-            case "$formatter" in
-            plutil)
-                plutil -convert xml1 "$file" || status=1
-                ;;
-            plistutil)
-                tmp=$(mktemp "$tmpdir/plist.XXXXXX")
-                if plistutil -i "$file" -f xml -o "$tmp"; then
-                    cp "$tmp" "$file"
-                else
-                    status=1
-                fi
-                ;;
-            esac
+            plutil -convert xml1 "$file" || status=1
             ;;
         esac
     done < <(fd -HI -0 -e plist .)

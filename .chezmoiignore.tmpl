@@ -1,3 +1,6 @@
+{{- if ne .chezmoi.os "darwin" -}}
+{{- fail "This branch supports macOS only; use archive/ubuntu-2026-10-05 for Ubuntu." -}}
+{{- end -}}
 # Development directories
 .agents/skills/
 .ai/
@@ -12,41 +15,9 @@ node_modules/
 .prettierignore
 .prettierrc.yml
 .shellcheckrc
-bootstrap_ubuntu.sh
 justfile
 LICENSE
 README.md
 taplo.toml
 tests/
 .config/iterm2/com.googlecode.iterm2.plist
-
-# the following files are macOS only
-{{- if ne .chezmoi.os "darwin" }}
-*macos.sh
-.actrc
-.biome/
-.docker/config.json
-.npkillrc
-.setup/setup_biome.sh
-.setup/setup_dutix.sh
-.setup/load_launchagents.sh
-.config/caddy/
-.config/iterm2/
-.config/karabiner/
-.config/launchd-dashboard/
-.setup/start_sleepwatcher.sh
-.sleep
-.sleep.sh
-.ssh/
-.vscode/
-.wakeup
-.wakeup.sh
-Library/
-{{- end }}
-
-# the following files are Linux only
-{{- if ne .chezmoi.os "linux" }}
-*ubuntu.sh
-.config/prb/bin/pbcopy.sh
-.config/prb/bin/pbpaste.sh
-{{- end }}

@@ -197,11 +197,9 @@
     changed = green
     untracked = cyan
 
-{{- if eq .chezmoi.os "darwin" }}
 [commit]
     # Sign commits with the local SSH key.
     gpgsign = true
-{{- end }}
 
 [core]
     # Use custom `.gitattributes`.
@@ -223,11 +221,9 @@
     # Use delta for diffs.
     pager = delta
 
-{{- if eq .chezmoi.os "darwin" }}
     # Prevent showing files whose names contain non-ASCII symbols as unversioned.
     # http://michael-kuehnel.de/git/2014/11/21/git-mac-osx-and-german-umlaute.html
     precomposeUnicode = true
-{{- end }}
 
     # Make `git rebase` safer on macOS.
     # More info: <http://www.git-tower.com/blog/make-git-rebase-safe-on-osx/>
@@ -249,18 +245,8 @@
 # Curated here rather than left to `gh auth setup-git`, whose writes land in the
 # unmanaged ~/.gitconfig and never reach other machines.
 [credential]
-{{- if eq .chezmoi.os "darwin" }}
     # Store credentials in the macOS keychain.
     helper = osxkeychain
-{{- else if lookPath "git-credential-libsecret" }}
-    # Store credentials in the freedesktop.org secret service.
-    helper = libsecret
-{{- else }}
-    # No secret-service helper on PATH. Cache in memory rather than fall back to
-    # `store`, which writes credentials to disk in plaintext. Install
-    # git-credential-libsecret and re-apply to upgrade.
-    helper = cache --timeout=86400
-{{- end }}
 
 [delta]
     line-numbers = true
@@ -278,10 +264,8 @@
     # Detect copies as well as renames.
     renames = copies
 
-{{- if eq .chezmoi.os "darwin" }}
     # Make difftool the default conflict resolving tool.
     tool = opendiff
-{{- end }}
 
 [diff "bin"]
     # Use `hexdump` to diff binary files.
@@ -318,10 +302,8 @@
     # Include summaries of merged commits in newly created merge commit messages.
     log = true
 
-{{- if eq .chezmoi.os "darwin" }}
     # Make difftool the default merging tool.
     tool = opendiff
-{{- end }}
 
 # Registers mergiraf as a selectable merge driver; dot_config/git/attributes
 # opts files into it. https://mergiraf.org
@@ -393,10 +375,8 @@
     email = prberg@proton.me
     name = Paul Berg
 
-{{- if eq .chezmoi.os "darwin" }}
 [gpg]
     format = ssh
 
 [user]
     signingKey = ~/.ssh/github/key.pub
-{{- end }}

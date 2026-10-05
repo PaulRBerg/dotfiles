@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 # Enforce the login shell. macOS sets this in Directory Services (not a dotfile),
 # so chezmoi can only converge it via this run_onchange_ script.
-#
-# macOS only: the _macos.sh suffix matches the `*macos.sh` rule in
-# .chezmoiignore.tmpl, so chezmoi skips this entirely on Linux.
 # shellcheck disable=SC2034  # SCRIPT_NAME is consumed by common.sh's LOG_PREFIX
 
 readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
