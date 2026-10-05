@@ -41,3 +41,7 @@ preserved on `archive/ubuntu-2026-10-05`.
 
 - `/chezmoi-add-tool ripgrep`
 - `/chezmoi-add-tool duti`
+
+## Completion
+
+Report the added package, changed files, and validation results. State whether installation was run or only configured.

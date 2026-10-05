@@ -84,3 +84,8 @@ should be tracked. Otherwise proceed.
 ### 7. Commit
 
 Invoke `/commit` to stage and commit the chezmoi source changes. Add `--push` only if the user asks.
+
+## Completion
+
+Report the captured changes, validation and apply results, and commit outcome. Identify any unresolved installer
+changes.
