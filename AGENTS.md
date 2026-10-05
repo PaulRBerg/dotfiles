@@ -161,7 +161,7 @@ changes are involved.
 ### launchd dashboard (macOS only)
 
 `https://launchd.localhost` is a read-only view of every plist in `~/Library/LaunchAgents`: schedule, launchd state,
-last exit, next calendar run, a 24-hour strip, observed runs, and log tails with error-line highlighting. Its
+uptime, last exit, next calendar run, a 24-hour strip, observed runs, and log tails with error-line highlighting. Its
 zero-dependency Bun server lives in `dot_config/launchd-dashboard/` (→ `~/.config/launchd-dashboard/`) and runs as
 `local.launchd-dashboard` on `127.0.0.1:8479`; it accepts only the named host or direct loopback `Host` headers.
 

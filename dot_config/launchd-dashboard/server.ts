@@ -272,15 +272,48 @@ function sample() {
 }
 
 // ---------------------------------------------------------------------------- #
+//                                    UPTIME                                    #
+// ---------------------------------------------------------------------------- #
+
+// Parse ps `etime` ([[dd-]hh:]mm:ss) into seconds.
+export function parseElapsed(etime: string): number | undefined {
+  const match = /^(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)$/.exec(etime.trim());
+  if (!match) return undefined;
+  const [, days = "0", hours = "0", minutes, seconds] = match;
+  return ((Number(days) * 24 + Number(hours)) * 60 + Number(minutes)) * 60 + Number(seconds);
+}
+
+// One ps call for all running jobs; returns pid -> process start time.
+function readStartTimes(pids: number[], now: Date): Map<number, string> {
+  const startedAt = new Map<number, string>();
+  if (pids.length === 0) return startedAt;
+  const proc = Bun.spawnSync(["/bin/ps", "-o", "pid=,etime=", "-p", pids.join(",")]);
+  for (const line of proc.stdout.toString().split("\n")) {
+    const [pid, etime] = line.trim().split(/\s+/);
+    const elapsed = etime ? parseElapsed(etime) : undefined;
+    if (elapsed !== undefined) startedAt.set(Number(pid), new Date(now.getTime() - elapsed * 1000).toISOString());
+  }
+  return startedAt;
+}
+
+// ---------------------------------------------------------------------------- #
 //                                     API                                      #
 // ---------------------------------------------------------------------------- #
 
 async function agentsPayload() {
   const now = new Date();
+  const loaded = loadAgents().map((agent) => ({
+    ...agent,
+    live: lastSeen.get(agent.label) ?? readLiveState(agent.label),
+  }));
+  const startTimes = readStartTimes(
+    loaded.flatMap((agent) => (agent.live.pid === undefined ? [] : [agent.live.pid])),
+    now,
+  );
   const agents = await Promise.all(
-    loadAgents().map(async (agent) => {
+    loaded.map(async (agent) => {
       const schedule = parseSchedule(agent.plist);
-      const live = lastSeen.get(agent.label) ?? readLiveState(agent.label);
+      const live = agent.live;
       const logs = await Promise.all(logPaths(agent.plist).map(readLogTail));
       const args = Array.isArray(agent.plist.ProgramArguments)
         ? (agent.plist.ProgramArguments as string[])
@@ -302,6 +335,7 @@ async function agentsPayload() {
         plistError: agent.error,
         schedule,
         live,
+        startedAt: live.pid === undefined ? undefined : startTimes.get(live.pid),
         lastExitOk: isSuccessfulExit(live.lastExit),
         nextRun,
         lastLogWrite,

@@ -410,7 +410,10 @@
 
       function status(agent) {
         if (!agent.live.loaded) return { cls: "unloaded", text: "not loaded" };
-        if (agent.live.pid) return { cls: "running", text: `running · pid ${agent.live.pid}` };
+        if (agent.live.pid) {
+          const uptime = agent.startedAt ? ` · up ${relative(agent.startedAt).replace(" ago", "")}` : "";
+          return { cls: "running", text: `running${uptime}`, title: `pid ${agent.live.pid}` };
+        }
         if (agent.lastExitOk === false) return { cls: "fail", text: "idle" };
         if (agent.lastExitOk === true) return { cls: "ok", text: "idle" };
         return { cls: "", text: agent.live.state ?? "idle" };
@@ -420,10 +423,14 @@
         const exit = agent.live.lastExit;
         if (!exit) return '<span class="sub">—</span>';
         if (exit.startsWith("(never")) return '<span class="sub">never exited</span>';
-        const cls = agent.lastExitOk === true ? "ok-text" : agent.lastExitOk === false ? "fail-text" : "sub";
+        // While a job runs, launchd's last exit belongs to the previous run, so a failure there is history, not an alarm.
+        const running = Boolean(agent.live.pid);
+        const failCls = running ? "warn-text" : "fail-text";
+        const cls = agent.lastExitOk === true ? "ok-text" : agent.lastExitOk === false ? failCls : "sub";
         const text =
           agent.lastExitOk === true ? "0 · success" : agent.lastExitOk === undefined ? "stopped (SIGTERM)" : exit;
-        return `<span class="${cls}">${esc(text)}</span>`;
+        const suffix = running ? ' <span class="sub">· before restart</span>' : "";
+        return `<span class="${cls}">${esc(text)}</span>${suffix}`;
       }
 
       // Today's 24h strip: always-on bar, periodic hatch, calendar fire marks, sampled runs, and the now cursor.
@@ -518,6 +525,7 @@
                 <dt>Schedule</dt><dd>${esc(agent.schedule.summary)}</dd>
                 ${agent.nextRun ? `<dt>Next run</dt><dd>${esc(fullTime(agent.nextRun))}</dd>` : ""}
                 <dt>launchd state</dt><dd>${esc(agent.live.loaded ? agent.live.state : "not loaded")}</dd>
+                ${agent.startedAt ? `<dt>Running since</dt><dd>${esc(fullTime(agent.startedAt))} <span class="sub">pid ${esc(agent.live.pid)}</span></dd>` : ""}
                 <dt>Runs</dt><dd>${esc(agent.live.runs ?? "—")} <span class="sub">since load</span></dd>
                 <dt>Plist</dt><dd><code>${esc(agent.path)}</code>${agent.managed ? ' <span class="tag">chezmoi</span>' : ""}</dd>
                 ${agent.workingDirectory ? `<dt>Directory</dt><dd><code>${esc(agent.workingDirectory)}</code></dd>` : ""}
@@ -537,7 +545,7 @@
         if (!data) return;
         const agents = data.agents.filter((agent) => agent.managed || showThirdParty.checked);
         const running = agents.filter((agent) => agent.live.pid).length;
-        const failing = agents.filter((agent) => agent.lastExitOk === false).length;
+        const failing = agents.filter((agent) => agent.lastExitOk === false && !agent.live.pid).length;
         const scheduled = agents.filter((agent) => agent.schedule.calendar.length || agent.schedule.interval).length;
         document.getElementById("totals").innerHTML =
           `<span><b>${agents.length}</b> agents</span><span><b>${running}</b> running</span><span><b>${scheduled}</b> scheduled</span>` +
@@ -564,7 +572,7 @@
               <tr class="agent" tabindex="0" data-label="${esc(agent.label)}" aria-expanded="${open}">
                 <td class="label"><span class="dot ${s.cls}"></span>${esc(agent.label)}${agent.managed ? "" : '<span class="tag">third-party</span>'}</td>
                 <td>${esc(agent.schedule.summary)}</td>
-                <td class="${s.cls === "running" ? "" : "sub"}">${esc(s.text)}</td>
+                <td class="${s.cls === "running" ? "" : "sub"}" title="${esc(s.title ?? "")}">${esc(s.text)}</td>
                 <td class="col-exit">${exitCell(agent)}</td>
                 <td class="col-runs">${esc(agent.live.runs ?? "—")}</td>
                 <td class="col-log">${logWrite ? `<span title="${esc(fullTime(logWrite))}">${esc(relative(logWrite))}</span>` : '<span class="sub">—</span>'}${errorCount ? ` <span class="fail-text" title="Error lines in the last 200 log lines">· ${errorCount} err</span>` : ""}</td>

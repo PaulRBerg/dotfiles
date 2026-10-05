@@ -7,6 +7,7 @@ import {
   isSuccessfulExit,
   logPaths,
   nextCalendarRun,
+  parseElapsed,
   parseLaunchctlPrint,
   parseSchedule,
 } from "../dot_config/launchd-dashboard/server.ts";
@@ -60,6 +61,15 @@ describe("parseLaunchctlPrint", () => {
     expect(isSuccessfulExit("1")).toBe(false);
     expect(isSuccessfulExit("143")).toBeUndefined();
     expect(isSuccessfulExit("(never exited)")).toBeUndefined();
+  });
+});
+
+describe("parseElapsed", () => {
+  test("converts ps etime forms to seconds", () => {
+    expect(parseElapsed("09:28")).toBe(568);
+    expect(parseElapsed("13:45:08")).toBe(49_508);
+    expect(parseElapsed("17-19:17:11")).toBe(17 * 86_400 + 69_431);
+    expect(parseElapsed("garbage")).toBeUndefined();
   });
 });
 
