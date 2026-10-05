@@ -153,6 +153,11 @@ zero-dependency Bun server lives in `dot_config/launchd-dashboard/` (→ `~/.con
 - Log paths come from `StandardOutPath`/`StandardErrorPath`, plus `exec >>"<path>"` redirects in inline shell scripts.
 - `dot_setup/run_onchange_after_setup_launchd_dashboard_macos.sh.tmpl` hashes the plist and `server.ts`, so changing
   either reloads the agent; `index.html` is read per request. Tests: `tests/launchd_dashboard.test.ts` (`bun test`).
+- The **Sleep & wake** tab (`#sleep`, `/api/hooks`) shows the sleepwatcher hooks `~/.wakeup` and `~/.sleep`: steps
+  parsed from each script's `# ---` section headers and the comments below them, plus recent runs with output.
+  Sleepwatcher discards hook output, so both scripts log to `~/Library/Logs/sleepwatcher-{wakeup,sleep}.log` (rotated to
+  `.1` at 2 MB) between `=== sleepwatcher <hook> start|end ===` markers; keep them in sync with `HOOK_MARKER` in
+  `server.ts`.
 - Log: `~/Library/Logs/launchd-dashboard.log`. Restart: `launchctl kickstart -k gui/$(id -u)/local.launchd-dashboard`.
 
 ### iTerm2 settings (macOS only)
