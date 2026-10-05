@@ -112,6 +112,43 @@ function upgrade_go_globals() {
   return "$result"
 }
 
+# Delete project node_modules folders under the given roots (default: $HOME),
+# listing them with sizes and asking first. Global installs are kept by never
+# descending into ~/Library or hidden top-level home dirs (~/.local, ~/.cache,
+# ~/.bun, …), which hold the fnm/npm, pnpm, bun, and yarn globals plus
+# tool-managed runtimes, nor into system prefixes or .app bundles.
+# Usage: clean_node_modules [root...]
+function clean_node_modules() {
+  local roots=() root dirs dir found=()
+  for root in "${@:-$HOME}"; do
+    # find matches -path against the root's spelling, so make roots absolute.
+    root=$(cd -- "$root" && pwd) || return 1
+    roots+=("$root")
+  done
+
+  dirs=$(find "${roots[@]}" \
+    \( -path "$HOME/.*" -o -path "$HOME/Library" -o -path /opt/homebrew -o -path /usr -o -name '*.app' \) -prune \
+    -o -type d -name node_modules -print -prune 2>/dev/null)
+
+  while IFS= read -r dir; do
+    [[ -n "$dir" ]] && found+=("$dir")
+  done <<<"$dirs"
+
+  if ((${#found[@]} == 0)); then
+    echo "No node_modules folders found."
+    return 0
+  fi
+
+  du -shc -- "${found[@]}"
+
+  local reply
+  printf 'Delete these %d node_modules folders? [y/N] ' "${#found[@]}"
+  read -r reply
+  [[ "$reply" == [yY] ]] || return 0
+
+  rm -rf -- "${found[@]}"
+}
+
 # Copy Chromium browser profile while excluding files specific to one browser or system
 function copy_browser_profile() {
   rsync --archive \
