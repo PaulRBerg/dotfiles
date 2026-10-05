@@ -116,7 +116,8 @@ function upgrade_go_globals() {
 # listing them with sizes and asking first. Global installs are kept by never
 # descending into ~/Library or hidden top-level home dirs (~/.local, ~/.cache,
 # ~/.bun, …), which hold the fnm/npm, pnpm, bun, and yarn globals plus
-# tool-managed runtimes, nor into system prefixes or .app bundles.
+# tool-managed runtimes, nor into system prefixes, .app bundles, or browser
+# profiles (Chromium-family profiles unpack extensions under Extensions/).
 # Usage: clean_node_modules [root...]
 function clean_node_modules() {
   local roots=() root dirs dir found=()
@@ -127,7 +128,7 @@ function clean_node_modules() {
   done
 
   dirs=$(find "${roots[@]}" \
-    \( -path "$HOME/.*" -o -path "$HOME/Library" -o -path /opt/homebrew -o -path /usr -o -name '*.app' \) -prune \
+    \( -path "$HOME/.*" -o -path "$HOME/Library" -o -path /opt/homebrew -o -path /usr -o -name '*.app' -o -name Extensions \) -prune \
     -o -type d -name node_modules -print -prune 2>/dev/null)
 
   while IFS= read -r dir; do
