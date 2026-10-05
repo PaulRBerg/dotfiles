@@ -21,3 +21,10 @@
 
 # Corrected source-state naming now manages ~/.vim_runtime/my_configs.vim.
 .vimruntime/my_configs.vim
+
+# Ubuntu support is preserved on archive/ubuntu-2026-10-05.
+.config/prb/bin/pbcopy.sh
+.config/prb/bin/pbpaste.sh
+.config/prb/load_env_linux.sh
+.config/prb/path_linux.sh
+.setup/tools_ubuntu.sh

@@ -14,24 +14,6 @@ log_success() {
   echo "${LOG_PREFIX} ✓ $*" >&2
 }
 
-check_root() {
-  if [[ $EUID -ne 0 ]]; then
-    log_error "This script must be run as root (use sudo)"
-    exit 1
-  fi
-}
-
-apt_refresh() {
-  export NEEDRESTART_MODE=a
-  export DEBIAN_FRONTEND=noninteractive
-
-  log_info "Updating package lists..."
-  apt-get update
-
-  log_info "Upgrading installed packages..."
-  apt-get upgrade -y
-}
-
 brew_refresh() {
   log_info "Updating Homebrew..."
   brew update
