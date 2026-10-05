@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LaunchAgents</title>
+    <style>
+      :root {
+        color-scheme: dark light;
+        --bg: #0f1418;
+        --surface: #161d22;
+        --surface-2: #1d262d;
+        --line: #26323a;
+        --text: #dbe4ea;
+        --muted: #8698a4;
+        --ok: #4cc38a;
+        --fail: #f0616d;
+        --warn: #e9a23b;
+        --run: #59a8f5;
+        --strip: #222d35;
+        --always: #2f6f55;
+        --mono: ui-monospace, "SF Mono", Menlo, monospace;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #eef2f5;
+          --surface: #ffffff;
+          --surface-2: #f4f7f9;
+          --line: #d9e1e7;
+          --text: #18232b;
+          --muted: #5d6f7b;
+          --ok: #198754;
+          --fail: #c9303e;
+          --warn: #b06d00;
+          --run: #1f6fc4;
+          --strip: #e3e9ee;
+          --always: #9fd5bc;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          14px/1.45 system-ui,
+          -apple-system,
+          sans-serif;
+        font-variant-numeric: tabular-nums;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 8px 24px;
+        padding: 20px 24px 12px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 650;
+      }
+      .totals {
+        display: flex;
+        gap: 18px;
+        color: var(--muted);
+      }
+      .totals span {
+        white-space: nowrap;
+      }
+      .totals b {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .controls {
+        margin-left: auto;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        color: var(--muted);
+      }
+      main {
+        padding: 0 24px 32px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      th {
+        text-align: left;
+        font-weight: 500;
+        color: var(--muted);
+        font-size: 12px;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      th.strip-head {
+        position: relative;
+        min-width: 280px;
+      }
+      .hours {
+        display: flex;
+        justify-content: space-between;
+      }
+      td {
+        white-space: nowrap;
+        padding: 9px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: middle;
+      }
+      tr.agent {
+        cursor: pointer;
+      }
+      tr.agent:hover,
+      tr.agent:focus-visible {
+        background: var(--surface-2);
+        outline: none;
+      }
+      tr.agent[aria-expanded="true"] {
+        background: var(--surface-2);
+      }
+      .label {
+        font-weight: 550;
+        white-space: nowrap;
+      }
+      .label .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+        background: var(--muted);
+      }
+      .dot.running {
+        background: var(--run);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--run) 25%, transparent);
+      }
+      .dot.ok {
+        background: var(--ok);
+      }
+      .dot.fail {
+        background: var(--fail);
+      }
+      .dot.unloaded {
+        background: transparent;
+        border: 1.5px solid var(--muted);
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .tag {
+        margin-left: 6px;
+        font-size: 11px;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 0 4px;
+      }
+      .fail-text {
+        color: var(--fail);
+      }
+      .ok-text {
+        color: var(--ok);
+      }
+      .warn-text {
+        color: var(--warn);
+      }
+      .strip {
+        position: relative;
+        height: 18px;
+        background: var(--strip);
+        border-radius: 3px;
+        min-width: 280px;
+      }
+      .strip .always {
+        position: absolute;
+        inset: 6px 0;
+        background: var(--always);
+        border-radius: 2px;
+      }
+      .strip .periodic {
+        position: absolute;
+        inset: 6px 0;
+        background: repeating-linear-gradient(90deg, var(--warn) 0 2px, transparent 2px var(--tick, 12px));
+        opacity: 0.55;
+      }
+      .strip .fire {
+        position: absolute;
+        top: 2px;
+        bottom: 2px;
+        width: 2px;
+        margin-left: -1px;
+        background: var(--warn);
+        border-radius: 1px;
+      }
+      .strip .run {
+        position: absolute;
+        top: 5px;
+        width: 8px;
+        height: 8px;
+        margin-left: -4px;
+        border-radius: 50%;
+        background: var(--run);
+        border: 1.5px solid var(--surface);
+      }
+      .strip .run.ok {
+        background: var(--ok);
+      }
+      .strip .run.fail {
+        background: var(--fail);
+      }
+      .strip .now {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 1px;
+        background: var(--text);
+        opacity: 0.6;
+      }
+      tr.detail td {
+        white-space: normal;
+        background: var(--surface-2);
+        padding: 4px 16px 18px;
+      }
+      .detail-grid {
+        /* Zero intrinsic width so long log lines never widen the table columns. */
+        width: 0;
+        min-width: 100%;
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) minmax(0, 2.2fr);
+        gap: 20px;
+      }
+      dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 4px 12px;
+        margin: 8px 0;
+      }
+      dt {
+        color: var(--muted);
+      }
+      dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      h3 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 14px 0 6px;
+      }
+      .history {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 220px;
+        overflow: auto;
+      }
+      .history li {
+        padding: 2px 0;
+      }
+      .log-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        align-items: baseline;
+        margin: 14px 0 6px;
+      }
+      .log-head h3 {
+        margin: 0;
+      }
+      pre.log {
+        margin: 0;
+        padding: 10px 12px;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        max-height: 360px;
+        overflow: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      pre.log .err {
+        color: var(--fail);
+      }
+      label.toggle {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        cursor: pointer;
+      }
+      .empty {
+        color: var(--muted);
+        padding: 24px;
+        text-align: center;
+      }
+      @media (max-width: 900px) {
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+        .col-runs,
+        .col-log {
+          display: none;
+        }
+      }
+      @media (max-width: 640px) {
+        header,
+        main {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        .controls {
+          margin-left: 0;
+        }
+        .col-strip,
+        .col-next,
+        .col-exit {
+          display: none;
+        }
+        td,
+        .label {
+          white-space: normal;
+          overflow-wrap: break-word;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>LaunchAgents</h1>
+      <div class="totals" id="totals"></div>
+      <div class="controls">
+        <label class="toggle"><input type="checkbox" id="show-third-party" /> Third-party agents</label>
+        <span id="updated" aria-live="polite"></span>
+      </div>
+    </header>
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Schedule</th>
+            <th>State</th>
+            <th class="col-exit">Last exit</th>
+            <th class="col-runs">Runs</th>
+            <th class="col-log">Log written</th>
+            <th class="col-next">Next run</th>
+            <th class="strip-head col-strip">
+              <div class="hours"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </main>
+    <script>
+      const rows = document.getElementById("rows");
+      const showThirdParty = document.getElementById("show-third-party");
+      const expanded = new Set();
+      const errorsOnly = new Set();
+      let data = null;
+
+      try {
+        showThirdParty.checked = localStorage.getItem("show-third-party") === "1";
+      } catch {}
+      showThirdParty.addEventListener("change", () => {
+        try {
+          localStorage.setItem("show-third-party", showThirdParty.checked ? "1" : "0");
+        } catch {}
+        render();
+      });
+
+      const esc = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+        );
+      const ERROR_PATTERN = /\b(error|err|fatal|panic|fail(ed|ure)?|exception|traceback)\b/i;
+
+      function relative(iso) {
+        if (!iso) return "—";
+        const seconds = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+        const future = seconds < 0;
+        const abs = Math.abs(seconds);
+        const text =
+          abs < 60
+            ? `${abs}s`
+            : abs < 3600
+              ? `${Math.round(abs / 60)}m`
+              : abs < 86400
+                ? `${Math.round(abs / 3600)}h`
+                : `${Math.round(abs / 86400)}d`;
+        return future ? `in ${text}` : `${text} ago`;
+      }
+
+      const clock = (iso) => new Date(iso).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" });
+      const fullTime = (iso) => new Date(iso).toLocaleString();
+
+      function status(agent) {
+        if (!agent.live.loaded) return { cls: "unloaded", text: "not loaded" };
+        if (agent.live.pid) return { cls: "running", text: `running · pid ${agent.live.pid}` };
+        if (agent.lastExitOk === false) return { cls: "fail", text: "idle" };
+        if (agent.lastExitOk === true) return { cls: "ok", text: "idle" };
+        return { cls: "", text: agent.live.state ?? "idle" };
+      }
+
+      function exitCell(agent) {
+        const exit = agent.live.lastExit;
+        if (!exit) return '<span class="sub">—</span>';
+        if (exit.startsWith("(never")) return '<span class="sub">never exited</span>';
+        const cls = agent.lastExitOk === true ? "ok-text" : agent.lastExitOk === false ? "fail-text" : "sub";
+        const text =
+          agent.lastExitOk === true ? "0 · success" : agent.lastExitOk === undefined ? "stopped (SIGTERM)" : exit;
+        return `<span class="${cls}">${esc(text)}</span>`;
+      }
+
+      // Today's 24h strip: always-on bar, periodic hatch, calendar fire marks, sampled runs, and the now cursor.
+      function strip(agent) {
+        const today = new Date();
+        const pct = (date) => ((date.getHours() * 60 + date.getMinutes()) / 1440) * 100;
+        const parts = [];
+        const schedule = agent.schedule;
+        if (schedule.keepAlive) parts.push('<div class="always" title="Always on (KeepAlive)"></div>');
+        if (schedule.interval) {
+          const tickPx = Math.max(3, (schedule.interval / 86400) * 280);
+          parts.push(`<div class="periodic" style="--tick:${tickPx}px" title="${esc(schedule.summary)}"></div>`);
+        }
+        for (const entry of schedule.calendar) {
+          if (entry.Month !== undefined && entry.Month !== today.getMonth() + 1) continue;
+          if (entry.Day !== undefined && entry.Day !== today.getDate()) continue;
+          if (entry.Weekday !== undefined && entry.Weekday % 7 !== today.getDay()) continue;
+          const hours = entry.Hour === undefined ? [...Array(24).keys()] : [entry.Hour];
+          for (const hour of hours) {
+            const left = ((hour * 60 + (entry.Minute ?? 0)) / 1440) * 100;
+            parts.push(
+              `<div class="fire" style="left:${left}%" title="Scheduled ${String(hour).padStart(2, "0")}:${String(entry.Minute ?? 0).padStart(2, "0")}"></div>`,
+            );
+          }
+        }
+        const events = agent.history;
+        for (let i = 0; i < events.length; i++) {
+          const event = events[i];
+          if (event.kind !== "start") continue;
+          const at = new Date(event.ts);
+          if (at.toDateString() !== today.toDateString()) continue;
+          const exit = events.slice(i + 1).find((e) => e.kind === "exit");
+          const cls = exit
+            ? exit.exit === "0"
+              ? "ok"
+              : exit.exit === "143" || exit.exit?.endsWith(": 15")
+                ? ""
+                : "fail"
+            : "";
+          parts.push(
+            `<div class="run ${cls}" style="left:${pct(at)}%" title="Started ${esc(fullTime(event.ts))}${exit ? ` · exit ${esc(exit.exit)}` : ""}"></div>`,
+          );
+        }
+        parts.push(`<div class="now" style="left:${pct(today)}%" title="Now"></div>`);
+        return `<div class="strip">${parts.join("")}</div>`;
+      }
+
+      function logBlock(agent, log) {
+        const key = `${agent.label}:${log.path}`;
+        if (!log.exists)
+          return `<div class="log-head"><h3>${esc(log.path)}</h3><span class="sub">file does not exist yet</span></div>`;
+        const only = errorsOnly.has(key);
+        const lines = only ? log.lines.filter((line) => ERROR_PATTERN.test(line)) : log.lines;
+        const body = lines.length
+          ? lines
+              .map((line) => (ERROR_PATTERN.test(line) ? `<span class="err">${esc(line)}</span>` : esc(line)))
+              .join("\n")
+          : only
+            ? "No error lines in the tail."
+            : "Empty log.";
+        return `
+          <div class="log-head">
+            <h3>${esc(log.path)}</h3>
+            <span class="sub">written ${esc(relative(log.mtime))} · ${(log.size / 1024).toFixed(1)} KB · last ${log.lines.length} lines</span>
+            ${log.errorLines ? `<span class="fail-text">${log.errorLines} error line${log.errorLines > 1 ? "s" : ""}</span>` : '<span class="ok-text">no error lines</span>'}
+            <label class="toggle sub"><input type="checkbox" data-errors="${esc(key)}" ${only ? "checked" : ""}/> Errors only</label>
+          </div>
+          <pre class="log" data-log="${esc(key)}">${body}</pre>`;
+      }
+
+      function detail(agent) {
+        const history = [...agent.history].reverse();
+        const historyList = history.length
+          ? `<ul class="history">${history
+              .map((event) => {
+                const ok = event.exit === "0";
+                const text =
+                  event.kind === "start"
+                    ? `<span class="ok-text">▸</span> started${event.pid ? ` · pid ${event.pid}` : ""}`
+                    : `<span class="${ok ? "ok-text" : "fail-text"}">■</span> exited${event.exit ? ` · ${esc(event.exit)}` : ""}`;
+                return `<li><span class="sub">${esc(fullTime(event.ts))}</span> ${text}</li>`;
+              })
+              .join("")}</ul>`
+          : `<p class="sub">No runs observed yet. The dashboard samples launchd every ${data.sampleSeconds}s and keeps history in <code>${esc(data.historyFile)}</code>.</p>`;
+        const logs = agent.logs.length
+          ? agent.logs.map((log) => logBlock(agent, log)).join("")
+          : '<p class="sub">No log file: the plist sets no StandardOutPath/StandardErrorPath and its script redirects nowhere detectable.</p>';
+        return `
+          <div class="detail-grid">
+            <div>
+              <dl>
+                <dt>Schedule</dt><dd>${esc(agent.schedule.summary)}</dd>
+                ${agent.nextRun ? `<dt>Next run</dt><dd>${esc(fullTime(agent.nextRun))}</dd>` : ""}
+                <dt>launchd state</dt><dd>${esc(agent.live.loaded ? agent.live.state : "not loaded")}</dd>
+                <dt>Runs</dt><dd>${esc(agent.live.runs ?? "—")} <span class="sub">since load</span></dd>
+                <dt>Plist</dt><dd><code>${esc(agent.path)}</code>${agent.managed ? ' <span class="tag">chezmoi</span>' : ""}</dd>
+                ${agent.workingDirectory ? `<dt>Directory</dt><dd><code>${esc(agent.workingDirectory)}</code></dd>` : ""}
+                ${agent.schedule.watchPaths.length ? `<dt>Watches</dt><dd><code>${agent.schedule.watchPaths.map(esc).join("<br>")}</code></dd>` : ""}
+                ${agent.plistError ? `<dt>Plist error</dt><dd class="fail-text">${esc(agent.plistError)}</dd>` : ""}
+              </dl>
+              <h3>Program</h3>
+              <pre class="log">${esc(agent.program.join(" \n  ")) || "—"}</pre>
+              <h3>Observed runs</h3>
+              ${historyList}
+            </div>
+            <div>${logs}</div>
+          </div>`;
+      }
+
+      function render() {
+        if (!data) return;
+        const agents = data.agents.filter((agent) => agent.managed || showThirdParty.checked);
+        const running = agents.filter((agent) => agent.live.pid).length;
+        const failing = agents.filter((agent) => agent.lastExitOk === false).length;
+        const scheduled = agents.filter((agent) => agent.schedule.calendar.length || agent.schedule.interval).length;
+        document.getElementById("totals").innerHTML =
+          `<span><b>${agents.length}</b> agents</span><span><b>${running}</b> running</span><span><b>${scheduled}</b> scheduled</span>` +
+          `<span class="${failing ? "fail-text" : ""}"><b class="${failing ? "fail-text" : ""}">${failing}</b> last exit failed</span>`;
+        document.getElementById("updated").textContent = `Updated ${new Date(data.generatedAt).toLocaleTimeString()}`;
+
+        // Keep log scroll positions across refreshes.
+        const scroll = new Map(
+          [...rows.querySelectorAll("pre[data-log]")].map((pre) => [pre.dataset.log, pre.scrollTop]),
+        );
+
+        if (!agents.length) {
+          rows.innerHTML =
+            '<tr><td colspan="8" class="empty">No LaunchAgents found in ~/Library/LaunchAgents.</td></tr>';
+          return;
+        }
+        rows.innerHTML = agents
+          .map((agent) => {
+            const s = status(agent);
+            const open = expanded.has(agent.label);
+            const logWrite = agent.lastLogWrite;
+            const errorCount = agent.logs.reduce((sum, log) => sum + (log.errorLines ?? 0), 0);
+            return `
+              <tr class="agent" tabindex="0" data-label="${esc(agent.label)}" aria-expanded="${open}">
+                <td class="label"><span class="dot ${s.cls}"></span>${esc(agent.label)}${agent.managed ? "" : '<span class="tag">third-party</span>'}</td>
+                <td>${esc(agent.schedule.summary)}</td>
+                <td class="${s.cls === "running" ? "" : "sub"}">${esc(s.text)}</td>
+                <td class="col-exit">${exitCell(agent)}</td>
+                <td class="col-runs">${esc(agent.live.runs ?? "—")}</td>
+                <td class="col-log">${logWrite ? `<span title="${esc(fullTime(logWrite))}">${esc(relative(logWrite))}</span>` : '<span class="sub">—</span>'}${errorCount ? ` <span class="fail-text" title="Error lines in the last 200 log lines">· ${errorCount} err</span>` : ""}</td>
+                <td class="col-next">${agent.nextRun ? `<span title="${esc(fullTime(agent.nextRun))}">${esc(clock(agent.nextRun))}</span>` : '<span class="sub">—</span>'}</td>
+                <td class="col-strip">${strip(agent)}</td>
+              </tr>
+              ${open ? `<tr class="detail"><td colspan="8">${detail(agent)}</td></tr>` : ""}`;
+          })
+          .join("");
+
+        for (const pre of rows.querySelectorAll("pre[data-log]")) {
+          pre.scrollTop = scroll.has(pre.dataset.log) ? scroll.get(pre.dataset.log) : pre.scrollHeight;
+        }
+      }
+
+      function toggle(row) {
+        const label = row.dataset.label;
+        if (expanded.has(label)) expanded.delete(label);
+        else expanded.add(label);
+        render();
+      }
+
+      rows.addEventListener("click", (event) => {
+        const errorsBox = event.target.closest("input[data-errors]");
+        if (errorsBox) {
+          if (errorsBox.checked) errorsOnly.add(errorsBox.dataset.errors);
+          else errorsOnly.delete(errorsBox.dataset.errors);
+          render();
+          return;
+        }
+        const row = event.target.closest("tr.agent");
+        if (row) toggle(row);
+      });
+      rows.addEventListener("keydown", (event) => {
+        const row = event.target.closest("tr.agent");
+        if (row && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          toggle(row);
+          rows.querySelector(`tr.agent[data-label="${CSS.escape(row.dataset.label)}"]`)?.focus();
+        }
+      });
+
+      async function refresh() {
+        try {
+          const response = await fetch("/api/agents", { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          data = await response.json();
+          render();
+        } catch (error) {
+          document.getElementById("updated").innerHTML =
+            `<span class="fail-text">Refresh failed: ${esc(error.message)}</span>`;
+        }
+      }
+
+      refresh();
+      setInterval(refresh, 15000);
+    </script>
+  </body>
+</html>

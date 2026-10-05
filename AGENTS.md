@@ -140,9 +140,10 @@ directly, so clipboard workflows work on macOS and Linux without per-OS aliases.
 
 Caddy runs as the `local.caddy` LaunchAgent (`Library/LaunchAgents/local.caddy.plist.tmpl`) and reverse-proxies named
 `*.localhost` domains to local apps: `https://pulse.localhost` (6173), `https://budget.localhost` (8437),
-`https://handoffs.localhost` (7777), and `https://coord.localhost` (4173). All are always-on services. The budget app
-runs from `~/projects/our-house/budget` as `local.our-house-budget`; its log is `~/Library/Logs/our-house-budget.log`.
-Browsers and macOS resolve `*.localhost` to loopback, so no DNS or `/etc/hosts` changes are involved.
+`https://handoffs.localhost` (7777), `https://coord.localhost` (4173), and `https://launchd.localhost` (8479). All are
+always-on services. The budget app runs from `~/projects/our-house/budget` as `local.our-house-budget`; its log is
+`~/Library/Logs/our-house-budget.log`. Browsers and macOS resolve `*.localhost` to loopback, so no DNS or `/etc/hosts`
+changes are involved.
 
 - To add a site, add a block to `dot_config/caddy/Caddyfile` with a comment naming the app and its source directory,
   then apply. The hook `dot_setup/run_onchange_after_setup_caddy_macos.sh.tmpl` validates the Caddyfile and restarts the
@@ -156,6 +157,21 @@ Browsers and macOS resolve `*.localhost` to loopback, so no DNS or `/etc/hosts` 
   `dot_setup/executable_caddy_tls_watchdog_macos.sh.tmpl`; apply them with
   `dot_setup/run_onchange_after_setup_caddy_tls_watchdog_macos.sh.tmpl`. Log: `~/Library/Logs/caddy-tls-watchdog.log`.
 - Log: `~/Library/Logs/caddy.log`. Restart: `launchctl kickstart -k gui/$(id -u)/local.caddy`.
+
+### launchd dashboard (macOS only)
+
+`https://launchd.localhost` is a read-only view of every plist in `~/Library/LaunchAgents`: schedule, launchd state,
+last exit, next calendar run, a 24-hour strip, observed runs, and log tails with error-line highlighting. Its
+zero-dependency Bun server lives in `dot_config/launchd-dashboard/` (→ `~/.config/launchd-dashboard/`) and runs as
+`local.launchd-dashboard` on `127.0.0.1:8479`; it accepts only the named host or direct loopback `Host` headers.
+
+- launchd keeps no run history and the unified log does not retain job spawns, so the server samples `launchctl print`
+  every 15s and appends start/exit transitions to `~/.local/state/launchd-dashboard/history.jsonl`. History starts when
+  the service loads; runs shorter than a sample are inferred from the `runs` counter.
+- Log paths come from `StandardOutPath`/`StandardErrorPath`, plus `exec >>"<path>"` redirects in inline shell scripts.
+- `dot_setup/run_onchange_after_setup_launchd_dashboard_macos.sh.tmpl` hashes the plist and `server.ts`, so changing
+  either reloads the agent; `index.html` is read per request. Tests: `tests/launchd_dashboard.test.ts` (`bun test`).
+- Log: `~/Library/Logs/launchd-dashboard.log`. Restart: `launchctl kickstart -k gui/$(id -u)/local.launchd-dashboard`.
 
 ### iTerm2 settings (macOS only)
 

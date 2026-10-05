@@ -36,3 +36,9 @@ coord.localhost {
 		header_up Host {upstream_hostport}
 	}
 }
+
+# launchd dashboard: read-only view of ~/Library/LaunchAgents schedules, state, run history, and logs (Bun).
+# Source: ~/.local/share/chezmoi/dot_config/launchd-dashboard, served by the local.launchd-dashboard LaunchAgent.
+launchd.localhost {
+	reverse_proxy 127.0.0.1:8479
+}
