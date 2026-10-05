@@ -118,6 +118,8 @@ function upgrade_go_globals() {
 # ~/.bun, …), which hold the fnm/npm, pnpm, bun, and yarn globals plus
 # tool-managed runtimes, nor into system prefixes, .app bundles, or browser
 # profiles (Chromium-family profiles unpack extensions under Extensions/).
+# Roots themselves are never pruned, so an explicit root inside one of those
+# trees (e.g. ~/.claude) is still scanned.
 # Usage: clean_node_modules [root...]
 function clean_node_modules() {
   local roots=() root dirs dir found=() tilde='~' tab=$'\t'
@@ -131,8 +133,8 @@ function clean_node_modules() {
   # gum spin passes the child's stderr through, so silence find's permission
   # errors inside sh; `|| true` drops the nonzero status they cause.
   dirs=$(gum spin --show-stdout --title "Scanning ${shown[*]} for node_modules..." -- \
-    sh -c 'find "$@" 2>/dev/null || true' sh "${roots[@]}" \
-    \( -path "$HOME/.*" -o -path "$HOME/Library" -o -path /opt/homebrew -o -path /usr -o -name '*.app' -o -name Extensions \) -prune \
+    sh -c 'find "$@" 2>/dev/null || true' sh "${roots[@]}" -mindepth 1 \
+    \( -path "$HOME/.*" ! -path "$HOME/.*/*" -o -path "$HOME/Library" -o -path /opt/homebrew -o -path /usr -o -name '*.app' -o -name Extensions \) -prune \
     -o -type d -name node_modules -print -prune) || return 1
 
   while IFS= read -r dir; do
