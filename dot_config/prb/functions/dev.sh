@@ -47,6 +47,8 @@ function upgrade_bun_globals() {
 
 # Upgrade every Cargo binary that cargo-update can track. --git includes
 # Git-originating installs; path installs remain tied to their local source.
+# --cooldown skips crates.io versions released in the last 7 days, matching the
+# npm/bun/pnpm cooldown; Git installs build from the branch head regardless.
 function upgrade_cargo_globals() {
   if ! command -v cargo >/dev/null 2>&1; then
     echo "cargo is not installed." >&2
@@ -58,7 +60,7 @@ function upgrade_cargo_globals() {
     cargo install cargo-update || return 1
   fi
 
-  cargo install-update --all --git
+  cargo install-update --all --git --cooldown 7d
 }
 
 # Upgrade Go binaries installed from a published module. Go has no global-install

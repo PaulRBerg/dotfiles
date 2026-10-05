@@ -3,3 +3,11 @@ cache-dir = "{{ .chezmoi.homeDir }}/.local/share/uv/cache"
 
 # Always use uv-managed CPython, never Homebrew/system interpreters.
 python-preference = "only-managed"
+
+# 7-day release cooldown, matching min-release-age in npm and minimumReleaseAge
+# in bun and pnpm: uv ignores distributions uploaded to the index less than 7 days
+# ago, in every resolver (`uv tool upgrade`, `uvx`, `uv lock`, `uv pip`).
+# Override per invocation when a fresh release is needed now:
+#   uv tool upgrade <pkg> --exclude-newer "0 days"
+# Exempt individual packages with `exclude-newer-package = { <name> = "0 days" }`.
+exclude-newer = "7 days"
