@@ -361,8 +361,82 @@
         padding: 24px;
         text-align: center;
       }
+      .tabs {
+        display: flex;
+        gap: 4px;
+      }
+      .tabs a {
+        padding: 3px 10px;
+        border-radius: 6px;
+        color: var(--muted);
+        font-weight: 500;
+        text-decoration: none;
+      }
+      .tabs a:hover {
+        color: var(--text);
+      }
+      .tabs a[aria-selected="true"] {
+        color: var(--text);
+        background: var(--surface);
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      body[data-tab="sleep"] #totals,
+      body[data-tab="sleep"] #third-party-toggle {
+        display: none;
+      }
+      .notice {
+        margin: 0 0 16px;
+        color: var(--muted);
+      }
+      .hook {
+        --row: var(--surface);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px 16px;
+        margin-bottom: 16px;
+      }
+      .hook-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 24px;
+      }
+      .hook-grid {
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
+        gap: 24px;
+      }
+      ol.steps {
+        margin: 0;
+        padding-left: 22px;
+      }
+      ol.steps li {
+        padding: 3px 0;
+      }
+      ol.steps .sub {
+        display: block;
+      }
+      table.runs {
+        border-radius: 6px;
+      }
+      tr.run {
+        cursor: pointer;
+      }
+      tr.run:hover,
+      tr.run:focus-visible,
+      tr.run[aria-expanded="true"] {
+        background: var(--surface-2);
+        outline: none;
+      }
+      tr.run-output td {
+        white-space: normal;
+        padding: 0 10px 12px;
+        background: var(--surface-2);
+      }
       @media (max-width: 900px) {
-        .detail-grid {
+        .detail-grid,
+        .hook-grid {
           grid-template-columns: 1fr;
         }
         .col-runs,
@@ -394,13 +468,19 @@
   <body>
     <header>
       <h1>LaunchAgents</h1>
+      <nav class="tabs" role="tablist">
+        <a href="#agents" role="tab" data-tab="agents">Agents</a>
+        <a href="#sleep" role="tab" data-tab="sleep">Sleep &amp; wake</a>
+      </nav>
       <div class="totals" id="totals"></div>
       <div class="controls">
-        <label class="toggle"><input type="checkbox" id="show-third-party" /> Third-party agents</label>
+        <label class="toggle" id="third-party-toggle"
+          ><input type="checkbox" id="show-third-party" /> Third-party agents</label
+        >
         <span id="updated" aria-live="polite"></span>
       </div>
     </header>
-    <main>
+    <main id="agents-view">
       <table>
         <thead>
           <tr>
@@ -419,12 +499,18 @@
         <tbody id="rows"></tbody>
       </table>
     </main>
+    <main id="sleep-view" hidden></main>
     <script>
       const rows = document.getElementById("rows");
       const showThirdParty = document.getElementById("show-third-party");
       const expanded = new Set();
       const errorsOnly = new Set();
+      const sleepView = document.getElementById("sleep-view");
+      // Hook kind -> start of the run whose output is open; defaults to the newest run.
+      const openRuns = new Map();
       let data = null;
+      let hookData = null;
+      let tab = "agents";
 
       try {
         showThirdParty.checked = localStorage.getItem("show-third-party") === "1";
@@ -462,6 +548,7 @@
         drive:
           '<path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01M10 16h.01"/>',
         moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+        sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
         download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
         box: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
       };
@@ -718,19 +805,160 @@
         }
       });
 
+      function duration(start, end) {
+        const seconds = Math.round((new Date(end) - new Date(start)) / 1000);
+        if (seconds < 60) return `${seconds}s`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+        return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+      }
+
+      function runResult(run, index) {
+        if (!run.end)
+          return index === 0
+            ? '<span class="sub">running or interrupted</span>'
+            : '<span class="warn-text">no end marker</span>';
+        return run.exit === 0
+          ? '<span class="ok-text">0 · success</span>'
+          : `<span class="fail-text">exit ${run.exit}</span>`;
+      }
+
+      function hookCard(hook, live) {
+        const latest = hook.runs[0];
+        if (!openRuns.has(hook.kind)) openRuns.set(hook.kind, latest?.start ?? null);
+        const steps = hook.steps.length
+          ? `<ol class="steps">${hook.steps
+              .map(
+                (step) =>
+                  `<li>${esc(step.title)}${step.notes ? `<span class="sub">${esc(step.notes)}</span>` : ""}</li>`,
+              )
+              .join("")}</ol>`
+          : '<p class="sub">No <code># ---</code> section headers found in the script.</p>';
+        const runs = hook.runs.length
+          ? `<table class="runs"><thead><tr><th>Started</th><th>Duration</th><th>Result</th><th>Errors</th></tr></thead><tbody>${hook.runs
+              .map((run, index) => {
+                const open = openRuns.get(hook.kind) === run.start;
+                const key = `${hook.kind}:${run.start}`;
+                const body = run.lines.length
+                  ? run.lines
+                      .map((line) => (ERROR_PATTERN.test(line) ? `<span class="err">${esc(line)}</span>` : esc(line)))
+                      .join("\n")
+                  : "No output.";
+                return `
+                  <tr class="run" tabindex="0" data-kind="${esc(hook.kind)}" data-start="${esc(run.start)}" aria-expanded="${open}">
+                    <td title="${esc(fullTime(run.start))}">${esc(clock(run.start))} <span class="sub">${esc(relative(run.start))}</span></td>
+                    <td>${run.end ? esc(duration(run.start, run.end)) : '<span class="sub">—</span>'}</td>
+                    <td>${runResult(run, index)}</td>
+                    <td>${run.errorLines ? `<span class="fail-text">${run.errorLines}</span>` : '<span class="sub">0</span>'}</td>
+                  </tr>
+                  ${open ? `<tr class="run-output"><td colspan="4"><pre class="log" data-log="${esc(key)}">${body}</pre></td></tr>` : ""}`;
+              })
+              .join("")}</tbody></table>`
+          : `<p class="sub">No runs logged yet.${hook.logFile ? ` The next run appends to <code>${esc(hook.logFile)}</code>.` : " The script redirects its output nowhere detectable."}</p>`;
+        const status = !live.loaded
+          ? { cls: "unloaded", text: "sleepwatcher not loaded" }
+          : latest && !latest.end
+            ? { cls: "running", text: "running" }
+            : latest
+              ? { cls: latest.exit === 0 ? "ok" : "fail", text: `last ran ${relative(latest.start)}` }
+              : { cls: "", text: "never logged" };
+        return `
+          <section class="hook">
+            <div class="hook-head">
+              <div class="agent-id">
+                <span class="icon" style="--accent:${hook.kind === "sleep" ? "#9b7cf0" : "#d99a2b"}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[hook.kind === "sleep" ? "moon" : "sun"]}</svg>
+                  <span class="dot ${status.cls}" title="${esc(status.text)}"></span>
+                </span>
+                <span class="names">
+                  <span class="name">${esc(hook.name)} hook</span>
+                  <span class="desc">Runs ${hook.kind === "sleep" ? "as the Mac goes to sleep" : "each time the Mac wakes"} · ${esc(status.text)}</span>
+                </span>
+              </div>
+              <dl>
+                <dt>Trigger</dt><dd><code>${esc(hook.trigger ?? "not configured")}</code>${hook.script ? ` → <code>${esc(hook.script)}</code>` : ""}</dd>
+                ${hook.source ? `<dt>Source</dt><dd><code>${esc(hook.source)}</code> <span class="tag">chezmoi</span></dd>` : ""}
+                <dt>Log</dt><dd>${hook.logFile ? `<code>${esc(hook.logFile)}</code>` : '<span class="sub">none</span>'}</dd>
+              </dl>
+            </div>
+            <div class="hook-grid">
+              <div><h3>Steps</h3>${steps}</div>
+              <div><h3>Recent runs</h3>${runs}</div>
+            </div>
+          </section>`;
+      }
+
+      function renderHooks() {
+        if (!hookData) return;
+        document.getElementById("updated").textContent =
+          `Updated ${new Date(hookData.generatedAt).toLocaleTimeString()}`;
+        const scroll = new Map(
+          [...sleepView.querySelectorAll("pre[data-log]")].map((pre) => [pre.dataset.log, pre.scrollTop]),
+        );
+        const sw = hookData.sleepwatcher;
+        const swState = sw.live.loaded
+          ? `<b>${esc(sw.live.state ?? "loaded")}</b>${sw.live.pid ? ` · pid ${esc(sw.live.pid)}` : ""}`
+          : '<b class="fail-text">not loaded</b>';
+        sleepView.innerHTML = `
+          <p class="notice">The <code>${esc(sw.label)}</code> agent (${swState}) runs these scripts on power events.
+          Sleepwatcher discards their output, so each script logs its runs between <code>=== sleepwatcher … ===</code> markers.</p>
+          ${hookData.hooks.map((hook) => hookCard(hook, sw.live)).join("")}`;
+        for (const pre of sleepView.querySelectorAll("pre[data-log]")) {
+          pre.scrollTop = scroll.has(pre.dataset.log) ? scroll.get(pre.dataset.log) : pre.scrollHeight;
+        }
+      }
+
+      function toggleRun(row) {
+        const { kind, start } = row.dataset;
+        openRuns.set(kind, openRuns.get(kind) === start ? null : start);
+        renderHooks();
+        sleepView.querySelector(`tr.run[data-kind="${CSS.escape(kind)}"][data-start="${CSS.escape(start)}"]`)?.focus();
+      }
+
+      sleepView.addEventListener("click", (event) => {
+        const row = event.target.closest("tr.run");
+        if (row) toggleRun(row);
+      });
+      sleepView.addEventListener("keydown", (event) => {
+        const row = event.target.closest("tr.run");
+        if (row && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          toggleRun(row);
+        }
+      });
+
+      function selectTab() {
+        tab = location.hash === "#sleep" ? "sleep" : "agents";
+        document.body.dataset.tab = tab;
+        document.getElementById("agents-view").hidden = tab !== "agents";
+        sleepView.hidden = tab !== "sleep";
+        for (const link of document.querySelectorAll(".tabs a")) {
+          link.setAttribute("aria-selected", String(link.dataset.tab === tab));
+        }
+        if (tab === "sleep") renderHooks();
+        else render();
+        refresh();
+      }
+      window.addEventListener("hashchange", selectTab);
+
       async function refresh() {
+        const sleep = tab === "sleep";
         try {
-          const response = await fetch("/api/agents", { cache: "no-store" });
+          const response = await fetch(sleep ? "/api/hooks" : "/api/agents", { cache: "no-store" });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          data = await response.json();
-          render();
+          if (sleep) {
+            hookData = await response.json();
+            renderHooks();
+          } else {
+            data = await response.json();
+            render();
+          }
         } catch (error) {
           document.getElementById("updated").innerHTML =
             `<span class="fail-text">Refresh failed: ${esc(error.message)}</span>`;
         }
       }
 
-      refresh();
+      selectTab();
       setInterval(refresh, 15000);
     </script>
   </body>

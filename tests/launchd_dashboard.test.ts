@@ -10,6 +10,8 @@ import {
   logPaths,
   nextCalendarRun,
   parseElapsed,
+  parseHookRuns,
+  parseHookSteps,
   parseLaunchctlPrint,
   parseSchedule,
 } from "../dot_config/launchd-dashboard/server.ts";
@@ -141,6 +143,54 @@ describe("logPaths", () => {
   });
 });
 
+describe("parseHookSteps", () => {
+  test("reads ruled section headers and the comments right below them", () => {
+    const script = [
+      "#!/usr/bin/env bash",
+      "# ------------------------------",
+      "# Pull repos",
+      "# ------------------------------",
+      "git pull",
+      "# ------------------------------",
+      "# Refresh skills",
+      "# ------------------------------",
+      "# Spawns Claude when a CLI",
+      "# is newer.",
+      "refresh",
+      "# not a header",
+    ].join("\n");
+    expect(parseHookSteps(script)).toEqual([
+      { title: "Pull repos", notes: "" },
+      { title: "Refresh skills", notes: "Spawns Claude when a CLI is newer." },
+    ]);
+  });
+});
+
+describe("parseHookRuns", () => {
+  test("splits runs on markers, newest first, ignoring output outside runs", () => {
+    const log = [
+      "legacy output",
+      "=== sleepwatcher wakeup start 2026-10-05T09:00:00Z ===",
+      "Pulling repo",
+      "==> Upgrading pnpm",
+      "=== sleepwatcher wakeup end 2026-10-05T09:01:30Z exit=0 ===",
+      "=== sleepwatcher wakeup start 2026-10-05T10:00:00Z ===",
+      "fatal: could not read",
+      "",
+    ].join("\n");
+    expect(parseHookRuns(log)).toEqual([
+      { start: "2026-10-05T10:00:00Z", lines: ["fatal: could not read"], errorLines: 1 },
+      {
+        start: "2026-10-05T09:00:00Z",
+        end: "2026-10-05T09:01:30Z",
+        exit: 0,
+        lines: ["Pulling repo", "==> Upgrading pnpm"],
+        errorLines: 0,
+      },
+    ]);
+  });
+});
+
 describe("host guard (proxy path)", () => {
   const get = (host: string, path = "/api/agents", headers: Record<string, string> = {}) =>
     handle(new Request(`http://127.0.0.1:8479${path}`, { headers: { host, ...headers } }));
@@ -181,6 +231,13 @@ describe("host guard (proxy path)", () => {
     const body = (await response.json()) as { agents: { label: string }[] };
     expect(Array.isArray(body.agents)).toBe(true);
     expect(body.agents.map((agent) => agent.label)).not.toContain("local.launchd-dashboard");
+  });
+
+  test("reads sleep and wake hooks through the named host", async () => {
+    const response = await get("launchd.localhost", "/api/hooks");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { hooks: { kind: string }[] };
+    expect(body.hooks.map((hook) => hook.kind)).toEqual(["wakeup", "sleep"]);
   });
 
   test("serves the page through the named host and refuses writes", async () => {

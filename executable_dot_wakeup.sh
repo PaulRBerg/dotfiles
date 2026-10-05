@@ -5,6 +5,16 @@
 # Sleepwatcher runs with a minimal PATH; ensure user and Homebrew binaries are available
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
+# Sleepwatcher discards hook output, so log each run for the launchd dashboard,
+# which splits runs on these marker lines (see dot_config/launchd-dashboard/server.ts).
+HOOK_LOG="$HOME/Library/Logs/sleepwatcher-wakeup.log"
+if [[ -f "$HOOK_LOG" ]] && (($(wc -c <"$HOOK_LOG") > 2097152)); then
+  mv -f "$HOOK_LOG" "$HOOK_LOG.1"
+fi
+exec >>"$HOOK_LOG" 2>&1
+echo "=== sleepwatcher wakeup start $(date -u +%Y-%m-%dT%H:%M:%SZ) ==="
+trap 'rc=$?; echo "=== sleepwatcher wakeup end $(date -u +%Y-%m-%dT%H:%M:%SZ) exit=$rc ==="' EXIT
+
 _wakeup_commit_and_push() {
   local repo="$1"
   local message="$2"
@@ -69,6 +79,9 @@ done
 # ------------------------------
 # Refresh CLI-backed agent skills
 # ------------------------------
+# When an installed CLI is newer than the version recorded in a cli-* skill's
+# references/version.txt, a headless Claude session refreshes that skill in
+# ~/projects/agent-skills from a temporary clone, then commits and publishes it.
 REFRESH_CLI_SKILLS="$HOME/.config/prb/wakeup/refresh_cli_skills.sh"
 if [[ -x "$REFRESH_CLI_SKILLS" ]]; then
   "$REFRESH_CLI_SKILLS" 2>&1 || true

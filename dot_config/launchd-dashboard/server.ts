@@ -2,14 +2,15 @@
 // Served at https://launchd.localhost by the local.launchd-dashboard LaunchAgent (Caddy proxies 127.0.0.1:8479).
 // launchd keeps no run history, so the server samples `launchctl print` and appends run/exit transitions to a JSONL file.
 
-import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 
 const HOME = homedir();
 const PORT = Number(process.env.LAUNCHD_DASHBOARD_PORT ?? 8479);
 const AGENTS_DIR = join(HOME, "Library/LaunchAgents");
-const CHEZMOI_AGENTS_DIR = join(HOME, ".local/share/chezmoi/Library/LaunchAgents");
+const CHEZMOI_DIR = join(HOME, ".local/share/chezmoi");
+const CHEZMOI_AGENTS_DIR = join(CHEZMOI_DIR, "Library/LaunchAgents");
 const STATE_HOME = process.env.XDG_STATE_HOME ?? join(HOME, ".local/state");
 const STATE_DIR = join(STATE_HOME, "launchd-dashboard");
 const HISTORY_FILE = join(STATE_DIR, "history.jsonl");
@@ -129,7 +130,7 @@ const CATALOG: Record<string, Profile> = {
     name: "Sleep & wake hooks",
     icon: "moon",
     group: "Mac health",
-    description: "Runs ~/.sleep and ~/.wakeup",
+    description: "Runs ~/.sleep and ~/.wakeup (see the Sleep & wake tab)",
   },
   "com.google.GoogleUpdater.wake": {
     name: "Google updater",
@@ -433,6 +434,106 @@ function readStartTimes(pids: number[], now: Date): Map<number, string> {
 }
 
 // ---------------------------------------------------------------------------- #
+//                              SLEEP & WAKE HOOKS                              #
+// ---------------------------------------------------------------------------- #
+
+const SLEEPWATCHER_LABEL = "homebrew.mxcl.sleepwatcher";
+const HOOK_RUN_LIMIT = 20;
+const HOOK_RUN_LINES = 400;
+// Written by ~/.sleep and ~/.wakeup around each run; keep in sync with those scripts.
+const HOOK_MARKER = /^=== sleepwatcher (?:sleep|wakeup) (start|end) (\S+)(?: exit=(\d+))? ===$/;
+
+export type HookStep = { title: string; notes: string };
+export type HookRun = { start: string; end?: string; exit?: number; lines: string[]; errorLines: number };
+
+// A step is a `# ---` rule, `# Title`, `# ---` rule block; the comment lines right below it become its notes.
+export function parseHookSteps(script: string): HookStep[] {
+  const lines = script.split("\n");
+  const rule = /^# -{6,}$/;
+  const steps: HookStep[] = [];
+  for (let i = 0; i + 2 < lines.length; i++) {
+    if (!rule.test(lines[i]) || !lines[i + 1].startsWith("# ") || !rule.test(lines[i + 2])) continue;
+    const notes: string[] = [];
+    for (let j = i + 3; j < lines.length && /^#( |$)/.test(lines[j]); j++) notes.push(lines[j].slice(2));
+    steps.push({ title: lines[i + 1].slice(2).trim(), notes: notes.join(" ").trim() });
+    i += 2;
+  }
+  return steps;
+}
+
+// Newest first. A run without an end marker is still going or was killed before its EXIT trap ran.
+export function parseHookRuns(log: string): HookRun[] {
+  const runs: HookRun[] = [];
+  let current: HookRun | undefined;
+  for (const line of log.split("\n")) {
+    const marker = HOOK_MARKER.exec(line);
+    if (marker?.[1] === "start") {
+      current = { start: marker[2], lines: [], errorLines: 0 };
+      runs.push(current);
+    } else if (marker?.[1] === "end") {
+      if (current) Object.assign(current, { end: marker[2], exit: Number(marker[3]) });
+      current = undefined;
+    } else if (current) {
+      current.lines.push(line);
+    }
+  }
+  return runs
+    .slice(-HOOK_RUN_LIMIT)
+    .reverse()
+    .map((run) => {
+      while (run.lines.at(-1) === "") run.lines.pop();
+      const lines = run.lines.slice(-HOOK_RUN_LINES);
+      return { ...run, lines, errorLines: lines.filter((line) => ERROR_PATTERN.test(line)).length };
+    });
+}
+
+async function hooksPayload() {
+  const plistPath = join(AGENTS_DIR, `${SLEEPWATCHER_LABEL}.plist`);
+  const args = existsSync(plistPath)
+    ? (readPlist(plistPath).plist.ProgramArguments as string[] | undefined)
+    : undefined;
+  const flagValue = (flag: string) => {
+    const index = args?.indexOf(flag) ?? -1;
+    return index >= 0 ? args?.[index + 1] : undefined;
+  };
+  const hooks = await Promise.all(
+    [
+      { kind: "wakeup", name: "Wake", trigger: flagValue("-w") },
+      { kind: "sleep", name: "Sleep", trigger: flagValue("-s") },
+    ].map(async (hook) => {
+      const script = hook.trigger && existsSync(hook.trigger) ? realpathSync(hook.trigger) : undefined;
+      const text = script ? readFileSync(script, "utf8") : "";
+      const logFile = scriptLogPaths(text, HOME, STATE_HOME)[0];
+      // Read the rotated log first so runs stay in order; the scripts rotate before writing a start marker.
+      const logText = logFile
+        ? (await Promise.all([`${logFile}.1`, logFile].map((f) => (existsSync(f) ? Bun.file(f).text() : "")))).join(
+            "\n",
+          )
+        : "";
+      // ~/.wakeup.sh comes from executable_dot_wakeup.sh in the chezmoi source.
+      const source = script && join(CHEZMOI_DIR, `executable_dot_${basename(script).replace(/^\./, "")}`);
+      return {
+        ...hook,
+        script,
+        source: source && existsSync(source) ? source : undefined,
+        logFile,
+        steps: parseHookSteps(text),
+        runs: parseHookRuns(logText),
+      };
+    }),
+  );
+  return {
+    generatedAt: new Date().toISOString(),
+    sleepwatcher: {
+      label: SLEEPWATCHER_LABEL,
+      plist: existsSync(plistPath) ? plistPath : undefined,
+      live: readLiveState(SLEEPWATCHER_LABEL),
+    },
+    hooks,
+  };
+}
+
+// ---------------------------------------------------------------------------- #
 //                                     API                                      #
 // ---------------------------------------------------------------------------- #
 
@@ -508,6 +609,8 @@ export async function handle(request: Request): Promise<Response> {
   if (pathname === "/") return new Response(indexHtml, { headers: { "Content-Type": "text/html; charset=utf-8" } });
   if (pathname === "/api/agents")
     return Response.json(await agentsPayload(), { headers: { "Cache-Control": "no-store" } });
+  if (pathname === "/api/hooks")
+    return Response.json(await hooksPayload(), { headers: { "Cache-Control": "no-store" } });
   return new Response("Not found", { status: 404 });
 }
 
