@@ -94,7 +94,6 @@ MACOS_FORMULAE=(
   sfnt2woff-zopfli
   tesseract-lang
   woff2
-  zopfli
 
   # Other utilities
   ack
