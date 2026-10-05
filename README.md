@@ -34,8 +34,9 @@ chicken-and-egg failures.
 4. **GitHub SSH key**: only the public key is tracked (`dot_ssh/github/key.pub`). Restore the passphrase-protected
    private key from your secure backup to `~/.ssh/github/key.pem` and `chmod 600` it. Until then, GitHub access over SSH
    does not work — use HTTPS URLs as a fallback. Store its passphrase in the macOS login keychain once, so the
-   `local.ssh-load-keychain` LaunchAgent can load the key at every login without prompting. Git uses this local key for
-   both GitHub authentication and SSH commit signing; neither operation invokes 1Password.
+   `local.ssh-load-keychain` LaunchAgent (from `PaulRBerg/circadian`, step 6) can load the key at every login without
+   prompting. Git uses this local key for both GitHub authentication and SSH commit signing; neither operation invokes
+   1Password.
 
    ```sh
    /usr/bin/ssh-add --apple-use-keychain ~/.ssh/github/key.pem
@@ -94,8 +95,9 @@ chicken-and-egg failures.
    - Agent configs: `git clone git@github.com:PaulRBerg/dot-claude.git ~/.claude` and
      `git clone git@github.com:PaulRBerg/dot-agents.git ~/.agents`
    - Shell history sync: `atuin login`
-   - Local HTTPS domains: run `caddy trust` once (sudo prompt) so browsers accept Caddy's local CA, then open
-     `https://pulse.localhost`, `https://handoffs.localhost`, and `https://coord.localhost`.
+   - LaunchAgents, sleep and wake hooks, and local HTTPS:
+     `git clone git@github.com:PaulRBerg/circadian.git ~/projects/circadian`, then `just install && just deploy` there.
+     Run `caddy trust` once (sudo prompt) so browsers accept Caddy's local CA.
 
 7. Verify everything: `chezmoi cd && just doctor` — checks required commands, PATH health, a dry-run apply, rendered
    templates, and lint.

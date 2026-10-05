@@ -71,22 +71,20 @@ chezmoi source-state naming (source name → target):
 
 Layout:
 
-| Path                                    | Purpose                                                                |
-| --------------------------------------- | ---------------------------------------------------------------------- |
-| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                                      |
-| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`                  |
-| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                              |
-| `dot_config/prb/bin/`                   | Shell utilities, added to `PATH`                                       |
-| `Library/LaunchAgents/`                 | macOS user agents                                                      |
-| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                                     |
-| `dot_config/caddy/`                     | Caddyfile for named `*.localhost` HTTPS domains (macOS; `local.caddy`) |
-| `dot_config/iterm2/`                    | Selected iTerm2 settings overlay (macOS; merged into global prefs)     |
-| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)                  |
-| `dot_setup/packages.sh`                 | Shared package manifest — source of truth                              |
-| `dot_setup/lib/common.sh`               | Shared setup helpers                                                   |
-| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)                 |
-| `.chezmoiignore.tmpl`                   | Development-file exclusions and macOS guard                            |
-| `justfile`                              | Task runner                                                            |
+| Path                                    | Purpose                                                            |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                                  |
+| `dot_zshenv`                            | Early XDG defaults; prepends `~/.local/bin` to `PATH`              |
+| `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                          |
+| `dot_config/prb/bin/`                   | Shell utilities, added to `PATH`                                   |
+| `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                                 |
+| `dot_config/iterm2/`                    | Selected iTerm2 settings overlay (macOS; merged into global prefs) |
+| `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)              |
+| `dot_setup/packages.sh`                 | Shared package manifest — source of truth                          |
+| `dot_setup/lib/common.sh`               | Shared setup helpers                                               |
+| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)             |
+| `.chezmoiignore.tmpl`                   | Development-file exclusions and macOS guard                        |
+| `justfile`                              | Task runner                                                        |
 
 ### Shell Startup Order
 
@@ -114,51 +112,14 @@ category in `MACOS_FORMULAE`, `MACOS_CASKS`, or `MACOS_TAPS`.
 
 Shell functions and Git aliases use the native macOS `pbcopy` and `pbpaste` commands.
 
-### Local HTTPS domains (macOS only)
+### LaunchAgents, sleep and wake hooks, and local HTTPS
 
-Caddy runs as the `local.caddy` LaunchAgent (`Library/LaunchAgents/local.caddy.plist.tmpl`) and reverse-proxies named
-`*.localhost` domains to local apps: `https://pulse.localhost` (6173), `https://budget.localhost` (8437),
-`https://handoffs.localhost` (7777), `https://coord.localhost` (4173), and `https://launchd.localhost` (8479). All are
-always-on services. The budget app runs from `~/projects/our-house/budget` as `local.our-house-budget`; its log is
-`~/Library/Logs/our-house-budget.log`. Browsers and macOS resolve `*.localhost` to loopback, so no DNS or `/etc/hosts`
-changes are involved.
-
-- To add a site, add a block to `dot_config/caddy/Caddyfile` with a comment naming the app and its source directory,
-  then apply. The hook `dot_setup/run_onchange_after_setup_caddy_macos.sh.tmpl` validates the Caddyfile and restarts the
-  agent whenever the Caddyfile or plist changes. A scoped apply only runs the hook when it is named too:
-  `chezmoi apply --source-path dot_config/caddy/Caddyfile dot_setup/run_onchange_after_setup_caddy_macos.sh.tmpl`.
-- Certificates come from Caddy's local CA. Trust it once with `caddy trust` (sudo prompt); the Caddyfile sets
-  `skip_install_trust` because the launchd process cannot prompt. The hook prints a reminder while the CA is untrusted.
-- `local.caddy-tls-watchdog` runs at load and hourly. It reasserts local-CA trust, verifies the budget API through
-  normal TLS, restarts Caddy on failure, and restarts the budget agent only if Caddy recovery is insufficient. Its
-  source files are `Library/LaunchAgents/local.caddy-tls-watchdog.plist.tmpl` and
-  `dot_setup/executable_caddy_tls_watchdog_macos.sh.tmpl`; apply them with
-  `dot_setup/run_onchange_after_setup_caddy_tls_watchdog_macos.sh.tmpl`. Log: `~/Library/Logs/caddy-tls-watchdog.log`.
-- Log: `~/Library/Logs/caddy.log`. Restart: `launchctl kickstart -k gui/$(id -u)/local.caddy`.
-
-### launchd dashboard (macOS only)
-
-`https://launchd.localhost` is a read-only view of every plist in `~/Library/LaunchAgents`: schedule, launchd state,
-uptime, last exit, next calendar run, a 24-hour strip, observed runs, and log tails with error-line highlighting. Its
-zero-dependency Bun server lives in `dot_config/launchd-dashboard/` (→ `~/.config/launchd-dashboard/`) and runs as
-`local.launchd-dashboard` on `127.0.0.1:8479`; it accepts only the named host or direct loopback `Host` headers.
-
-- Agents render grouped by domain with a friendly name, icon, and description from the `CATALOG` in `server.ts`; add an
-  entry there when adding a LaunchAgent. Unknown labels fall back to a humanized name under "Other". The dashboard hides
-  its own agent.
-
-- launchd keeps no run history and the unified log does not retain job spawns, so the server samples `launchctl print`
-  every 15s and appends start/exit transitions to `~/.local/state/launchd-dashboard/history.jsonl`. History starts when
-  the service loads; runs shorter than a sample are inferred from the `runs` counter.
-- Log paths come from `StandardOutPath`/`StandardErrorPath`, plus `exec >>"<path>"` redirects in inline shell scripts.
-- `dot_setup/run_onchange_after_setup_launchd_dashboard_macos.sh.tmpl` hashes the plist and `server.ts`, so changing
-  either reloads the agent; `index.html` is read per request. Tests: `tests/launchd_dashboard.test.ts` (`bun test`).
-- The **Sleep & wake** tab (`#sleep`, `/api/hooks`) shows the sleepwatcher hooks `~/.wakeup` and `~/.sleep`: steps
-  parsed from each script's `# ---` section headers and the comments below them, plus recent runs with output.
-  Sleepwatcher discards hook output, so both scripts log to `~/Library/Logs/sleepwatcher-{wakeup,sleep}.log` (rotated to
-  `.1` at 2 MB) between `=== sleepwatcher <hook> start|end ===` markers; keep them in sync with `HOOK_MARKER` in
-  `server.ts`.
-- Log: `~/Library/Logs/launchd-dashboard.log`. Restart: `launchctl kickstart -k gui/$(id -u)/local.launchd-dashboard`.
+These live in `~/projects/circadian` (GitHub `PaulRBerg/circadian`), not in this repository: every `local.*`
+LaunchAgent, the sleepwatcher hooks, the Caddyfile for the named `*.localhost` apps, and the launchd dashboard at
+`https://launchd.localhost`. That repository installs its own plists with `just deploy`; follow its `AGENTS.md`. This
+repository only provisions the tools those agents need (`caddy`, `sleepwatcher`, `smartmontools`, Bun) and the shell
+modules some of them source (`env_core.sh`, `path.sh`, `functions/dev.sh`). Do not add LaunchAgents or `run_onchange`
+launchctl hooks here.
 
 ### iTerm2 settings (macOS only)
 

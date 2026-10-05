@@ -80,7 +80,6 @@ alias fw := full-write
 @test:
     bats tests/*.bats
     uv run python -m unittest discover -s tests -p 'test_*.py'
-    bun test tests/
 alias t := test
 
 # Run local health checks for this chezmoi source tree
@@ -92,7 +91,6 @@ doctor:
     echo "== required commands =="
     missing=0
     required=(
-        caddy
         chezmoi
         delta
         difft

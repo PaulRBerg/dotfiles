@@ -59,7 +59,7 @@ MACOS_FORMULAE=(
   tree
 
   # Development tools
-  caddy # local HTTPS reverse proxy for *.localhost (local.caddy LaunchAgent)
+  caddy # local HTTPS reverse proxy for *.localhost (local.caddy in ~/projects/circadian)
   direnv
   gh
   git
@@ -107,7 +107,7 @@ MACOS_FORMULAE=(
   openssh
   pinentry-mac
   screen
-  sleepwatcher
+  sleepwatcher # sleep and wake hooks (local.sleepwatcher in ~/projects/circadian)
   smartmontools
   ssh-copy-id
   tmux

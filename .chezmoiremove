@@ -28,3 +28,15 @@
 .config/prb/load_env_linux.sh
 .config/prb/path_linux.sh
 .setup/tools_ubuntu.sh
+
+# LaunchAgents, sleepwatcher hooks, Caddy, and the launchd dashboard moved to ~/projects/circadian, which installs
+# ~/Library/LaunchAgents itself and runs hooks and jobs from its checkout.
+.config/caddy/Caddyfile
+.config/launchd-dashboard
+.config/prb/bin/ssd_write_monitor_macos.sh
+.config/prb/wakeup
+.setup/caddy_tls_watchdog_macos.sh
+.sleep
+.sleep.sh
+.wakeup
+.wakeup.sh

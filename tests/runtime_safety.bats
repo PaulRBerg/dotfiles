@@ -19,74 +19,6 @@ copy_symlinks_functions() {
   cp "$REPO_ROOT/dot_config/prb/functions/symlinks.sh.tmpl" "$BATS_TEST_TMPDIR/symlinks.sh"
 }
 
-setup_agent_skills_remote() {
-  AGENT_SKILLS_REMOTE="$BATS_TEST_TMPDIR/agent-skills.git"
-  AGENT_SKILLS_PRIMARY="$BATS_TEST_TMPDIR/agent-skills-primary"
-  local seed="$BATS_TEST_TMPDIR/agent-skills-seed"
-
-  git init -q --bare "$AGENT_SKILLS_REMOTE"
-  git init -q -b main "$seed"
-  git -C "$seed" config user.name Test
-  git -C "$seed" config user.email test@example.com
-  mkdir -p "$seed/skills/cli-fake/references"
-  printf '1.0.0\n' >"$seed/skills/cli-fake/references/version.txt"
-  git -C "$seed" add skills/cli-fake/references/version.txt
-  git -C "$seed" commit -qm initial
-  git -C "$seed" remote add origin "$AGENT_SKILLS_REMOTE"
-  git -C "$seed" push -q -u origin main
-  git clone -q --branch main "$AGENT_SKILLS_REMOTE" "$AGENT_SKILLS_PRIMARY"
-  printf 'primary worktree must remain dirty\n' >"$AGENT_SKILLS_PRIMARY/local-only"
-}
-
-install_fake_refresh_tools() {
-  write_executable "$BATS_TEST_TMPDIR/bin/fake" \
-    '#!/usr/bin/env bash' \
-    "printf '%s\\n' 'fake 2.0.0'"
-
-  write_executable "$BATS_TEST_TMPDIR/bin/claude" \
-    '#!/usr/bin/env bash' \
-    'printf "%s\n" "$PWD" >>"$CLAUDE_CWD_LOG"' \
-    'if [[ "${!#}" != /refresh-cli-skill* ]]; then' \
-    '  [[ "${!#}" == *"just publish-skills --skill cli-fake\`"* ]] || exit 3' \
-    '  [[ "$(git rev-parse HEAD)" == "$(git --git-dir="$AGENT_SKILLS_REMOTE" rev-parse refs/heads/main)" ]] || exit 4' \
-    '  printf "publish\n" >>"$CLAUDE_CALL_LOG"' \
-    "  printf '%s\\n' '{\"result\":\"ok\"}'" \
-    '  exit 0' \
-    'fi' \
-    'printf "refresh\n" >>"$CLAUDE_CALL_LOG"' \
-    'printf "2.0.0\n" >skills/cli-fake/references/version.txt' \
-    'if [[ -n "${ADVANCE_REMOTE_DURING_REFRESH:-}" ]]; then' \
-    '  base="$(git --git-dir="$AGENT_SKILLS_REMOTE" rev-parse refs/heads/main)"' \
-    '  tree="$(git --git-dir="$AGENT_SKILLS_REMOTE" rev-parse "${base}^{tree}")"' \
-    '  advanced="$(printf "advance\n" | GIT_AUTHOR_NAME=Test GIT_AUTHOR_EMAIL=test@example.com GIT_COMMITTER_NAME=Test GIT_COMMITTER_EMAIL=test@example.com git --git-dir="$AGENT_SKILLS_REMOTE" commit-tree "$tree" -p "$base")"' \
-    '  git --git-dir="$AGENT_SKILLS_REMOTE" update-ref refs/heads/main "$advanced" "$base"' \
-    'fi' \
-    "printf '%s\\n' '{\"result\":\"ok\"}'"
-
-  write_executable "$BATS_TEST_TMPDIR/bin/ai-commit" \
-    '#!/usr/bin/env bash' \
-    'case "$1" in' \
-    '  prepare)' \
-    '    git add -A' \
-    '    printf "PREPARED\\tfake-transaction\\n"' \
-    '    ;;' \
-    '  commit)' \
-    '    [[ "$2" == fake-transaction ]] || exit 2' \
-    '    shift 2' \
-    '    while (($#)); do' \
-    '      case "$1" in' \
-    '        -m) message="$2"; shift 2 ;;' \
-    '        --push) push=1; shift ;;' \
-    '        *) exit 2 ;;' \
-    '      esac' \
-    '    done' \
-    '    git commit -qm "$message"' \
-    '    [[ -z "${push:-}" ]] || git push -q origin HEAD:main' \
-    '    ;;' \
-    '  *) exit 2 ;;' \
-    'esac'
-}
-
 @test "agents-layout shell-quotes a directory containing quotes and metacharacters" {
   local target="$BATS_TEST_TMPDIR/repo ' ; touch injected ; #"
   local pwd_log="$BATS_TEST_TMPDIR/it2-pwd"
@@ -220,36 +152,6 @@ install_fake_refresh_tools() {
   [[ "$(git -C "$repo" branch --show-current)" == current ]]
 }
 
-@test "Codex build autosync refuses unexpected output paths" {
-  local home="$BATS_TEST_TMPDIR/home"
-  local codex="$home/.codex"
-  local block="$BATS_TEST_TMPDIR/codex-build.sh"
-  mkdir -p "$codex"
-  git init -q -b main "$codex"
-  git -C "$codex" config user.name Test
-  git -C "$codex" config user.email test@example.com
-  printf 'old\n' >"$codex/AGENTS.md"
-  git -C "$codex" add AGENTS.md
-  git -C "$codex" commit -qm initial
-  write_executable "$BATS_TEST_TMPDIR/bin/just" \
-    '#!/usr/bin/env bash' \
-    'printf "new\n" >AGENTS.md' \
-    'printf "unexpected\n" >other-file'
-  awk '
-    /# Build Codex AGENTS.md/ { include = 1; next }
-    /# Update package managers/ { include = 0 }
-    include { print }
-  ' "$REPO_ROOT/executable_dot_wakeup.sh" >"$block"
-
-  run env HOME="$home" PATH="$BATS_TEST_TMPDIR/bin:$PATH" bash "$block"
-
-  [[ "$status" -eq 0 ]]
-  [[ "$output" == *"Skipping Codex commit and push"* ]]
-  [[ "$(git -C "$codex" rev-list --count HEAD)" == 1 ]]
-  [[ -z "$(git -C "$codex" diff --cached --name-only)" ]]
-  [[ "$(git -C "$codex" status --short)" == $' M AGENTS.md\n?? other-file' ]]
-}
-
 @test "Vim starts without the optional Amix runtime and loads the custom config" {
   mkdir -p "$BATS_TEST_TMPDIR/home"
 
@@ -258,59 +160,4 @@ install_fake_refresh_tools() {
 
   run vim -Nu NONE -n -es -S "$REPO_ROOT/dot_vim_runtime/my_configs.vim" '+qa!'
   [[ "$status" -eq 0 ]]
-}
-
-@test "CLI skill refresh commits and publishes from a temporary clone and never touches the primary worktree" {
-  setup_agent_skills_remote
-  install_fake_refresh_tools
-  mkdir -p "$BATS_TEST_TMPDIR/clones" "$BATS_TEST_TMPDIR/home"
-  local primary_before
-  primary_before="$(git -C "$AGENT_SKILLS_PRIMARY" status --short)"
-
-  run env \
-    PATH="$BATS_TEST_TMPDIR/bin:$PATH" \
-    HOME="$BATS_TEST_TMPDIR/home" \
-    TMPDIR="$BATS_TEST_TMPDIR/clones" \
-    AGENT_SKILLS_DIR="$AGENT_SKILLS_PRIMARY" \
-    AGENT_SKILLS_REMOTE="$AGENT_SKILLS_REMOTE" \
-    GIT_AUTHOR_NAME=Test \
-    GIT_AUTHOR_EMAIL=test@example.com \
-    GIT_COMMITTER_NAME=Test \
-    GIT_COMMITTER_EMAIL=test@example.com \
-    CHEZMOI_SOURCE_DIR="$REPO_ROOT" \
-    CLAUDE_CWD_LOG="$BATS_TEST_TMPDIR/claude-cwd" \
-    CLAUDE_CALL_LOG="$BATS_TEST_TMPDIR/claude-calls" \
-    bash "$REPO_ROOT/dot_config/prb/wakeup/executable_refresh_cli_skills.sh"
-
-  [[ "$status" -eq 0 ]]
-  [[ "$(git -C "$AGENT_SKILLS_PRIMARY" status --short)" == "$primary_before" ]]
-  [[ "$(<"$AGENT_SKILLS_PRIMARY/skills/cli-fake/references/version.txt")" == 1.0.0 ]]
-  [[ "$(git --git-dir="$AGENT_SKILLS_REMOTE" show main:skills/cli-fake/references/version.txt)" == 2.0.0 ]]
-  [[ "$(<"$BATS_TEST_TMPDIR/claude-calls")" == $'refresh\npublish' ]]
-  run rg -Fx "$AGENT_SKILLS_PRIMARY" "$BATS_TEST_TMPDIR/claude-cwd"
-  [[ "$status" -eq 1 ]]
-  [[ -z "$(find "$BATS_TEST_TMPDIR/clones" -mindepth 1 -print -quit)" ]]
-}
-
-@test "CLI skill refresh aborts before commit when the remote branch advances" {
-  setup_agent_skills_remote
-  install_fake_refresh_tools
-  mkdir -p "$BATS_TEST_TMPDIR/clones" "$BATS_TEST_TMPDIR/home"
-
-  run env \
-    PATH="$BATS_TEST_TMPDIR/bin:$PATH" \
-    HOME="$BATS_TEST_TMPDIR/home" \
-    TMPDIR="$BATS_TEST_TMPDIR/clones" \
-    AGENT_SKILLS_DIR="$AGENT_SKILLS_PRIMARY" \
-    AGENT_SKILLS_REMOTE="$AGENT_SKILLS_REMOTE" \
-    ADVANCE_REMOTE_DURING_REFRESH=1 \
-    CHEZMOI_SOURCE_DIR="$REPO_ROOT" \
-    CLAUDE_CWD_LOG="$BATS_TEST_TMPDIR/claude-cwd" \
-    CLAUDE_CALL_LOG="$BATS_TEST_TMPDIR/claude-calls" \
-    bash "$REPO_ROOT/dot_config/prb/wakeup/executable_refresh_cli_skills.sh"
-
-  [[ "$status" -ne 0 ]]
-  [[ "$(<"$BATS_TEST_TMPDIR/claude-calls")" == refresh ]]
-  [[ "$(git --git-dir="$AGENT_SKILLS_REMOTE" show main:skills/cli-fake/references/version.txt)" == 1.0.0 ]]
-  [[ -z "$(find "$BATS_TEST_TMPDIR/clones" -mindepth 1 -print -quit)" ]]
 }
