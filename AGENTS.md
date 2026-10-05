@@ -165,6 +165,10 @@ uptime, last exit, next calendar run, a 24-hour strip, observed runs, and log ta
 zero-dependency Bun server lives in `dot_config/launchd-dashboard/` (→ `~/.config/launchd-dashboard/`) and runs as
 `local.launchd-dashboard` on `127.0.0.1:8479`; it accepts only the named host or direct loopback `Host` headers.
 
+- Agents render grouped by domain with a friendly name, icon, and description from the `CATALOG` in `server.ts`; add an
+  entry there when adding a LaunchAgent. Unknown labels fall back to a humanized name under "Other". The dashboard hides
+  its own agent.
+
 - launchd keeps no run history and the unified log does not retain job spawns, so the server samples `launchctl print`
   every 15s and appends start/exit transitions to `~/.local/state/launchd-dashboard/history.jsonl`. History starts when
   the service loads; runs shorter than a sample are inferred from the `runs` counter.

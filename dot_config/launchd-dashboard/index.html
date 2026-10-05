@@ -116,26 +116,78 @@
         vertical-align: middle;
       }
       tr.agent {
+        --row: var(--surface);
         cursor: pointer;
+        background: var(--row);
       }
       tr.agent:hover,
-      tr.agent:focus-visible {
-        background: var(--surface-2);
+      tr.agent:focus-visible,
+      tr.agent[aria-expanded="true"] {
+        --row: var(--surface-2);
         outline: none;
       }
-      tr.agent[aria-expanded="true"] {
-        background: var(--surface-2);
+      tr.group td {
+        padding: 14px 10px 6px;
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
       }
-      .label {
+      tr.group:first-child td {
+        padding-top: 8px;
+      }
+      tr.group .count {
+        margin-left: 6px;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+      .agent-id {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .icon {
+        position: relative;
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 16%, transparent);
+      }
+      .icon svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .names {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .name {
         font-weight: 550;
-        white-space: nowrap;
       }
-      .label .dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
+      .desc {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .icon .dot {
+        position: absolute;
+        right: -3px;
+        bottom: -3px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
-        margin-right: 8px;
+        border: 2px solid var(--row);
         background: var(--muted);
       }
       .dot.running {
@@ -148,9 +200,9 @@
       .dot.fail {
         background: var(--fail);
       }
-      .dot.unloaded {
-        background: transparent;
-        border: 1.5px solid var(--muted);
+      .icon .dot.unloaded {
+        background: var(--row);
+        box-shadow: inset 0 0 0 1.5px var(--muted);
       }
       .sub {
         color: var(--muted);
@@ -251,6 +303,9 @@
         margin: 0;
         overflow-wrap: anywhere;
       }
+      a {
+        color: var(--run);
+      }
       code,
       pre {
         font-family: var(--mono);
@@ -329,8 +384,7 @@
         .col-exit {
           display: none;
         }
-        td,
-        .label {
+        td {
           white-space: normal;
           overflow-wrap: break-word;
         }
@@ -387,6 +441,39 @@
           /[&<>"']/g,
           (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
         );
+      // Lucide-style 24px stroke icons, keyed by the `icon` field from the server catalog.
+      const ICONS = {
+        activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+        wallet:
+          '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+        receipt:
+          '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+        server:
+          '<rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 6h.01M6 18h.01"/>',
+        dashboard:
+          '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+        handoff: '<path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>',
+        lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+        shield:
+          '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+        history:
+          '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+        key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+        drive:
+          '<path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><path d="M6 16h.01M10 16h.01"/>',
+        moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+        download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+        box: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+      };
+      const GROUP_COLORS = {
+        Finance: "#3fb37f",
+        "AI agents": "#9b7cf0",
+        "Local web": "#4a9ff0",
+        "Shell & SSH": "#d99a2b",
+        "Mac health": "#e0708a",
+      };
+      const icon = (agent) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[agent.icon] ?? ICONS.box}</svg>`;
+
       const ERROR_PATTERN = /\b(error|err|fatal|panic|fail(ed|ure)?|exception|traceback)\b/i;
 
       function relative(iso) {
@@ -522,6 +609,8 @@
           <div class="detail-grid">
             <div>
               <dl>
+                <dt>Label</dt><dd><code>${esc(agent.label)}</code></dd>
+                ${agent.url ? `<dt>Opens at</dt><dd><a href="${esc(agent.url)}" target="_blank" rel="noopener">${esc(agent.url)}</a></dd>` : ""}
                 <dt>Schedule</dt><dd>${esc(agent.schedule.summary)}</dd>
                 ${agent.nextRun ? `<dt>Next run</dt><dd>${esc(fullTime(agent.nextRun))}</dd>` : ""}
                 <dt>launchd state</dt><dd>${esc(agent.live.loaded ? agent.live.state : "not loaded")}</dd>
@@ -562,15 +651,29 @@
             '<tr><td colspan="8" class="empty">No LaunchAgents found in ~/Library/LaunchAgents.</td></tr>';
           return;
         }
+        const groupSizes = new Map();
+        for (const agent of agents) groupSizes.set(agent.group, (groupSizes.get(agent.group) ?? 0) + 1);
         rows.innerHTML = agents
-          .map((agent) => {
+          .map((agent, index) => {
             const s = status(agent);
+            const groupHead =
+              index === 0 || agents[index - 1].group !== agent.group
+                ? `<tr class="group"><td colspan="8">${esc(agent.group)}<span class="count">${groupSizes.get(agent.group)}</span></td></tr>`
+                : "";
             const open = expanded.has(agent.label);
             const logWrite = agent.lastLogWrite;
             const errorCount = agent.logs.reduce((sum, log) => sum + (log.errorLines ?? 0), 0);
-            return `
+            return `${groupHead}
               <tr class="agent" tabindex="0" data-label="${esc(agent.label)}" aria-expanded="${open}">
-                <td class="label"><span class="dot ${s.cls}"></span>${esc(agent.label)}${agent.managed ? "" : '<span class="tag">third-party</span>'}</td>
+                <td>
+                  <div class="agent-id">
+                    <span class="icon" style="--accent:${GROUP_COLORS[agent.group] ?? "var(--muted)"}">${icon(agent)}<span class="dot ${s.cls}" title="${esc(s.text)}"></span></span>
+                    <span class="names">
+                      <span class="name" title="${esc(agent.label)}">${esc(agent.name)}${agent.managed ? "" : '<span class="tag">third-party</span>'}</span>
+                      <span class="desc">${esc(agent.description)}</span>
+                    </span>
+                  </div>
+                </td>
                 <td>${esc(agent.schedule.summary)}</td>
                 <td class="${s.cls === "running" ? "" : "sub"}" title="${esc(s.title ?? "")}">${esc(s.text)}</td>
                 <td class="col-exit">${exitCell(agent)}</td>

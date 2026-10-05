@@ -43,6 +43,140 @@ export type LiveState = {
 export type HistoryEvent = { ts: string; label: string; kind: "start" | "exit"; pid?: number; exit?: string };
 
 // ---------------------------------------------------------------------------- #
+//                                    CATALOG                                   #
+// ---------------------------------------------------------------------------- #
+
+// The dashboard's own agent is hidden: it is always running whenever the page loads.
+const SELF_LABEL = "local.launchd-dashboard";
+
+// Groups render in this order; `icon` names an SVG defined in index.html.
+export const GROUPS = ["Finance", "AI agents", "Local web", "Shell & SSH", "Mac health", "App updaters", "Other"];
+
+export type Profile = { name: string; icon: string; group: string; description: string; url?: string };
+
+const CATALOG: Record<string, Profile> = {
+  "local.prb-pulse": {
+    name: "Pulse",
+    icon: "activity",
+    group: "Finance",
+    description: "Personal finance dashboard",
+    url: "https://pulse.localhost",
+  },
+  "local.our-house-budget": {
+    name: "Household budget",
+    icon: "wallet",
+    group: "Finance",
+    description: "Our House budget app",
+    url: "https://budget.localhost",
+  },
+  "com.prb.claude.gaszip-refund-check": {
+    name: "Gas.zip refund check",
+    icon: "receipt",
+    group: "Finance",
+    description: "One-shot Claude task checking a bridge refund",
+  },
+  "local.ai-coord-api": {
+    name: "Coordination API",
+    icon: "server",
+    group: "AI agents",
+    description: "ai-coord server for agent scopes and findings",
+  },
+  "local.ai-coord-dashboard": {
+    name: "Coordination board",
+    icon: "dashboard",
+    group: "AI agents",
+    description: "Live view of agent sessions and claims",
+    url: "https://coord.localhost",
+  },
+  "local.ai-handoffs": {
+    name: "Handoffs",
+    icon: "handoff",
+    group: "AI agents",
+    description: "Task handoff inbox",
+    url: "https://handoffs.localhost",
+  },
+  "local.caddy": {
+    name: "HTTPS proxy",
+    icon: "lock",
+    group: "Local web",
+    description: "Caddy serving the *.localhost domains",
+  },
+  "local.caddy-tls-watchdog": {
+    name: "HTTPS watchdog",
+    icon: "shield",
+    group: "Local web",
+    description: "Checks TLS hourly and restarts Caddy on failure",
+  },
+  "local.atuin-daemon": {
+    name: "Shell history",
+    icon: "history",
+    group: "Shell & SSH",
+    description: "Atuin daemon recording shell history",
+  },
+  "local.ssh-load-keychain": {
+    name: "SSH key loader",
+    icon: "key",
+    group: "Shell & SSH",
+    description: "Adds the GitHub key to ssh-agent at login",
+  },
+  "local.ssd-write-monitor": {
+    name: "SSD write monitor",
+    icon: "drive",
+    group: "Mac health",
+    description: "Daily check of disk write volume",
+  },
+  "homebrew.mxcl.sleepwatcher": {
+    name: "Sleep & wake hooks",
+    icon: "moon",
+    group: "Mac health",
+    description: "Runs ~/.sleep and ~/.wakeup",
+  },
+  "com.google.GoogleUpdater.wake": {
+    name: "Google updater",
+    icon: "download",
+    group: "App updaters",
+    description: "Wakes Google Updater for Chrome updates",
+  },
+  "com.google.keystone.agent": {
+    name: "Google Keystone",
+    icon: "download",
+    group: "App updaters",
+    description: "Legacy Google software updater",
+  },
+  "com.google.keystone.xpcservice": {
+    name: "Google Keystone service",
+    icon: "download",
+    group: "App updaters",
+    description: "Helper service for Keystone",
+  },
+  "com.macpaw.CleanMyMac5.Updater": {
+    name: "CleanMyMac updater",
+    icon: "download",
+    group: "App updaters",
+    description: "Checks for CleanMyMac 5 updates",
+  },
+};
+
+// Unknown labels: "com.example.sync-worker" -> "Sync worker".
+export function humanize(label: string): string {
+  const words = (label.split(".").at(-1) ?? label)
+    .replace(/[-_]+/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+export function describeAgent(label: string): Profile {
+  const known = CATALOG[label];
+  if (known) return known;
+  if (/updater|keystone/i.test(label)) {
+    const vendor = label.split(".")[1] ?? label;
+    return { name: `${humanize(vendor)} updater`, icon: "download", group: "App updaters", description: label };
+  }
+  return { name: humanize(label), icon: "box", group: "Other", description: label };
+}
+
+// ---------------------------------------------------------------------------- #
 //                                    PARSING                                   #
 // ---------------------------------------------------------------------------- #
 
@@ -205,12 +339,14 @@ function isChezmoiManaged(file: string): boolean {
 }
 
 function loadAgents() {
-  return listAgentFiles().map((file) => {
-    const path = join(AGENTS_DIR, file);
-    const { plist, error } = readPlist(path);
-    const label = typeof plist.Label === "string" ? plist.Label : basename(file, ".plist");
-    return { file, path, label, plist, error };
-  });
+  return listAgentFiles()
+    .map((file) => {
+      const path = join(AGENTS_DIR, file);
+      const { plist, error } = readPlist(path);
+      const label = typeof plist.Label === "string" ? plist.Label : basename(file, ".plist");
+      return { file, path, label, plist, error };
+    })
+    .filter((agent) => agent.label !== SELF_LABEL);
 }
 
 // ---------------------------------------------------------------------------- #
@@ -329,6 +465,7 @@ async function agentsPayload() {
       if (schedule.calendar.length > 0) nextRun = nextCalendarRun(schedule.calendar, now)?.toISOString();
       return {
         label: agent.label,
+        ...describeAgent(agent.label),
         file: agent.file,
         path: agent.path,
         managed: isChezmoiManaged(agent.file),
@@ -346,7 +483,12 @@ async function agentsPayload() {
       };
     }),
   );
-  agents.sort((a, b) => Number(b.managed) - Number(a.managed) || a.label.localeCompare(b.label));
+  agents.sort(
+    (a, b) =>
+      GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group) ||
+      Number(b.managed) - Number(a.managed) ||
+      a.name.localeCompare(b.name),
+  );
   return { generatedAt: now.toISOString(), sampleSeconds: SAMPLE_MS / 1000, historyFile: HISTORY_FILE, agents };
 }
 

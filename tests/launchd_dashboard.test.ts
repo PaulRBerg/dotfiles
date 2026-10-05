@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  describeAgent,
   diffSamples,
+  GROUPS,
   handle,
   isAllowedHost,
   isSuccessfulExit,
@@ -22,6 +24,26 @@ describe("parseSchedule", () => {
     );
     expect(parseSchedule({ RunAtLoad: true }).summary).toBe("once at login");
     expect(parseSchedule({}).summary).toBe("on demand");
+  });
+});
+
+describe("describeAgent", () => {
+  test("uses the catalog for known agents", () => {
+    expect(describeAgent("local.caddy")).toMatchObject({ name: "HTTPS proxy", icon: "lock", group: "Local web" });
+  });
+
+  test("falls back to readable names in a known group", () => {
+    expect(describeAgent("com.adobe.AdobeUpdater.daemon")).toMatchObject({
+      name: "Adobe updater",
+      group: "App updaters",
+    });
+    expect(describeAgent("com.example.syncWorker")).toEqual({
+      name: "Sync worker",
+      icon: "box",
+      group: "Other",
+      description: "com.example.syncWorker",
+    });
+    expect(GROUPS).toContain(describeAgent("org.example.thing").group);
   });
 });
 
@@ -158,6 +180,7 @@ describe("host guard (proxy path)", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as { agents: { label: string }[] };
     expect(Array.isArray(body.agents)).toBe(true);
+    expect(body.agents.map((agent) => agent.label)).not.toContain("local.launchd-dashboard");
   });
 
   test("serves the page through the named host and refuses writes", async () => {
