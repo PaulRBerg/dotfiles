@@ -213,6 +213,8 @@ Review secret-backed and machine-specific templates before applying on a new mac
 - Standalone shell scripts use `.sh` (or `.sh.tmpl` for chezmoi templates). Preserve required extensionless entry points
   with chezmoi `symlink_*` files. Shell startup files and Zsh completion definitions retain their conventional names;
   non-shell scripts retain their language extensions.
+- Name shell functions in snake_case with underscores, never hyphens (e.g. `clean_dev_caches`). ZLE widgets keep zsh's
+  hyphenated `*-widget` convention.
 - Order package lists alphabetically.
 
 ## Conventions
