@@ -39,7 +39,6 @@ minimumReleaseAgeExclude:
   - "@prb/effect-solana"
   - "@prb/effect-xstate"
   - "@prb/math"
-  - "@sablier/devkit"
   - "@sablier/indexers"
   - "@sablier/price-data"
   - "@types/node"
