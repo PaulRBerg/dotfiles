@@ -123,7 +123,7 @@ The items below live in `~/projects/circadian` (GitHub `PaulRBerg/circadian`), n
 - Every `local.*` LaunchAgent.
 - The sleepwatcher hooks.
 - The Caddyfile for the named `*.localhost` apps.
-- The launchd dashboard at `https://launchd.localhost`.
+- The launchd dashboard at `https://circadian.localhost`.
 
 That repository installs its own plists with `just deploy`. Follow its `AGENTS.md`. This repository only provisions the
 tools those agents need (`caddy`, `sleepwatcher`, `smartmontools`, Bun) and the shell modules some of them source
