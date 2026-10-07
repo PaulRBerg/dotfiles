@@ -22,20 +22,21 @@ fi
 # healthy. Keep enough headroom for document-heavy workflows.
 export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--max-old-space-size=8192"
 
-# Per-process server log (namespace mcp:log; export DEBUG='*' for verbose CDP
+# Per-process server log (namespace mcp:log; export NODE_DEBUG='*' for verbose CDP
 # traffic) so transport drops are diagnosable after the fact. Each agent
 # session spawns its own server process, hence the PID suffix.
 log_dir="${XDG_CACHE_HOME:-$HOME/.cache}/chrome-devtools-mcp/logs"
 mkdir -p "$log_dir"
 find "$log_dir" -name 'server-*.log' -mtime +7 -delete 2>/dev/null || true
 
-# Screenshot flags only set response-side defaults (JPEG ~3-5x smaller than
-# PNG, downscaled to vision-model resolution); tools can still request PNG or
-# full size explicitly.
+# Keep the deprecated unrestricted-path opt-in: it bypasses restrictions only
+# without client-negotiated roots. --workspace=/ would also broaden client roots.
+# Screenshot format and quality are defaults; tools can still request PNG.
+# Maximum dimensions cap both file and inline output, with no per-call override.
 exec "$server" \
   "--browser-url=http://127.0.0.1:$port" \
-  --experimental-page-id-routing \
-  --experimental-memory \
+  --page-id-routing \
+  --memory-debugging \
   --experimental-vision \
   --experimental-structured-content \
   --experimental-screencast \
