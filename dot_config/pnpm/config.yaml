@@ -15,7 +15,8 @@ verifyDepsBeforeRun: false
 # otherwise stall every fresh release). `effect`/`sablier`/`typescript` are
 # unscoped, so a `@scope/*` glob wouldn't cover them — entries are explicit to
 # match the exact set and mirror bun (which cannot glob at all). Keep this list
-# identical to minimumReleaseAgeExcludes in ~/.config/.bunfig.toml;
+# identical to minimumReleaseAgeExcludes in ~/.config/.bunfig.toml and
+# min-release-age-exclude in ~/.config/npm/npmrc;
 # tests/release_age_excludes.bats enforces it.
 minimumReleaseAge: 10080 # 7 days
 minimumReleaseAgeExclude:
