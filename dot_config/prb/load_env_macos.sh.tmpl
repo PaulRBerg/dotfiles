@@ -16,6 +16,9 @@ export ETHERSCAN_API_KEY='{{ onepasswordRead "op://Keys/Etherscan/credential" | 
 # RouteMesh
 export ROUTEMESH_API_KEY='{{ onepasswordRead "op://Keys/RouteMesh/credential" | replace "'" "'\\''" }}'
 
+# Vercel AI Gateway
+export AI_GATEWAY_API_KEY='{{ onepasswordRead "op://Keys/q3tg2upimauv5ze24rdinqase4/credential" | replace "'" "'\\''" }}'
+
 # GitHub
 export GITHUB_TOKEN='{{ onepasswordRead "op://Keys/GitHub/credential" | replace "'" "'\\''" }}'
 
