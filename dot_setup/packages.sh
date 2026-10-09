@@ -3,6 +3,7 @@
 
 MACOS_TAPS=(
   bramstein/webfonttools
+  etherscan/etherscan-cli
   jackchuka/tap
 )
 
@@ -61,6 +62,7 @@ MACOS_FORMULAE=(
   # Development tools
   caddy # local HTTPS reverse proxy for *.localhost (local.caddy in ~/projects/circadian)
   direnv
+  etherscan # Etherscan CLI (etherscan/etherscan-cli tap)
   gh
   git
   git-absorb
