@@ -13,3 +13,11 @@ if [[ -d "$HOME/.local/bin" ]]; then
   path=("$HOME/.local/bin" ${path:#"$HOME/.local/bin"})
   export PATH
 fi
+
+# Coding agents (Claude Code, Codex) run commands through zsh but write bash by
+# habit. Make unmatched globs, `echo =====`, and alias-named functions behave as
+# in bash for those shells only. Claude Code's shell snapshot replays only
+# non-default options, so these survive it.
+if [[ -n "${CLAUDECODE:-}" || -n "${CODEX_THREAD_ID:-}" ]]; then
+  setopt no_nomatch no_equals no_aliases
+fi
