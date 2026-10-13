@@ -161,3 +161,20 @@ copy_symlinks_functions() {
   run vim -Nu NONE -n -es -S "$REPO_ROOT/dot_vim_runtime/my_configs.vim" '+qa!'
   [[ "$status" -eq 0 ]]
 }
+
+@test "agent shells override git autostash and autocorrect while other shells keep gitconfig" {
+  run env -u CLAUDECODE -u CODEX_THREAD_ID -u GIT_CONFIG_COUNT CLAUDECODE=1 zsh -fc \
+    'source "$1"; git config --get rebase.autoStash; git config --get help.autocorrect' _ "$REPO_ROOT/dot_zshenv"
+  [[ "$status" -eq 0 ]]
+  [[ "${lines[0]}" == false ]]
+  [[ "${lines[1]}" == never ]]
+
+  run env -u CLAUDECODE -u CODEX_THREAD_ID -u GIT_CONFIG_COUNT zsh -fc \
+    'source "$1"; [[ -z "${GIT_CONFIG_COUNT:-}" ]]' _ "$REPO_ROOT/dot_zshenv"
+  [[ "$status" -eq 0 ]]
+
+  run env -u CLAUDECODE -u CODEX_THREAD_ID CLAUDECODE=1 GIT_CONFIG_COUNT=0 zsh -fc \
+    'source "$1"; printf "%s\n" "$GIT_CONFIG_COUNT"' _ "$REPO_ROOT/dot_zshenv"
+  [[ "$status" -eq 0 ]]
+  [[ "$output" == 0 ]]
+}

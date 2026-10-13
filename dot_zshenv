@@ -17,7 +17,19 @@ fi
 # Coding agents (Claude Code, Codex) run commands through zsh but write bash by
 # habit. Make unmatched globs, `echo =====`, and alias-named functions behave as
 # in bash for those shells only. Claude Code's shell snapshot replays only
-# non-default options, so these survive it.
+# non-default options, so these survive it. They also disable git's autostash
+# and autocorrect, which are enabled for interactive use in the shared gitconfig.
 if [[ -n "${CLAUDECODE:-}" || -n "${CODEX_THREAD_ID:-}" ]]; then
   setopt no_nomatch no_equals no_aliases
+
+  # Git reads GIT_CONFIG_COUNT/KEY_n/VALUE_n as highest-precedence config.
+  # ~/.config/git/gitconfig enables rebase.autoStash and immediate
+  # help.autocorrect for interactive use. In shared worktrees an autostash
+  # can sweep another agent's uncommitted work, and autocorrect turns an
+  # agent's typo into an executed command, so agent shells disable both.
+  if [[ -z "${GIT_CONFIG_COUNT:-}" ]]; then
+    export GIT_CONFIG_COUNT=2
+    export GIT_CONFIG_KEY_0=rebase.autoStash GIT_CONFIG_VALUE_0=false
+    export GIT_CONFIG_KEY_1=help.autocorrect GIT_CONFIG_VALUE_1=never
+  fi
 fi
