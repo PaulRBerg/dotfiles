@@ -40,3 +40,6 @@
 .sleep.sh
 .wakeup
 .wakeup.sh
+
+# Orphaned: ai-commit reads only <repo>/.agents/commit.toml; the global natural_repositories list is ignored.
+.config/ai-commit/config.toml

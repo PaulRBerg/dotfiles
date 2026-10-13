@@ -4,13 +4,6 @@
 # GIT                                                                         #
 ###############################################################################
 
-# Use Git's colored diff when available
-if hash git &>/dev/null; then
-  function diff() {
-    git diff --no-index --color-words "$@"
-  }
-fi
-
 function _git_require_repo() {
   if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "❌ Not a git repository" >&2
