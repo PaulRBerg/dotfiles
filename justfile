@@ -12,6 +12,7 @@ export RUST_LOG := "warn"
 # Backticks use /bin/sh (not `set shell`), so bash's globstar isn't available.
 # Use fd to find .sh and .sh.tmpl files, then append non-extension matches.
 GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc.tmpl`
+GLOBS_PRETTIER := '"**/*.{md,yaml,yml}"'
 
 # ---------------------------------------------------------------------------- #
 #                                    SCRIPTS                                   #
@@ -188,16 +189,16 @@ doctor:
     exit "$status"
 alias d := doctor
 
-# Check Prettier formatting
+# Check Prettier formatting (all, or only the given files)
 [group("checks")]
-@prettier-check:
-    nlx prettier --check "**/*.{md,yaml,yml}"
+@prettier-check +globs=GLOBS_PRETTIER:
+    nlx prettier --check {{ globs }}
 alias pc := prettier-check
 
-# Format using Prettier
+# Format using Prettier (all, or only the given files)
 [group("checks")]
-@prettier-write:
-    nlx prettier --write "**/*.{md,yaml,yml}"
+@prettier-write +globs=GLOBS_PRETTIER:
+    nlx prettier --write {{ globs }}
 alias pw := prettier-write
 
 # Check plist syntax and canonical XML formatting
@@ -266,27 +267,27 @@ _plist:
     fi
     exit "$status"
 
-# Check shell scripts with ShellCheck and shfmt
+# Check shell scripts with ShellCheck and shfmt (all, or only the given files)
 [group("checks")]
-@shell-check:
-    shellcheck -x {{ GLOBS_SHELL }}
-    shfmt -d {{ GLOBS_SHELL }}
+@shell-check +files=GLOBS_SHELL:
+    shellcheck -x {{ files }}
+    shfmt -d {{ files }}
 alias sc := shell-check
 
-# Format shell scripts with shfmt
+# Format shell scripts with shfmt (all, or only the given files)
 [group("checks")]
-@shell-write:
-    shfmt -w {{ GLOBS_SHELL }}
+@shell-write +files=GLOBS_SHELL:
+    shfmt -w {{ files }}
 alias sw := shell-write
 
-# Check TOML formatting
+# Check TOML formatting (all, or only the given files)
 [group("checks")]
-@toml-format-check:
-    taplo format --check
+@toml-format-check *files:
+    taplo format --check {{ files }}
 alias tfc := toml-format-check
 
-# Format TOML files in place
+# Format TOML files in place (all, or only the given files)
 [group("checks")]
-@toml-format-write:
-    taplo format
+@toml-format-write *files:
+    taplo format {{ files }}
 alias tfw := toml-format-write

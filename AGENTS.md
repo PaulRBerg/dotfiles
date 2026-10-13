@@ -7,8 +7,8 @@ require cross-platform validation. Both chezmoi init and apply reject non-macOS 
 
 ## Stack
 
-- **chezmoi** — dotfile manager. Source state uses Go templates (`.tmpl`). Fetch current chezmoi docs via the context7
-  MCP when unsure about syntax or API.
+- **chezmoi** — dotfile manager. Source state uses Go templates (`.tmpl`). When unsure about syntax or API, check
+  `chezmoi help <command>` or the reference at https://www.chezmoi.io/reference/.
 - **Zsh** — Oh My Zsh + Starship prompt. `bash` runs scripts and `just` recipes.
 - **just** — task runner (`justfile`). Requires `gum`, `nlx`, `shellcheck`, and `shfmt` on `PATH` (declared via
   `require()`).
@@ -21,16 +21,19 @@ require cross-platform validation. Both chezmoi init and apply reject non-macOS 
 
 Run `just` recipes from the chezmoi source directory (`chezmoi cd`).
 
-| Recipe                | Alias | Action                                                |
-| --------------------- | ----- | ----------------------------------------------------- |
-| `just`                | —     | List recipes                                          |
-| `just apply`          | `a`   | `op signin`, then `chezmoi apply`                     |
-| `just sync [msg]`     | —     | Commit, push, then signin + apply                     |
-| `just full-check`     | `fc`  | Run all formatting, static, and regression checks     |
-| `just prettier-check` | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`          |
-| `just prettier-write` | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`          |
-| `just shell-check`    | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts |
-| `just shell-write`    | `sw`  | `shfmt -w` over all shell scripts                     |
+| Recipe                   | Alias | Action                                                                         |
+| ------------------------ | ----- | ------------------------------------------------------------------------------ |
+| `just`                   | —     | List recipes                                                                   |
+| `just apply`             | `a`   | `op signin`, then `chezmoi apply`                                              |
+| `just sync [msg]`        | —     | Interactive shortcut: commit all, push, then signin + apply                    |
+| `just full-check`        | `fc`  | Run all formatting, static, and regression checks                              |
+| `just prettier-check`    | `pc`  | Prettier `--check` over `**/*.{md,yaml,yml}`, or only the given files          |
+| `just prettier-write`    | `pw`  | Prettier `--write` over `**/*.{md,yaml,yml}`, or only the given files          |
+| `just shell-check`       | `sc`  | ShellCheck (`-x`) + `shfmt -d` over all shell scripts, or only the given files |
+| `just shell-write`       | `sw`  | `shfmt -w` over all shell scripts, or only the given files                     |
+| `just toml-format-check` | `tfc` | taplo `--check` over TOML files, or only the given files                       |
+| `just toml-format-write` | `tfw` | taplo format over TOML files, or only the given files                          |
+| `just test`              | `t`   | bats + Python unittest regression tests                                        |
 
 ### chezmoi
 
@@ -220,8 +223,8 @@ Review secret-backed and machine-specific templates before applying on a new mac
 
 ## Code Style
 
-- **Shell**: `shfmt` + ShellCheck (`.shellcheckrc`). Run `just shell-write` then `just shell-check`. Recipes execute
-  under `bash -euo pipefail`.
+- **Shell**: `shfmt` + ShellCheck (`.shellcheckrc`). Run `just shell-write <files>` then `just shell-check <files>` on
+  the files you changed. Recipes execute under `bash -euo pipefail`.
 - **Markdown/YAML**: Prettier (`.prettierrc.yml`: `printWidth: 120`, `proseWrap: always`). Wrap prose at 120 columns.
 - **Templates**: use chezmoi Go template syntax for machine data and secrets. macOS code needs no per-OS branch.
 - Standalone shell scripts use `.sh` (or `.sh.tmpl` for chezmoi templates). Preserve required extensionless entry points
@@ -247,26 +250,12 @@ Review secret-backed and machine-specific templates before applying on a new mac
 
 ## Contribution Workflow
 
-- Default branch: `main`. `just sync` commits and pushes directly to `main` (personal repo, no PR flow), then runs
-  `chezmoi apply`.
-- Run `just full-check` before committing and fix any reported findings.
-- Once a coherent unit of work passes `just full-check`, run `just sync` proactively. Do not ask first. Do not stop at
-  "here's the command to run". Unless you want the recipe's `ccc` helper to generate a message, pass an explicit one
-  (`just sync "<msg>"`).
-- **Guard first**: `just sync` runs `git add -A`, so it sweeps the entire working tree. Before running it, check
-  `git status --porcelain` and confirm every dirty path is one you edited this session. If anything unrelated is dirty,
-  do **not** run `just sync`. It is likely another agent's work in progress. Instead, commit and push only your own
-  files:
-
-  ```sh
-  git add <files you edited>
-  git commit -m "<msg>"
-  git push origin main
-  ```
-
-  Then apply manually per the bullet below. Say plainly that you skipped `just sync` because of unrelated dirty paths.
-
-- After committing and pushing without `just sync`, apply per the scoped-apply rule in the chezmoi section under
-  Commands above.
+- Default branch: `main`. Personal repo, no PR flow. Commit and push directly to `main`.
+- Run `just full-check` before committing and fix findings in the files you changed.
+- Once a coherent unit of work passes, commit it with the global `$commit` workflow, staging only the files you edited,
+  and push. Pushing is authorized for this repository. Do not ask first, and do not stop at "here's the command to run".
+- `just sync` is an interactive shortcut for the user. It runs `git add -A`, which sweeps every agent's uncommitted
+  work. Agents never run it.
+- After pushing, apply per the scoped-apply rule in the chezmoi section under Commands above.
 - There is no CI. Validation is local only.
 - Claude Code reads `AGENTS.md` directly. Do not add a `CLAUDE.md`.

@@ -93,7 +93,10 @@ chicken-and-egg failures.
    - iTerm2 (not in the brew manifest): `brew install --cask iterm2` — the apply hook merges the selected settings from
      `dot_config/iterm2/managed.plist` into iTerm2's normal macOS preferences domain.
    - Agent configs: `git clone git@github.com:PaulRBerg/dot-claude.git ~/.claude` and
-     `git clone git@github.com:PaulRBerg/dot-agents.git ~/.agents`
+     `git clone git@github.com:PaulRBerg/dot-agents.git ~/.agents`, then run
+     `just install-catalog && just install-external` in `~/.agents` to install the shared skills. Also clone
+     `git@github.com:PaulRBerg/agent-skills.git` to `~/projects/agent-skills` and run `just toolkit::install-cli` there
+     to build the `ai-*` CLIs (`ai-commit`, `ai-coord`, ...) that the global agent instructions depend on.
    - Shell history sync: `atuin login`
    - LaunchAgents, sleep and wake hooks, and local HTTPS:
      `git clone git@github.com:PaulRBerg/circadian.git ~/projects/circadian`, then `just install && just deploy` there.
