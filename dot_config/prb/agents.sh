@@ -99,10 +99,12 @@ function ccbump() {
 # CLAUDE_CONFIG_DIR keeps settings, hooks, skills, and session state under
 # ~/.claude-lab, and every clone with a .claude-plugin/plugin.json manifest in
 # ~/.claude-lab/plugins loads for the session only. Add one with
-# `gh repo clone owner/repo ~/.claude-lab/plugins/repo`.
+# `gh repo clone owner/repo ~/.claude-lab/plugins/repo`. Each run overwrites the
+# lab settings.json with a hook-free copy of ~/.claude/settings.json.
 function claude-lab() {
   local lab="$HOME/.claude-lab"
   mkdir -p "$lab/plugins" || return 1
+  jq 'del(.hooks)' "$HOME/.claude/settings.json" >"$lab/settings.json" || return 1
   CLAUDE_CONFIG_DIR="$lab" claude --dangerously-skip-permissions --plugin-dir "$lab/plugins" "$@"
 }
 
