@@ -95,6 +95,17 @@ function ccbump() {
   _run_claude_skill "Claude is bumping release..." "/release-bumper $*"
 }
 
+# Sandboxed Claude for trying external plugins without touching ~/.claude:
+# CLAUDE_CONFIG_DIR keeps settings, hooks, skills, and session state under
+# ~/.claude-lab, and every clone with a .claude-plugin/plugin.json manifest in
+# ~/.claude-lab/plugins loads for the session only. Add one with
+# `gh repo clone owner/repo ~/.claude-lab/plugins/repo`.
+function claude-lab() {
+  local lab="$HOME/.claude-lab"
+  mkdir -p "$lab/plugins" || return 1
+  CLAUDE_CONFIG_DIR="$lab" claude --dangerously-skip-permissions --plugin-dir "$lab/plugins" "$@"
+}
+
 # TODO archive
 function ccta() {
   local input_path="$PWD"
