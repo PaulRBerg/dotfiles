@@ -89,7 +89,7 @@ Layout:
 | `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)              |
 | `dot_setup/lib/brew_packages.sh`        | Homebrew package manifest — source of truth                        |
 | `dot_setup/lib/common.sh`               | Shared setup helpers                                               |
-| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)             |
+| `dot_setup/run_onchange_*`              | chezmoi hooks (biome, file associations, uv tools, completions, …) |
 | `.chezmoiignore.tmpl`                   | Development-file exclusions and macOS guard                        |
 | `justfile`                              | Task runner                                                        |
 
