@@ -22,16 +22,17 @@ brew_refresh() {
   brew upgrade
 }
 
+# ensure_symlink <link> <target>: make <link> a symlink to <target>.
 ensure_symlink() {
-  local target="$1"
-  local source="$2"
+  local link="$1"
+  local target="$2"
 
-  if [[ -L "$target" ]] && [[ "$(readlink "$target")" == "$source" ]]; then
+  if [[ -L "$link" ]] && [[ "$(readlink "$link")" == "$target" ]]; then
     return 0
   fi
 
-  mkdir -p "$(dirname "$target")" || return 1
-  rm -f "$target" || return 1
-  ln -s "$source" "$target" || return 1
-  printf "↪ %s → %s\n" "$target" "$source"
+  mkdir -p "$(dirname "$link")" || return 1
+  rm -f "$link" || return 1
+  ln -s "$target" "$link" || return 1
+  printf "↪ %s → %s\n" "$link" "$target"
 }

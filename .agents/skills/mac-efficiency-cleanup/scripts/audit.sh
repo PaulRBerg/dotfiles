@@ -26,15 +26,15 @@ limit_lines() {
 }
 
 du_kib() {
-  local path="$1"
+  local du_path="$1"
   local timeout_seconds="${MAC_CLEANUP_DU_TIMEOUT_SECONDS:-20}"
 
   if command -v gtimeout >/dev/null 2>&1; then
-    gtimeout "$timeout_seconds" du -sk "$path"
+    gtimeout "$timeout_seconds" du -sk "$du_path"
   elif command -v timeout >/dev/null 2>&1; then
-    timeout "$timeout_seconds" du -sk "$path"
+    timeout "$timeout_seconds" du -sk "$du_path"
   else
-    du -sk "$path"
+    du -sk "$du_path"
   fi
 }
 
@@ -42,7 +42,7 @@ section() {
   printf '\n## %s\n' "$1"
 }
 
-format_kib_stream() {
+format_kib() {
   awk '{
     size = $1
     $1 = ""
@@ -75,7 +75,7 @@ cache_root() {
     return 0
   fi
 
-  printf '%s\t%s\n' "$root_kib" "$root" | format_kib_stream
+  printf '%s\t%s\n' "$root_kib" "$root" | format_kib
 
   if ((root_kib > max_kib)); then
     echo "top children skipped: root exceeds $((max_kib / 1048576))G"
@@ -85,7 +85,7 @@ cache_root() {
   find "$root" -mindepth 1 -maxdepth 1 -exec du -sk {} + 2>/dev/null |
     sort -rn |
     head -n "$limit" |
-    format_kib_stream
+    format_kib
 }
 
 list_dir_entries() {
@@ -98,7 +98,7 @@ list_dir_entries() {
   fi
 }
 
-run_if_present() {
+run_or_skip() {
   local command_name="$1"
   shift
 
@@ -125,7 +125,7 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
 fi
 
 section "System"
-run_if_present sw_vers sw_vers
+run_or_skip sw_vers sw_vers
 uptime
 df -h / /System/Volumes/Data 2>/dev/null || df -h /
 
@@ -176,7 +176,7 @@ else
 fi
 
 section "Memory Pressure"
-run_if_present memory_pressure memory_pressure
+run_or_skip memory_pressure memory_pressure
 
 section "Top CPU Processes"
 ps -axo pid=,pcpu=,pmem=,rss=,comm= |

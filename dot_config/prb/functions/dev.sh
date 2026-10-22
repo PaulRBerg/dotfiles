@@ -227,9 +227,9 @@ function rgf() {
   local tmp
   tmp=$(mktemp -d) || return 1
   # Per-mode query stashes; pre-created so the first toggle's `cat` is quiet.
-  local rq="$tmp/rg-query" fq="$tmp/fzf-query" ret
-  : >"$rq"
-  : >"$fq"
+  local rg_query_file="$tmp/rg-query" fzf_query_file="$tmp/fzf-query" ret
+  : >"$rg_query_file"
+  : >"$fzf_query_file"
   # Stash queries with `printf %s`, not `echo`: fzf runs binds via $SHELL -c,
   # and zsh's echo would expand regex escapes like \b in the stashed query.
   : | fzf --ansi --disabled --query "${*:-}" \
@@ -239,8 +239,8 @@ function rgf() {
     --bind "start:reload:[ -n {q} ] && $rg_prefix -- {q} || :" \
     --bind "change:reload:sleep 0.1; [ -n {q} ] && $rg_prefix -- {q} || :" \
     --bind "ctrl-t:transform:[ \"\$FZF_PROMPT\" = 'rg> ' ] &&
-      printf %s \"unbind(change)+change-prompt(fzf> )+enable-search+transform-query:printf %s \\{q} >'$rq'; cat '$fq'\" ||
-      printf %s \"rebind(change)+change-prompt(rg> )+disable-search+transform-query:printf %s \\{q} >'$fq'; cat '$rq'\"" \
+      printf %s \"unbind(change)+change-prompt(fzf> )+enable-search+transform-query:printf %s \\{q} >'$rg_query_file'; cat '$fzf_query_file'\" ||
+      printf %s \"rebind(change)+change-prompt(rg> )+disable-search+transform-query:printf %s \\{q} >'$fzf_query_file'; cat '$rg_query_file'\"" \
     --delimiter : \
     --preview 'bat --color=always --style=numbers --highlight-line {2} -- {1}' \
     --preview-window 'right,60%,border-left,+{2}+3/3' \
@@ -273,7 +273,7 @@ function jsonf() {
 
   # Single-quote the path for the preview command's subshell, escaping any
   # embedded single quotes.
-  local file_q="'${1//\'/\'\\\'\'}'"
+  local quoted_file="'${1//\'/\'\\\'\'}'"
 
-  echo '' | fzf --print-query --preview "jq -C {q} $file_q" --preview-window=down,90%
+  echo '' | fzf --print-query --preview "jq -C {q} $quoted_file" --preview-window=down,90%
 }

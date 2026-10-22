@@ -7,14 +7,14 @@
 # Determine size of a file or total size of a directory
 function fs() {
   if du -b /dev/null >/dev/null 2>&1; then
-    local arg=-sbh
+    local du_flags=-sbh
   else
-    local arg=-sh
+    local du_flags=-sh
   fi
   if (($#)); then
-    du "$arg" -- "$@"
+    du "$du_flags" -- "$@"
   else
-    du "$arg" .[^.]* ./*
+    du "$du_flags" .[^.]* ./*
   fi
 }
 
@@ -136,25 +136,26 @@ function repos() {
 
 # Create a .tar.gz archive, using `pigz` or `gzip` for compression
 function targz() {
-  local tmpFile="$*.tar"
-  tar -cvf "${tmpFile}" --exclude=".DS_Store" "${@}" || return 1
+  local tar_file="$*.tar"
+  local tar_size gz_size
+  tar -cvf "${tar_file}" --exclude=".DS_Store" "${@}" || return 1
 
-  size=$(get_file_size "${tmpFile}")
+  tar_size=$(get_file_size "${tar_file}")
 
   local cmd=(gzip)
   if hash pigz 2>/dev/null; then
     cmd=(pigz)
     # pigz level 11 compresses with Zopfli; use it when the .tar file is smaller than 50 MB
-    ((size < 52428800)) && cmd+=(-11)
+    ((tar_size < 52428800)) && cmd+=(-11)
   fi
 
-  echo "Compressing .tar ($((size / 1000)) kB) using \`${cmd[*]}\`…"
-  "${cmd[@]}" -v "${tmpFile}" || return 1
-  [[ -f "${tmpFile}" ]] && rm "${tmpFile}"
+  echo "Compressing .tar ($((tar_size / 1000)) kB) using \`${cmd[*]}\`…"
+  "${cmd[@]}" -v "${tar_file}" || return 1
+  [[ -f "${tar_file}" ]] && rm "${tar_file}"
 
-  zippedSize=$(get_file_size "${tmpFile}.gz")
+  gz_size=$(get_file_size "${tar_file}.gz")
 
-  echo "${tmpFile}.gz ($((zippedSize / 1000)) kB) created successfully."
+  echo "${tar_file}.gz ($((gz_size / 1000)) kB) created successfully."
 }
 
 # `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring

@@ -102,7 +102,7 @@ function ccbump() {
 # `gh repo clone owner/repo ~/.claude-lab/plugins/repo`. Each run overwrites the
 # lab settings.json with a copy of ~/.claude/settings.json minus hooks and
 # enabledPlugins, so the sandbox runs only the --plugin-dir plugins.
-function claude-lab() {
+function claude_lab() {
   local lab="$HOME/.claude-lab"
   mkdir -p "$lab/plugins" || return 1
   jq 'del(.hooks, .enabledPlugins)' "$HOME/.claude/settings.json" >"$lab/settings.json" || return 1
@@ -155,7 +155,7 @@ function _require_ai_commit() {
 # _run_claude_skill <status-message> <prompt> [extra claude flags...]
 # Runs a headless Claude skill in lite mode (see CLAUDE_LITE_ENV/CLAUDE_LITE_FLAGS).
 function _run_claude_skill() {
-  local title="$1" prompt="$2"
+  local status_message="$1" prompt="$2"
   shift 2
 
   # Hard timeout so a stall can never become an unbounded hang (coreutils
@@ -186,7 +186,7 @@ function _run_claude_skill() {
 
   # Gum 2's spinner queries modes 2026/2027 with its input reader disabled,
   # leaking terminal replies into the shell. A plain status line needs no TTY.
-  printf '%s\n' "$title" >&2
+  printf '%s\n' "$status_message" >&2
   rc=0
   "${claude_command[@]}" </dev/null >"$out" 2>"$err" || rc=$?
 

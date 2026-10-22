@@ -40,8 +40,8 @@ function gh_cache_purge() {
   [[ -n "$repo" ]] && echo "Repository: $repo"
 
   echo -n "Continue? [y/N] "
-  read -r response
-  if [[ ! "$response" =~ ^[Yy]$ ]]; then
+  read -r reply
+  if [[ ! "$reply" =~ ^[Yy]$ ]]; then
     echo "Aborted"
     return 1
   fi

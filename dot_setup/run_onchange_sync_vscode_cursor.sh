@@ -18,9 +18,9 @@ CONFIG_FILES=(keybindings.json settings.json tasks.json)
 
 needs_setup=false
 for file in "${CONFIG_FILES[@]}"; do
-  target="$CURSOR_USER/$file"
-  source_path="$VSCODE_USER/$file"
-  [[ ! -L "$target" || "$(readlink "$target")" != "$source_path" ]] && needs_setup=true
+  link="$CURSOR_USER/$file"
+  target="$VSCODE_USER/$file"
+  [[ ! -L "$link" || "$(readlink "$link")" != "$target" ]] && needs_setup=true
 done
 
 if [[ $needs_setup == true ]]; then

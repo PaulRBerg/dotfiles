@@ -7,26 +7,28 @@ set -euo pipefail
 ZFUNC_DIR="$HOME/.zfunc"
 mkdir -p "$ZFUNC_DIR"
 
+# generate <command> <completion-name> <generator...>: write _<completion-name>
+# from the generator's stdout when <command> is installed.
 generate() {
-  local name="$1"
-  local target="$2"
+  local command_name="$1"
+  local completion_name="$2"
   shift
   shift
 
-  if command -v "$name" >/dev/null 2>&1; then
-    local output tmp
-    output="$ZFUNC_DIR/_$target"
-    tmp=$(mktemp "${output}.XXXXXX")
+  if command -v "$command_name" >/dev/null 2>&1; then
+    local completion_path tmp
+    completion_path="$ZFUNC_DIR/_$completion_name"
+    tmp=$(mktemp "${completion_path}.XXXXXX")
 
     if "$@" >"$tmp"; then
-      mv "$tmp" "$output"
-      echo "  ✓ $target" >&2
+      mv "$tmp" "$completion_path"
+      echo "  ✓ $completion_name" >&2
     else
       rm -f "$tmp"
-      echo "  ⚠ $target (generation failed)" >&2
+      echo "  ⚠ $completion_name (generation failed)" >&2
     fi
   else
-    echo "  ⊘ $name (not installed)" >&2
+    echo "  ⊘ $command_name (not installed)" >&2
   fi
 }
 

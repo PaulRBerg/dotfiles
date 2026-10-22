@@ -79,7 +79,7 @@ function _mac_cleanup_format_kib() {
   }'
 }
 
-function _mac_cleanup_du_root() {
+function _mac_cleanup_cache_root() {
   local root="$1"
   local limit="${2:-12}"
   local max_kib="${MAC_CLEANUP_TOP_CHILDREN_MAX_KIB:-52428800}"
@@ -111,7 +111,7 @@ function _mac_cleanup_du_root() {
     _mac_cleanup_format_kib
 }
 
-function _mac_cleanup_list_dir() {
+function _mac_cleanup_list_dir_entries() {
   local dir="$1"
 
   if command -v fd >/dev/null 2>&1; then
@@ -127,11 +127,11 @@ function mac_cleanup_review() {
   _mac_cleanup_require_macos || return
 
   echo "## Cache size summary"
-  _mac_cleanup_du_root "$HOME/Library/Caches"
-  _mac_cleanup_du_root "${XDG_CACHE_HOME:-$HOME/.cache}"
-  _mac_cleanup_du_root "$HOME/Library/Logs"
-  _mac_cleanup_du_root "$HOME/Library/Developer/Xcode/DerivedData"
-  _mac_cleanup_du_root "$HOME/Library/Caches/Homebrew"
+  _mac_cleanup_cache_root "$HOME/Library/Caches"
+  _mac_cleanup_cache_root "${XDG_CACHE_HOME:-$HOME/.cache}"
+  _mac_cleanup_cache_root "$HOME/Library/Logs"
+  _mac_cleanup_cache_root "$HOME/Library/Developer/Xcode/DerivedData"
+  _mac_cleanup_cache_root "$HOME/Library/Caches/Homebrew"
 
   echo
   echo "## mac-cleanup preview"
@@ -173,7 +173,7 @@ function mac_cleanup_review() {
     echo
     echo "== ${dir} =="
     if [[ -d "$dir" ]]; then
-      _mac_cleanup_list_dir "$dir"
+      _mac_cleanup_list_dir_entries "$dir"
     else
       echo "missing"
     fi
