@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
-MACOS_TAPS=(
+BREW_TAPS=(
   bramstein/webfonttools
   etherscan/etherscan-cli
   jackchuka/tap
 )
 
-MACOS_FORMULAE=(
+BREW_FORMULAE=(
   # Core utilities
   bash
   bash-completion2
@@ -117,7 +117,7 @@ MACOS_FORMULAE=(
   zellij
 )
 
-MACOS_CASKS=(
+BREW_CASKS=(
   # Browsers
   ungoogled-chromium
 

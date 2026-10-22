@@ -17,7 +17,7 @@ fi
 
 readonly RUBY_PREFIX="$(brew --prefix ruby 2>/dev/null || true)"
 if [[ -z "$RUBY_PREFIX" ]] || [[ ! -x "$RUBY_PREFIX/bin/gem" ]]; then
-  log_error "Homebrew ruby not installed; run ~/.setup/tools_macos.sh first"
+  log_error "Homebrew ruby not installed; run ~/.setup/install_brew_packages.sh first"
   exit 0
 fi
 

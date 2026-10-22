@@ -58,7 +58,7 @@ chicken-and-egg failures.
    Run the installer straight from the source tree:
 
    ```sh
-   bash ~/.local/share/chezmoi/dot_setup/executable_tools_macos.sh
+   bash ~/.local/share/chezmoi/dot_setup/executable_install_brew_packages.sh
    ```
 
 3. Install Oh My Zsh **into the XDG location** the tracked `.zshrc` expects (`~/.local/share/oh-my-zsh`, not the

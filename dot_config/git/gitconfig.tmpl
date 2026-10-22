@@ -276,7 +276,7 @@
     prune = true
 
 # What `git lfs install` writes, curated so LFS repos work on a fresh machine
-# without running it. git-lfs is installed on both platforms via packages.sh.
+# without running it. git-lfs is installed via lib/brew_packages.sh.
 [filter "lfs"]
     clean = git-lfs clean -- %f
     smudge = git-lfs smudge -- %f

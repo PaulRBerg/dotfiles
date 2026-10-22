@@ -13,7 +13,7 @@ echo ""
 
 # dutix is part of the managed macOS toolset.
 if ! command -v dutix >/dev/null 2>&1; then
-  echo "❌ dutix is required. Install it with ~/.setup/tools_macos.sh." >&2
+  echo "❌ dutix is required. Install it with ~/.setup/install_brew_packages.sh." >&2
   exit 1
 fi
 

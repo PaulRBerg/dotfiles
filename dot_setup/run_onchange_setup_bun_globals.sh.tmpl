@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Install/refresh global bun packages whenever the package list changes.
-# node_packages.sh hash: {{ include "dot_setup/lib/node_packages.sh" | sha256sum }}
+# bun_packages.sh hash: {{ include "dot_setup/lib/bun_packages.sh" | sha256sum }}
 set -uo pipefail
 
 # run_onchange_ scripts execute from a temp dir, so source from the installed path
-source "$HOME/.setup/lib/node_packages.sh"
+source "$HOME/.setup/lib/bun_packages.sh"
 BUN_GLOBALS_QUIET=1 install_bun_globals

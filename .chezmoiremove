@@ -29,6 +29,17 @@
 .config/prb/path_linux.sh
 .setup/tools_ubuntu.sh
 
+# The repository is macOS-only, so the _macos halves were merged into path.sh
+# and env_session.sh, and the setup scripts were named by package manager:
+# install_brew_packages.sh, update_brew_packages.sh, lib/brew_packages.sh,
+# and lib/bun_packages.sh.
+.config/prb/load_env_macos.sh
+.config/prb/path_macos.sh
+.setup/lib/node_packages.sh
+.setup/packages.sh
+.setup/tools_macos.sh
+.setup/update_macos.sh
+
 # LaunchAgents, sleepwatcher hooks, Caddy, and the launchd dashboard moved to ~/projects/circadian, which installs
 # ~/Library/LaunchAgents itself and runs hooks and jobs from its checkout.
 .config/caddy/Caddyfile

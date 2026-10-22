@@ -57,7 +57,7 @@ after an `apply --source-path`. It fails with `not managed`.
 
 ### Provisioning
 
-- macOS: `~/.setup/tools_macos.sh` (Homebrew)
+- macOS: `~/.setup/install_brew_packages.sh` (Homebrew)
 
 ### Validation (before committing)
 
@@ -87,7 +87,7 @@ Layout:
 | `dot_config/prb/aliases/`, `functions/` | Sourced alias and function modules                                 |
 | `dot_config/iterm2/`                    | Selected iTerm2 settings overlay (macOS, merged into global prefs) |
 | `dot_setup/`                            | Provisioning scripts (→ `~/.setup/`, added to `PATH`)              |
-| `dot_setup/packages.sh`                 | Shared package manifest — source of truth                          |
+| `dot_setup/lib/brew_packages.sh`        | Homebrew package manifest — source of truth                        |
 | `dot_setup/lib/common.sh`               | Shared setup helpers                                               |
 | `dot_setup/run_onchange_*`              | chezmoi hooks (biome, dutix, uv tools, completions, …)             |
 | `.chezmoiignore.tmpl`                   | Development-file exclusions and macOS guard                        |
@@ -109,11 +109,11 @@ Layout:
 
 ### Tool installation
 
-- [`dot_setup/packages.sh`](dot_setup/packages.sh) — package manifest, **source of truth**.
-- [`dot_setup/executable_tools_macos.sh`](dot_setup/executable_tools_macos.sh) — Homebrew installer.
+- [`dot_setup/lib/brew_packages.sh`](dot_setup/lib/brew_packages.sh) — Homebrew package manifest, **source of truth**.
+- [`dot_setup/executable_install_brew_packages.sh`](dot_setup/executable_install_brew_packages.sh) — Homebrew installer.
 
-Keep the installer thin. Source `packages.sh` rather than duplicating lists. Add tools alphabetically to the appropriate
-category in `MACOS_FORMULAE`, `MACOS_CASKS`, or `MACOS_TAPS`.
+Keep the installer thin. Source `lib/brew_packages.sh` rather than duplicating lists. Add tools alphabetically to the
+appropriate category in `BREW_FORMULAE`, `BREW_CASKS`, or `BREW_TAPS`.
 
 ### Clipboard
 
@@ -138,8 +138,8 @@ iTerm2 uses its normal global preferences domain (`com.googlecode.iterm2`). Do n
 source-state folder as a custom settings folder. iTerm rewrites that plist during normal GUI use.
 
 Track only selected settings in `dot_config/iterm2/managed.plist`. The macOS apply hook
-`dot_setup/run_onchange_setup_iterm2_macos.sh.tmpl` exports the current iTerm2 defaults, merges the managed overlay into
-them, imports the result, and disables custom-folder loading. The live prefs file
+`dot_setup/run_onchange_setup_iterm2.sh.tmpl` exports the current iTerm2 defaults, merges the managed overlay into them,
+imports the result, and disables custom-folder loading. The live prefs file
 `dot_config/iterm2/com.googlecode.iterm2.plist` is intentionally ignored. You should not add it again.
 
 ## Managed App Settings (partial overlays)
@@ -155,9 +155,9 @@ while leaving every other setting the app manages unchanged. The live settings f
 App managed this way:
 
 - **iTerm2** (macOS) — overlay `dot_config/iterm2/managed.plist`, merged into the `com.googlecode.iterm2` defaults
-  domain by `dot_setup/run_onchange_setup_iterm2_macos.sh.tmpl` (via the `dot_setup/executable_merge_iterm2_prefs.py`
-  helper). See the iTerm2 subsection above. The live prefs `dot_config/iterm2/com.googlecode.iterm2.plist` are ignored
-  in `.chezmoiignore.tmpl`.
+  domain by `dot_setup/run_onchange_setup_iterm2.sh.tmpl` (via the `dot_setup/executable_merge_iterm2_prefs.py` helper).
+  See the iTerm2 subsection above. The live prefs `dot_config/iterm2/com.googlecode.iterm2.plist` are ignored in
+  `.chezmoiignore.tmpl`.
 
 When adding another such app, use the same structure: a committed overlay of just the settings to enforce, plus a
 `run_*` apply hook that merges it onto the app's live file.
@@ -170,7 +170,7 @@ Fetch secrets in templates with `onepasswordRead`:
 {{ onepasswordRead "op://Vault/Item/field" }}
 ```
 
-See `dot_config/prb/load_env_macos.sh.tmpl` for examples. The chezmoi config at `~/.config/chezmoi/chezmoi.toml` uses
+See `dot_config/prb/env_session.sh.tmpl` for examples. The chezmoi config at `~/.config/chezmoi/chezmoi.toml` uses
 account auth:
 
 - `mode = "account"` — interactive 1Password CLI (`op signin`). Use for local development.
@@ -204,7 +204,7 @@ If `chezmoi apply` prompts for the account password, check the 1Password desktop
 repo back to service-account mode.
 
 Review secret-backed and machine-specific templates before applying on a new machine:
-`dot_config/prb/load_env_macos.sh.tmpl`, `aliases/locations.sh`, `path_macos.sh`, `agents.sh`, and `web3.sh`.
+`dot_config/prb/env_session.sh.tmpl`, `aliases/locations.sh`, `path.sh`, `agents.sh`, and `web3.sh`.
 
 ## Secrets
 
@@ -236,7 +236,8 @@ Review secret-backed and machine-specific templates before applying on a new mac
 
 ## Conventions
 
-- `dot_setup/packages.sh` is the single source of truth for packages. Edit it before the installer scripts.
+- `dot_setup/lib/brew_packages.sh` is the single source of truth for Homebrew packages. Edit it before the installer
+  scripts.
 - **Gum spin gotcha**: `gum spin -- <cmd>` spawns a subprocess via Go's `exec.Command`, which only finds executables on
   `$PATH`. It cannot find shell functions. Call the executable directly.
 

@@ -2,7 +2,7 @@
 # Global bun packages installed on top of Node.js.
 #
 # Sourced by dot_setup/executable_node.sh (manual / fnm_bump_node) and
-# dot_setup/run_onchange_setup_node.sh.tmpl (automatic, on `chezmoi apply`) so
+# dot_setup/run_onchange_setup_bun_globals.sh.tmpl (automatic, on `chezmoi apply`) so
 # both entry points install the same set without duplicating the list.
 # shellcheck disable=SC2034
 

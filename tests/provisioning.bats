@@ -48,7 +48,7 @@ esac
 EOF
   chmod +x "$MOCK_BIN/bun"
 
-  run bash -c 'BUN_INSTALL="$1"; PATH="$1:$PATH"; source "$2/dot_setup/lib/node_packages.sh"; install_bun_globals' _ "$MOCK_BIN" "$REPO_ROOT"
+  run bash -c 'BUN_INSTALL="$1"; PATH="$1:$PATH"; source "$2/dot_setup/lib/bun_packages.sh"; install_bun_globals' _ "$MOCK_BIN" "$REPO_ROOT"
 
   [[ "$status" -ne 0 ]]
   grep -Fxq 'add yarn' "$MOCK_LOG"
