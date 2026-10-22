@@ -13,7 +13,7 @@ function aliases() {
   # Build list: "filename:aliasname: description"
   local entries
   entries=$(
-    for f in "$config_dir"/aliases*.sh; do
+    for f in "$config_dir"/aliases/*.sh; do
       [[ -f "$f" ]] || continue
       awk -v file="$(basename "$f" .sh)" '
         /^alias [^ =]+/ {
@@ -48,7 +48,7 @@ function aliases() {
     --preview='
       alias_name={2}
       config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/prb"
-      for f in "$config_dir"/aliases*.sh; do
+      for f in "$config_dir"/aliases/*.sh; do
         awk -v name="$alias_name" '\''
           index($0, "alias " name "=") == 1 { print; exit }
         '\'' "$f" 2>/dev/null

@@ -152,6 +152,19 @@ copy_symlinks_functions() {
   [[ "$(git -C "$repo" branch --show-current)" == current ]]
 }
 
+@test "aliases lists entries from every aliases/*.sh module" {
+  mkdir -p "$BATS_TEST_TMPDIR/config"
+  ln -s "$REPO_ROOT/dot_config/prb" "$BATS_TEST_TMPDIR/config/prb"
+
+  run env XDG_CONFIG_HOME="$BATS_TEST_TMPDIR/config" bash -c \
+    'source "$1"; fzf() { cat; }; aliases' _ "$REPO_ROOT/dot_config/prb/functions/shell.sh"
+
+  [[ "$status" -eq 0 ]]
+  [[ "$output" == *$'\nbasics:g:'* ]]
+  [[ "$output" == *$'\nlocations:dot:'* ]]
+  [[ "$output" == *$'\nmacos:dl:'* ]]
+}
+
 @test "Vim starts without the optional Amix runtime and loads the custom config" {
   mkdir -p "$BATS_TEST_TMPDIR/home"
 

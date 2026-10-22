@@ -45,6 +45,12 @@
 .config/prb/functions/utils.sh
 .config/prb/shims.sh
 
+# Alias modules moved from aliases_*.sh to aliases/*.sh; the old copies masked a
+# stale glob in the aliases() introspection helper.
+.config/prb/aliases_core.sh
+.config/prb/aliases_locations.sh
+.config/prb/aliases_macos.sh
+
 # LaunchAgents, sleepwatcher hooks, Caddy, and the launchd dashboard moved to ~/projects/circadian, which installs
 # ~/Library/LaunchAgents itself and runs hooks and jobs from its checkout.
 .config/caddy/Caddyfile
