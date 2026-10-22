@@ -155,6 +155,11 @@ function envs() {
     --preview-window=right:60%:wrap
 }
 
+# Print each PATH entry on a separate line, sorted alphabetically
+function path() {
+  echo "$PATH" | tr ":" "\n" | sort
+}
+
 ###############################################################################
 # TELEVISION WIDGETS                                                          #
 ###############################################################################

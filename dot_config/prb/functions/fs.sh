@@ -110,11 +110,6 @@ function o() {
   fi
 }
 
-# Print each PATH entry on a separate line, sorted alphabetically
-function path() {
-  echo "$PATH" | tr ":" "\n" | sort
-}
-
 # Fuzzy-jump to a git repo. Lists every repo under the project roots plus the
 # repos sitting directly under $HOME (e.g. ~/.claude). Paths are shown relative
 # to $HOME, so the root prefix disambiguates same-named repos (sablier/devkit

@@ -1,6 +1,6 @@
 # macOS path_helper runs before this file in login shells and can move
 # /usr/bin ahead of user shims. Put user-managed bins back in front.
-_path_prepend_if_dir() {
+_prepend_path() {
   [[ -d "$1" ]] && path=("$1" ${path:#"$1"})
 }
 
@@ -13,14 +13,14 @@ if [[ -z "$homebrew_prefix" ]]; then
   fi
 fi
 if [[ -n "$homebrew_prefix" ]]; then
-  _path_prepend_if_dir "$homebrew_prefix/sbin"
-  _path_prepend_if_dir "$homebrew_prefix/bin"
+  _prepend_path "$homebrew_prefix/sbin"
+  _prepend_path "$homebrew_prefix/bin"
 fi
 unset homebrew_prefix
 
 if [[ -d "$HOME/.local/bin" ]]; then
-  _path_prepend_if_dir "$HOME/.local/bin"
+  _prepend_path "$HOME/.local/bin"
 fi
 
-unset -f _path_prepend_if_dir
+unset -f _prepend_path
 export PATH

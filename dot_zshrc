@@ -2,26 +2,26 @@
 [[ -n "${ZPROF:-}" ]] && zmodload zsh/zprof
 
 # Base directory for custom shell modules
-USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
+PRB_CONFIG_DIR="${PRB_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
 
 # Core environment and PATH must load before the rest of the shell modules.
-[[ -r "$USER_DIR/env_core.sh" ]] && source "$USER_DIR/env_core.sh"
-[[ -r "$USER_DIR/path.sh" ]] && source "$USER_DIR/path.sh"
+[[ -r "$PRB_CONFIG_DIR/env_core.sh" ]] && source "$PRB_CONFIG_DIR/env_core.sh"
+[[ -r "$PRB_CONFIG_DIR/path.sh" ]] && source "$PRB_CONFIG_DIR/path.sh"
 
 # Load tracked core shell modules.
-core_dotfiles=(
-  "$USER_DIR/agents.sh"
-  "$USER_DIR/aliases.sh"
-  "$USER_DIR/web3.sh"
-  "$USER_DIR/functions.sh"
-  "$USER_DIR/gh.sh"
-  "$USER_DIR/env_session.sh"
-  "$USER_DIR/shims.sh"
+shell_modules=(
+  "$PRB_CONFIG_DIR/agents.sh"
+  "$PRB_CONFIG_DIR/aliases.sh"
+  "$PRB_CONFIG_DIR/web3.sh"
+  "$PRB_CONFIG_DIR/functions.sh"
+  "$PRB_CONFIG_DIR/gh.sh"
+  "$PRB_CONFIG_DIR/env_session.sh"
+  "$PRB_CONFIG_DIR/hooks.sh"
 )
-for file in "${core_dotfiles[@]}"; do
+for file in "${shell_modules[@]}"; do
   [[ -r "$file" ]] && source "$file"
 done
-unset file core_dotfiles
+unset file shell_modules
 
 # Uncomment the following line to use case-sensitive completion.
 export CASE_SENSITIVE="true"
@@ -47,7 +47,7 @@ DISABLE_MAGIC_FUNCTIONS="true"
 # Load custom functions
 # shellcheck disable=SC2034 # zsh ties fpath and FPATH.
 typeset -gU fpath FPATH
-fpath=("$USER_DIR/zfunc" "$HOME/.zfunc" "${fpath[@]}")
+fpath=("$PRB_CONFIG_DIR/zfunc" "$HOME/.zfunc" "${fpath[@]}")
 
 # Keep compdump stable and skip compaudit for faster startup
 export ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/compdump-${ZSH_VERSION}"

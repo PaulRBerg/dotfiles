@@ -38,8 +38,8 @@ sync msg="":
     # Only commit if there are staged changes
     if ! git diff --cached --quiet; then
         if [[ -z "{{ msg }}" ]]; then
-            USER_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/prb"
-            source "${USER_DIR}/agents.sh"
+            PRB_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/prb"
+            source "${PRB_CONFIG_DIR}/agents.sh"
             ccc
         else
             git commit -m "{{ msg }}"

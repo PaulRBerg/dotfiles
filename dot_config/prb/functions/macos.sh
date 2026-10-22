@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# MACOS CLEANUP                                                               #
+# MACOS                                                                       #
 ###############################################################################
+
+# Get macOS marketing name + version (e.g., "macOS Tahoe 26.1")
+function macos_version() {
+  local name
+  name=$(awk -F 'macOS ' '/SOFTWARE LICENSE AGREEMENT FOR macOS/{gsub(/[0-9]+\\.*/, "", $2); gsub(/\\.*/, "", $2); print $2; exit}' "/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf" | tr -d ' ')
+  echo "macOS $name $(sw_vers -productVersion)"
+}
 
 function _mac_cleanup_require_macos() {
   if [[ "$(uname -s)" != "Darwin" ]]; then

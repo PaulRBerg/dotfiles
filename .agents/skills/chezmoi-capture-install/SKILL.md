@@ -56,7 +56,7 @@ appended (PATH line, `source` line, etc.). Treat that output as the first clue, 
 Copy the intended behavior, not literal lines. Repository-specific rules:
 
 - **PATH additions** → add a home-relative entry to [`dot_config/prb/path.sh`](dot_config/prb/path.sh) using the
-  existing `add_path "$HOME/.tool/bin"` idiom (Cross-Machine section, or the Homebrew and macOS apps section for
+  existing `prepend_path "$HOME/.tool/bin"` idiom (Cross-Machine section, or the Homebrew and macOS apps section for
   Homebrew and macOS tools). Do **not** copy raw `export PATH=...` lines. Never include an absolute `/Users/<user>` path
   or a version-pinned directory (e.g. an fnm `node-versions/vX.Y.Z` bin). Those paths break on another machine or after
   a version bump.

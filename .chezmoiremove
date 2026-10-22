@@ -40,6 +40,11 @@
 .setup/tools_macos.sh
 .setup/update_macos.sh
 
+# functions/utils.sh was split into network.sh, text.sh, and macos.sh; shims.sh
+# (direnv hook, rbenv init, ssh-agent) is now hooks.sh.
+.config/prb/functions/utils.sh
+.config/prb/shims.sh
+
 # LaunchAgents, sleepwatcher hooks, Caddy, and the launchd dashboard moved to ~/projects/circadian, which installs
 # ~/Library/LaunchAgents itself and runs hooks and jobs from its checkout.
 .config/caddy/Caddyfile

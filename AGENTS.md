@@ -99,7 +99,7 @@ Layout:
 2. `~/.config/prb/env_core.sh` — path-critical env (sourced first in `.zshrc`).
 3. `~/.config/prb/path.sh` — build `PATH` (adds `~/.config/prb/bin`, `~/.setup`, and macOS paths).
 4. Tracked modules, in order: `agents.sh`, `aliases.sh`, `web3.sh`, `functions.sh`, `gh.sh`, `env_session.sh`,
-   `shims.sh`.
+   `hooks.sh`.
 5. Oh My Zsh, then tool init: zoxide, fnm, atuin, fzf, Starship (last).
 
 `~/.config/prb/load_env.sh` remains a compatibility wrapper for manual sourcing. The boot path uses `env_core.sh` before

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
+PRB_CONFIG_DIR="${PRB_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
 
-source "$USER_DIR/aliases/basics.sh"
-source "$USER_DIR/aliases/locations.sh"
+source "$PRB_CONFIG_DIR/aliases/basics.sh"
+source "$PRB_CONFIG_DIR/aliases/locations.sh"
 
-source "$USER_DIR/aliases/macos.sh"
+source "$PRB_CONFIG_DIR/aliases/macos.sh"

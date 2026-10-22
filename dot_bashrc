@@ -5,9 +5,9 @@
 # Exit early if non-interactive
 [[ $- != *i* ]] && return
 
-USER_DIR="${USER_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
+PRB_CONFIG_DIR="${PRB_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/prb}"
 
 # Source common dotfiles
-[[ -r "$USER_DIR/path.sh" ]] && source "$USER_DIR/path.sh"
-[[ -r "$USER_DIR/aliases.sh" ]] && source "$USER_DIR/aliases.sh"
-[[ -r "$USER_DIR/functions.sh" ]] && source "$USER_DIR/functions.sh"
+[[ -r "$PRB_CONFIG_DIR/path.sh" ]] && source "$PRB_CONFIG_DIR/path.sh"
+[[ -r "$PRB_CONFIG_DIR/aliases.sh" ]] && source "$PRB_CONFIG_DIR/aliases.sh"
+[[ -r "$PRB_CONFIG_DIR/functions.sh" ]] && source "$PRB_CONFIG_DIR/functions.sh"
