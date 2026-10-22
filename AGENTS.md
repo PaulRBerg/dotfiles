@@ -119,18 +119,17 @@ appropriate category in `BREW_FORMULAE`, `BREW_CASKS`, or `BREW_TAPS`.
 
 Shell functions and Git aliases use the native macOS `pbcopy` and `pbpaste` commands.
 
-### LaunchAgents, sleep and wake hooks, and local HTTPS
+### LaunchAgents and local HTTPS
 
 The items below live in `~/projects/circadian` (GitHub `PaulRBerg/circadian`), not in this repository:
 
 - Every `local.*` LaunchAgent.
-- The sleepwatcher hooks.
 - The Caddyfile for the named `*.localhost` apps.
 - The launchd dashboard at `https://circadian.localhost`.
 
 That repository installs its own plists with `just deploy`. Follow its `AGENTS.md`. This repository only provisions the
-tools those agents need (`caddy`, `sleepwatcher`, `smartmontools`, Bun) and the shell modules some of them source
-(`env_core.sh`, `path.sh`, `functions/dev.sh`). Do not add LaunchAgents or `run_onchange` launchctl hooks here.
+tools those agents need (`caddy`, `smartmontools`, Bun) and the shell modules some of them source (`env_core.sh`,
+`path.sh`, `functions/dev.sh`). Do not add LaunchAgents or `run_onchange` launchctl hooks here.
 
 ### iTerm2 settings (macOS only)
 

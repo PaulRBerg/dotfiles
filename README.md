@@ -98,9 +98,8 @@ chicken-and-egg failures.
      `git@github.com:PaulRBerg/agent-skills.git` to `~/projects/agent-skills` and run `just toolkit::install-cli` there
      to build the `ai-*` CLIs (`ai-commit`, `ai-coord`, ...) that the global agent instructions depend on.
    - Shell history sync: `atuin login`
-   - LaunchAgents, sleep and wake hooks, and local HTTPS:
-     `git clone git@github.com:PaulRBerg/circadian.git ~/projects/circadian`, then `just install && just deploy` there.
-     Run `caddy trust` once (sudo prompt) so browsers accept Caddy's local CA.
+   - LaunchAgents and local HTTPS: `git clone git@github.com:PaulRBerg/circadian.git ~/projects/circadian`, then
+     `just install && just deploy` there. Run `caddy trust` once (sudo prompt) so browsers accept Caddy's local CA.
 
 7. Verify everything: `chezmoi cd && just doctor` — checks required commands, PATH health, a dry-run apply, rendered
    templates, and lint.

@@ -108,7 +108,6 @@ BREW_FORMULAE=(
   openssh
   pinentry-mac
   screen
-  sleepwatcher # sleep and wake hooks (local.sleepwatcher in ~/projects/circadian)
   smartmontools
   ssh-copy-id
   tmux
