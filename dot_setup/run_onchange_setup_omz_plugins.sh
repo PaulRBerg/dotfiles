@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install Oh My Zsh custom plugins used by dot_zshrc.tmpl.
+# Install Oh My Zsh custom plugins used by dot_zshrc.
 
 set -euo pipefail
 

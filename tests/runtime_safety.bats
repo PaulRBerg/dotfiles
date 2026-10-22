@@ -16,7 +16,7 @@ write_executable() {
 }
 
 copy_symlinks_functions() {
-  cp "$REPO_ROOT/dot_config/prb/functions/symlinks.sh.tmpl" "$BATS_TEST_TMPDIR/symlinks.sh"
+  cp "$REPO_ROOT/dot_config/prb/functions/symlinks.sh" "$BATS_TEST_TMPDIR/symlinks.sh"
 }
 
 @test "agents-layout shell-quotes a directory containing quotes and metacharacters" {

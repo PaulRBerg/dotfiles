@@ -80,7 +80,7 @@ Layout:
 
 | Path                                    | Purpose                                                            |
 | --------------------------------------- | ------------------------------------------------------------------ |
-| `dot_zshrc.tmpl`                        | Main Zsh bootstrap (→ `~/.zshrc`)                                  |
+| `dot_zshrc`                             | Main Zsh bootstrap (→ `~/.zshrc`)                                  |
 | `dot_zshenv`                            | Early XDG defaults. Prepends `~/.local/bin` to `PATH`              |
 | `dot_config/prb/`                       | Custom shell modules (→ `~/.config/prb/`)                          |
 | `dot_config/prb/bin/`                   | Shell utilities, added to `PATH`                                   |

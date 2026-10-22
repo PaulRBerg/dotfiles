@@ -11,7 +11,7 @@ export RUST_LOG := "warn"
 
 # Backticks use /bin/sh (not `set shell`), so bash's globstar isn't available.
 # Use fd to find .sh and .sh.tmpl files, then append non-extension matches.
-GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc.tmpl`
+GLOBS_SHELL := `fd -e sh -e sh.tmpl . | tr '\n' ' ' && echo dot_bashrc dot_zshrc`
 GLOBS_PRETTIER := '"**/*.{md,yaml,yml}"'
 
 # ---------------------------------------------------------------------------- #
@@ -165,7 +165,7 @@ doctor:
     while IFS= read -r -d '' file; do
         check_rendered "$file" bash
     done < <(fd -0 -e sh.tmpl .)
-    check_rendered dot_zshrc.tmpl zsh
+    check_rendered dot_zshrc zsh
     check_rendered dot_zshenv zsh
     check_rendered dot_zprofile zsh
     check_rendered dot_bashrc bash

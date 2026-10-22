@@ -8,7 +8,7 @@
 #
 # Unlike npm globals — which are scoped to the active fnm Node version and
 # wiped on every Node bump — bun installs these into its own global prefix
-# ($BUN_INSTALL/bin, on PATH via path.sh.tmpl), so they persist across Node
+# ($BUN_INSTALL/bin, on PATH via path.sh), so they persist across Node
 # versions and only need (re)linking, not reinstalling.
 
 # Fail on unset vars and masked pipe failures. `-e` is intentionally omitted:

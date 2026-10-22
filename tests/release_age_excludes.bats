@@ -10,7 +10,7 @@ bats_require_minimum_version 1.5.0
 
   yq -p toml -o yaml '.install.minimumReleaseAgeExcludes[]' "$repo_root/dot_config/dot_bunfig.toml" | sort >"$bun_list"
   yq '.minimumReleaseAgeExclude[]' "$repo_root/dot_config/pnpm/config.yaml" | sort >"$pnpm_list"
-  sed -n 's/^min-release-age-exclude\[\]=//p' "$repo_root/dot_config/npm/private_npmrc.tmpl" | sort >"$npm_list"
+  sed -n 's/^min-release-age-exclude\[\]=//p' "$repo_root/dot_config/npm/private_npmrc" | sort >"$npm_list"
 
   [[ -s "$bun_list" ]]
   run diff -u --label bunfig.toml --label pnpm/config.yaml "$bun_list" "$pnpm_list"

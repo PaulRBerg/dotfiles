@@ -43,7 +43,7 @@ BUN_TRUSTED_PACKAGES=(
 
 # bun honors $BUN_INSTALL (set in env_core.sh) for its location. Prepend its
 # bin dir so a freshly bootstrapped bun is callable within this process.
-# Mirror the canonical default used by env_core.sh / path.sh.tmpl so the
+# Mirror the canonical default used by env_core.sh / path.sh so the
 # install prefix and the PATH entry stay in sync even under a customized
 # $XDG_DATA_HOME.
 install_bun_globals() {

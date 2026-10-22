@@ -55,13 +55,12 @@ appended (PATH line, `source` line, etc.). Treat that output as the first clue, 
 
 Copy the intended behavior, not literal lines. Repository-specific rules:
 
-- **PATH additions** → add a home-relative entry to [`dot_config/prb/path.sh.tmpl`](dot_config/prb/path.sh.tmpl) using
-  the existing `add_path "$HOME/.tool/bin"` idiom (Cross-Machine section, or `path_macos.sh` for Homebrew and macOS
-  tools). Do **not** copy raw `export PATH=...` lines. Never include an absolute `/Users/<user>` path or a
-  version-pinned directory (e.g. an fnm `node-versions/vX.Y.Z` bin). Those paths break on another machine or after a
-  version bump.
+- **PATH additions** → add a home-relative entry to [`dot_config/prb/path.sh`](dot_config/prb/path.sh) using the
+  existing `add_path "$HOME/.tool/bin"` idiom (Cross-Machine section, or `path_macos.sh` for Homebrew and macOS tools).
+  Do **not** copy raw `export PATH=...` lines. Never include an absolute `/Users/<user>` path or a version-pinned
+  directory (e.g. an fnm `node-versions/vX.Y.Z` bin). Those paths break on another machine or after a version bump.
 - **Other rc edits** (shell init, `source` lines, completions) → copy the intended behavior into the matching source
-  template. Resolve it with `chezmoi source-path <target>` (e.g. `~/.zshrc` → `dot_zshrc.tmpl`). The repository supports
+  template. Resolve it with `chezmoi source-path <target>` (e.g. `~/.zshrc` → `dot_zshrc`). The repository supports
   macOS only. No OS guard is needed.
 - **New config files worth tracking** → `chezmoi add <file>` (ask first — see step 5).
 - **Redundant or fragile edits** → omit them. If the tool is already reachable, the installer's line is unnecessary.
