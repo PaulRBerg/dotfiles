@@ -32,4 +32,11 @@ if [[ -n "${CLAUDECODE:-}" || -n "${CODEX_THREAD_ID:-}" ]]; then
     export GIT_CONFIG_KEY_0=rebase.autoStash GIT_CONFIG_VALUE_0=false
     export GIT_CONFIG_KEY_1=help.autocorrect GIT_CONFIG_VALUE_1=never
   fi
+
+  # API keys live in the interactive profile. Codex copies that profile into its
+  # commands through a shell snapshot that parallel commands sometimes miss, so
+  # agent shells export the keys directly from the shared keys file.
+  if [[ -r "$XDG_CONFIG_HOME/prb/env_keys.sh" ]]; then
+    source "$XDG_CONFIG_HOME/prb/env_keys.sh"
+  fi
 fi

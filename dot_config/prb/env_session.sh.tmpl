@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC1003 # onepasswordRead values are single-quote escaped by the template.
 
 ###############################################################################
 # SESSION ENVIRONMENT                                                         #
@@ -26,22 +25,10 @@ export PYTHONIOENCODING="${PYTHONIOENCODING:-UTF-8}"
 # API KEYS                                                                    #
 ###############################################################################
 
-# Blockscout
-export API_KEY_BLOCKSCOUT='{{ onepasswordRead "op://Keys/Blockscout/credential" | replace "'" "'\\''" }}'
-export BLOCKSCOUT_API_KEY='{{ onepasswordRead "op://Keys/Blockscout/credential" | replace "'" "'\\''" }}'
-
-# Etherscan
-export API_KEY_ETHERSCAN='{{ onepasswordRead "op://Keys/Etherscan/credential" | replace "'" "'\\''" }}'
-export ETHERSCAN_API_KEY='{{ onepasswordRead "op://Keys/Etherscan/credential" | replace "'" "'\\''" }}'
-
-# RouteMesh
-export ROUTEMESH_API_KEY='{{ onepasswordRead "op://Keys/RouteMesh/credential" | replace "'" "'\\''" }}'
-
-# Vercel AI Gateway
-export AI_GATEWAY_API_KEY='{{ onepasswordRead "op://Keys/q3tg2upimauv5ze24rdinqase4/credential" | replace "'" "'\\''" }}'
-
-# GitHub
-export GITHUB_TOKEN='{{ onepasswordRead "op://Keys/GitHub/credential" | replace "'" "'\\''" }}'
+# Kept in a separate file so ~/.zshenv can export them for coding-agent shells.
+PRB_ENV_KEYS="${XDG_CONFIG_HOME:-$HOME/.config}/prb/env_keys.sh"
+[[ -r "$PRB_ENV_KEYS" ]] && source "$PRB_ENV_KEYS"
+unset PRB_ENV_KEYS
 
 ###############################################################################
 # LANGUAGES AND TOOLS                                                         #

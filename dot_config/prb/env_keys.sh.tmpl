@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC1003 # onepasswordRead values are single-quote escaped by the template.
+#
+# API keys for interactive shells and coding-agent shells. ~/.config/prb/env_session.sh
+# sources this file for interactive use, and ~/.zshenv sources it for Claude Code and
+# Codex shells, whose shell snapshots do not reliably carry the interactive profile.
+
+###############################################################################
+# API KEYS                                                                    #
+###############################################################################
+
+# Blockscout
+export API_KEY_BLOCKSCOUT='{{ onepasswordRead "op://Keys/Blockscout/credential" | replace "'" "'\\''" }}'
+export BLOCKSCOUT_API_KEY='{{ onepasswordRead "op://Keys/Blockscout/credential" | replace "'" "'\\''" }}'
+
+# Etherscan
+export API_KEY_ETHERSCAN='{{ onepasswordRead "op://Keys/Etherscan/credential" | replace "'" "'\\''" }}'
+export ETHERSCAN_API_KEY='{{ onepasswordRead "op://Keys/Etherscan/credential" | replace "'" "'\\''" }}'
+
+# RouteMesh
+export ROUTEMESH_API_KEY='{{ onepasswordRead "op://Keys/RouteMesh/credential" | replace "'" "'\\''" }}'
+
+# Vercel AI Gateway
+export AI_GATEWAY_API_KEY='{{ onepasswordRead "op://Keys/q3tg2upimauv5ze24rdinqase4/credential" | replace "'" "'\\''" }}'
+
+# GitHub
+export GITHUB_TOKEN='{{ onepasswordRead "op://Keys/GitHub/credential" | replace "'" "'\\''" }}'
