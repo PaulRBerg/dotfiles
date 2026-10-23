@@ -17,7 +17,7 @@ fi
 
 # Keep in sync with the global default pinned in ~/.config/uv/.python-version
 # and the only-managed preference in ~/.config/uv/uv.toml.
-readonly PYTHON_VERSION="3.14"
+readonly PYTHON_VERSION="3.15"
 
 # Global CLI tools, each installed into its own uv-managed venv on
 # PYTHON_VERSION. Editing this list re-triggers the script via run_onchange.

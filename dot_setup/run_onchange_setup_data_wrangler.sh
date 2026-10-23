@@ -16,10 +16,10 @@ if ! command -v uv &>/dev/null; then
   exit 0
 fi
 
-readonly PYTHON_VERSION="3.14"
+readonly PYTHON_VERSION="3.15"
 readonly VENV="$HOME/.venvs/data-wrangler"
-readonly KERNEL_DIR="$HOME/Library/Jupyter/kernels/data-wrangler-py314"
-readonly LEGACY_KERNEL_DIR="$HOME/Library/Jupyter/kernels/data-wrangler-py312"
+readonly KERNEL_DIR="$HOME/Library/Jupyter/kernels/data-wrangler-py315"
+readonly LEGACY_KERNEL_DIR="$HOME/Library/Jupyter/kernels/data-wrangler-py314"
 
 # (Re)build the venv when missing or not already on PYTHON_VERSION.
 needs_build=true
