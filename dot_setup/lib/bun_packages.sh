@@ -11,7 +11,6 @@ BUN_GLOBAL_PACKAGES=(
   @biomejs/biome
   @earendil-works/pi-coding-agent
   @mariozechner/claude-trace
-  @steipete/summarize
   @typescript/native-preview
   ccstatusline
   chrome-devtools-mcp
