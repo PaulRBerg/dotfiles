@@ -39,6 +39,3 @@ min-release-age-exclude[]=ultracite
 # scripts but print a warning (advisory in npm 11.x; a future release will block
 # them outright). Add a trusted global below to silence its postinstall nag.
 allow-scripts[]=bun
-
-# Publish token from 1Password (Keys → npm). Rotate it there, then `chezmoi apply ~/.config/npm/npmrc`.
-//registry.npmjs.org/:_authToken={{ onepasswordRead "op://Keys/npm/credential" }}
