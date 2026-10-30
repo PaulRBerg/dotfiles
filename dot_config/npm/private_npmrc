@@ -31,6 +31,7 @@ min-release-age-exclude[]=effect
 min-release-age-exclude[]=react-grab
 min-release-age-exclude[]=sablier
 min-release-age-exclude[]=typescript
+min-release-age-exclude[]=ultracite
 
 # Allow install (life-cycle) scripts only for these trusted packages during
 # `npm install -g` / npx (npm 11+ allow-scripts policy). Each name is matched
