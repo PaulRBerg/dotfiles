@@ -1,4 +1,4 @@
-#!/usr/bin/expect -f
+#!/usr/bin/expect --
 # Codex treats a positional /voice as a prompt. Enter it through the TUI instead.
 if {[catch {exec /bin/test -t 0 <@ stdin}]} {
     puts stderr "codex-voice requires an interactive terminal"
