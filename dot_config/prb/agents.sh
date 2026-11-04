@@ -32,6 +32,7 @@ CLAUDE_LITE_FLAGS=(
 ###############################################################################
 
 alias c="codex -m $CODEX_MODEL"
+alias cv="codex-voice.exp -m $CODEX_MODEL"
 alias c_a="codex -m gpt-6-astra"
 alias c_s="codex -m gpt-6.1-sol"
 alias c_t="codex -m gpt-6.1-terra"

@@ -1,0 +1,25 @@
+#!/usr/bin/expect -f
+# Codex treats a positional /voice as a prompt. Enter it through the TUI instead.
+if {[catch {exec /bin/test -t 0 <@ stdin}]} {
+    puts stderr "codex-voice requires an interactive terminal"
+    exit 2
+}
+spawn -noecho codex {*}$argv
+
+# Keep Codex's nested terminal sized to the real terminal on window changes.
+trap {
+    catch {stty rows [stty rows] columns [stty columns] < $spawn_out(slave,name)}
+} WINCH
+
+# Codex emits OSC 7501 when the TUI becomes idle. Preserve the notification and
+# start voice only once, while passing terminal input and output through normally.
+set idle_notification "\033\]7501;state=idle:app=codex\033\\"
+set voice_started 0
+interact -o -ex $idle_notification {
+    send_user -- $idle_notification
+    if {!$voice_started} {
+        set voice_started 1
+        send -- "/voice\r"
+    }
+}
+exit [lindex [wait] 3]
