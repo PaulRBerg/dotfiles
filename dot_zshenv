@@ -7,6 +7,12 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 # ripgrep does not auto-load config files; point it at the XDG config.
 export RIPGREP_CONFIG_PATH="${RIPGREP_CONFIG_PATH:-$XDG_CONFIG_HOME/ripgrep/config}"
 
+# Claude Code: in bypass mode, also skip the prompt for `rm` on critical paths.
+# The PreToolUse guards in ~/.claude/hooks deny the catastrophic removals
+# instead. Claude Code reads this from the launch environment only, and ignores
+# it when a settings file holds a deny or ask rule for Bash, Edit, or Read.
+export CLAUDE_CODE_EVEN_MORE_DANGEROUSLY_SKIP_PERMISSIONS=1
+
 # Keep user-managed shims ahead of system binaries for all zsh invocations,
 # including non-interactive shells that do not read ~/.zshrc.
 if [[ -d "$HOME/.local/bin" ]]; then
