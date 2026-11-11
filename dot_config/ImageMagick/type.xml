@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typemap>
+  <type name="Helvetica" fullname="Helvetica" family="Helvetica" style="Normal" stretch="Normal" weight="400" glyphs="/System/Library/Fonts/Helvetica.ttc"/>
+  <type name="Arial" fullname="Arial" family="Arial" style="Normal" stretch="Normal" weight="400" glyphs="/System/Library/Fonts/Helvetica.ttc"/>
+</typemap>
