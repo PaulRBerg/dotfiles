@@ -92,6 +92,7 @@
     "@medusajs/store",
     "@medusajs/tax",
     "@medusajs/telemetry",
+    "@medusajs/test-utils",
     "@medusajs/translation",
     "@medusajs/types",
     "@medusajs/ui",

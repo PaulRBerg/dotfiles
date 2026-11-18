@@ -81,6 +81,7 @@ min-release-age-exclude[]=@medusajs/stock-location
 min-release-age-exclude[]=@medusajs/store
 min-release-age-exclude[]=@medusajs/tax
 min-release-age-exclude[]=@medusajs/telemetry
+min-release-age-exclude[]=@medusajs/test-utils
 min-release-age-exclude[]=@medusajs/translation
 min-release-age-exclude[]=@medusajs/types
 min-release-age-exclude[]=@medusajs/ui
