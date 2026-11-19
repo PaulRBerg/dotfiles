@@ -27,6 +27,7 @@ readonly TOOLS=(
   extract-msg
   gita
   it2
+  marker-pdf
   mdformat
   pynvim
   pytest

@@ -85,11 +85,14 @@ BREW_FORMULAE=(
   vim
 
   # Image and media
+  epubcheck # EPUB validation for the pdf-to-epub skill
   ffmpeg
   gs
   img2pdf
+  llama.cpp # llama-server runtime for marker-pdf's surya OCR models
   lynx
   ocrmypdf
+  pandoc # Markdown-to-EPUB builds for the pdf-to-epub skill
   pngquant
   poppler # provides pdftotext
   sfnt2woff
